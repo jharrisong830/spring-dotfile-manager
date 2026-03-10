@@ -37,4 +37,28 @@ public class FileServiceUnitTests {
 
         assertTrue(fileService.exists(dirPath));
     }
+
+
+    @Test
+    public void testIsDirectory_isDirectory() throws IOException {
+        Path dirPath = tempDir.resolve("testDir");
+        dirPath.toFile().mkdir();
+
+        assertTrue(fileService.isDirectory(dirPath));
+    }
+
+    @Test
+    public void testIsDirectory_isNotDirectory() throws IOException {
+        Path filePath = tempDir.resolve("testFile.txt");
+        filePath.toFile().createNewFile();
+
+        assertFalse(fileService.isDirectory(filePath));
+    }
+
+    @Test
+    public void testIsDirectory_doesNotExist() {
+        Path filePath = tempDir.resolve("nonExistentFile.txt");
+        
+        assertFalse(fileService.isDirectory(filePath));
+    }
 }

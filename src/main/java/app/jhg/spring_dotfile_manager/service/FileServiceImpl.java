@@ -15,4 +15,13 @@ public class FileServiceImpl implements FileService {
     public boolean exists(Path path) {
         return path.toFile().exists();
     }
+
+    /**
+     * checks if the given path is a directory
+     * @param path the path to check
+     * @return true if the path is a directory, false otherwise
+     */
+    public boolean isDirectory(Path path) {
+        return path.toFile().isDirectory();
+    }
 }

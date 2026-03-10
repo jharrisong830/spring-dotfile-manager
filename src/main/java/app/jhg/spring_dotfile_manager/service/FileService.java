@@ -4,9 +4,9 @@ import java.nio.file.Path;
 
 public interface FileService {
     public boolean exists(Path path);
+    public boolean isDirectory(Path path);
 
     // TODO
-    // public boolean isDirectory(Path path);
     // public boolean isSymbolicLink(Path path);
     // public void writeFile(Path path, String content);
     // public String readFile(Path path);
