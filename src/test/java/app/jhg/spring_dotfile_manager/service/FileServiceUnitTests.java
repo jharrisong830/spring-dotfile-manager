@@ -3,6 +3,7 @@ package app.jhg.spring_dotfile_manager.service;
 import static org.junit.jupiter.api.Assertions.*;
 
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 
 import org.junit.jupiter.api.Test;
@@ -58,7 +59,26 @@ public class FileServiceUnitTests {
     @Test
     public void testIsDirectory_doesNotExist() {
         Path filePath = tempDir.resolve("nonExistentFile.txt");
-        
+
         assertFalse(fileService.isDirectory(filePath));
+    }
+
+
+    @Test
+    public void testIsSymbolicLink_isSymbolicLink() throws IOException {
+        Path targetFile = tempDir.resolve("targetFile.txt");
+        targetFile.toFile().createNewFile();
+        Path symbolicLink = tempDir.resolve("symbolicLink.txt");
+        Files.createSymbolicLink(symbolicLink, targetFile);
+
+        assertTrue(fileService.isSymbolicLink(symbolicLink));
+    }
+
+    @Test
+    public void testIsSymbolicLink_isNotSymbolicLink() throws IOException {
+        Path filePath = tempDir.resolve("testFile.txt");
+        filePath.toFile().createNewFile();
+
+        assertFalse(fileService.isSymbolicLink(filePath));
     }
 }

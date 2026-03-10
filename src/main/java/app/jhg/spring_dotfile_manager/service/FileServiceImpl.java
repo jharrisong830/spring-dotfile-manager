@@ -1,5 +1,6 @@
 package app.jhg.spring_dotfile_manager.service;
 
+import java.nio.file.Files;
 import java.nio.file.Path;
 
 import org.springframework.stereotype.Service;
@@ -13,7 +14,7 @@ public class FileServiceImpl implements FileService {
      * @return true if the path exists, false otherwise
      */
     public boolean exists(Path path) {
-        return path.toFile().exists();
+        return Files.exists(path);
     }
 
     /**
@@ -22,6 +23,10 @@ public class FileServiceImpl implements FileService {
      * @return true if the path is a directory, false otherwise
      */
     public boolean isDirectory(Path path) {
-        return path.toFile().isDirectory();
+        return Files.isDirectory(path);
+    }
+
+    public boolean isSymbolicLink(Path path) {
+        return Files.isSymbolicLink(path);
     }
 }
