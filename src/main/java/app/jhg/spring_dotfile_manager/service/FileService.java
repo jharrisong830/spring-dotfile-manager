@@ -10,7 +10,5 @@ public interface FileService {
     public boolean isDirectory(Path path);
     public boolean isSymbolicLink(Path path);
     public void writeFile(Path path, String content) throws FileExistsException, IOException;
-
-    // TODO
-    // public String readFile(Path path);
+    public String readFile(Path path) throws IOException;
 }

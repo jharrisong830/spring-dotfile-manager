@@ -52,4 +52,14 @@ public class FileServiceImpl implements FileService {
 
         Files.writeString(path, content);
     }
+
+    /**
+     * reads the content of a file at the specified path and returns it as a string
+     * @param path the path to read the file from
+     * @return the content of the file as a string
+     * @throws IOException if an I/O error occurs reading from the file
+     */
+    public String readFile(Path path) throws IOException {
+        return Files.readString(path);
+    }
 }

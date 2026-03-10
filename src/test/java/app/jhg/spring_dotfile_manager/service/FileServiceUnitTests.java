@@ -107,4 +107,41 @@ public class FileServiceUnitTests {
 
         assertThrows(FileExistsException.class, () -> fileService.writeFile(filePath, "Test content"));
     }
+
+
+    @Test
+    public void testReadFile_fileExists() throws IOException {
+        Path filePath = tempDir.resolve("testFile.txt");
+        String content = "Test content";
+        Files.writeString(filePath, content);
+
+        String readContent = fileService.readFile(filePath);
+        assertEquals(content, readContent);
+    }
+
+    @Test
+    public void testReadFile_fileDoesNotExist() {
+        Path filePath = tempDir.resolve("nonExistentFile.txt");
+        assertThrows(IOException.class, () -> fileService.readFile(filePath));
+    }
+
+    @Test
+    public void testReadFile_isDirectory() throws IOException {
+        Path dirPath = tempDir.resolve("testDir");
+        dirPath.toFile().mkdir();
+
+        assertThrows(IOException.class, () -> fileService.readFile(dirPath));
+    }
+
+    @Test
+    public void testReadFile_isSymbolicLink() throws IOException {
+        Path targetFile = tempDir.resolve("targetFile.txt");
+        String content = "Test content";
+        Files.writeString(targetFile, content);
+        Path symbolicLink = tempDir.resolve("symbolicLink.txt");
+        Files.createSymbolicLink(symbolicLink, targetFile);
+
+        String readContent = fileService.readFile(symbolicLink);
+        assertEquals(content, readContent);
+    }
 }
