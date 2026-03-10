@@ -9,6 +9,8 @@ import java.nio.file.Path;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
+import app.jhg.spring_dotfile_manager.exception.FileExistsException;
+
 public class FileServiceUnitTests {
 
     private final FileService fileService = new FileServiceImpl();
@@ -80,5 +82,29 @@ public class FileServiceUnitTests {
         filePath.toFile().createNewFile();
 
         assertFalse(fileService.isSymbolicLink(filePath));
+    }
+
+    @Test
+    public void testIsSymbolicLink_doesNotExist() {
+        Path filePath = tempDir.resolve("nonExistentFile.txt");
+
+        assertFalse(fileService.isSymbolicLink(filePath));
+    }
+
+
+    @Test
+    public void testWriteFile_fileDoesNotExist() {
+        Path filePath = tempDir.resolve("testFile.txt");
+
+        assertDoesNotThrow(() -> fileService.writeFile(filePath, "Test content"));
+        assertTrue(Files.exists(filePath)); // file should be written afterwards
+    }
+
+    @Test
+    public void testWriteFile_fileAlreadyExists() throws IOException {
+        Path filePath = tempDir.resolve("testFile.txt");
+        filePath.toFile().createNewFile();
+
+        assertThrows(FileExistsException.class, () -> fileService.writeFile(filePath, "Test content"));
     }
 }
