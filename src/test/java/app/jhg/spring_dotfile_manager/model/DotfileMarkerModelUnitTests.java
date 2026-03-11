@@ -1,6 +1,8 @@
 package app.jhg.spring_dotfile_manager.model;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.nio.file.Path;
 import java.util.List;
@@ -23,6 +25,10 @@ location: /home/testuser/.zshrc
         DotfileMarkerModel marker = markerModels.get(0);
         assertEquals(".zshrc", marker.name);
         assertEquals(Path.of("/home/testuser/.zshrc"), marker.location);
+        assertNull(marker.markerFilePath);
+        assertNull(marker.linuxOverride);
+        assertNull(marker.win32Override);
+        assertNull(marker.darwinOverride);
     }
 
     @Test
@@ -43,10 +49,18 @@ location: /home/testuser/.vimrc
         DotfileMarkerModel zshrcMarker = markerModels.get(0);
         assertEquals(".zshrc", zshrcMarker.name);
         assertEquals(Path.of("/home/testuser/.zshrc"), zshrcMarker.location);
+        assertNull(zshrcMarker.markerFilePath);
+        assertNull(zshrcMarker.linuxOverride);
+        assertNull(zshrcMarker.win32Override);
+        assertNull(zshrcMarker.darwinOverride);
 
         DotfileMarkerModel vimrcMarker = markerModels.get(1);
         assertEquals(".vimrc", vimrcMarker.name);
         assertEquals(Path.of("/home/testuser/.vimrc"), vimrcMarker.location);
+        assertNull(vimrcMarker.markerFilePath);
+        assertNull(vimrcMarker.linuxOverride);
+        assertNull(vimrcMarker.win32Override);
+        assertNull(vimrcMarker.darwinOverride);
     }
 
     @Test
@@ -66,10 +80,18 @@ location: /home/testuser/.vimrc
         DotfileMarkerModel zshrcMarker = markerModels.get(0);
         assertEquals(".zshrc", zshrcMarker.name);
         assertEquals(Path.of("/home/testuser/.zshrc"), zshrcMarker.location);
+        assertNull(zshrcMarker.markerFilePath);
+        assertNull(zshrcMarker.linuxOverride);
+        assertNull(zshrcMarker.win32Override);
+        assertNull(zshrcMarker.darwinOverride);
 
         DotfileMarkerModel vimrcMarker = markerModels.get(1);
         assertEquals(".vimrc", vimrcMarker.name);
         assertEquals(Path.of("/home/testuser/.vimrc"), vimrcMarker.location);
+        assertNull(vimrcMarker.markerFilePath);
+        assertNull(vimrcMarker.linuxOverride);
+        assertNull(vimrcMarker.win32Override);
+        assertNull(vimrcMarker.darwinOverride);
     }
 
     @Test
@@ -91,9 +113,196 @@ location: /home/testuser/.vimrc
         DotfileMarkerModel zshrcMarker = markerModels.get(0);
         assertEquals(".zshrc", zshrcMarker.name);
         assertEquals(Path.of("/home/testuser/.zshrc"), zshrcMarker.location);
+        assertNull(zshrcMarker.markerFilePath);
+        assertNull(zshrcMarker.linuxOverride);
+        assertNull(zshrcMarker.win32Override);
+        assertNull(zshrcMarker.darwinOverride);
 
         DotfileMarkerModel vimrcMarker = markerModels.get(1);
         assertEquals(".vimrc", vimrcMarker.name);
         assertEquals(Path.of("/home/testuser/.vimrc"), vimrcMarker.location);
+        assertNull(vimrcMarker.markerFilePath);
+        assertNull(vimrcMarker.linuxOverride);
+        assertNull(vimrcMarker.win32Override);
+        assertNull(vimrcMarker.darwinOverride);
+    }
+
+    @Test
+    public void testFromMarkerFileContents_missingKey() {
+        String markerFileContents =
+"""
+name: .zshrc
+""";
+
+        assertThrows(IllegalArgumentException.class, () -> DotfileMarkerModel.fromMarkerFileContents(null, markerFileContents));
+    }
+
+    @Test
+    public void testFromMarkerFileContents_invalidKeyType() {
+        String markerFileContents =
+"""
+name: .zshrc
+location: 123
+""";
+
+        assertThrows(IllegalArgumentException.class, () -> DotfileMarkerModel.fromMarkerFileContents(null, markerFileContents));
+    }
+
+    @Test
+    public void testFromMarkerFileContents_withPlatformOverrides() {
+        String markerFileContents =
+"""
+name: .zshrc
+location: /home/testuser/.zshrc
+linux:
+    shouldLink: true
+    location: /home/testuser/.linux_zshrc
+win32:
+    shouldLink: false
+    location: C:/Users/testuser/.zshrc
+darwin:
+    shouldLink: true
+    location: /Users/testuser/.zshrc                
+""";
+
+        List<DotfileMarkerModel> markerModels = DotfileMarkerModel.fromMarkerFileContents(null, markerFileContents);
+        assertEquals(1, markerModels.size());
+
+        DotfileMarkerModel marker = markerModels.get(0);
+        assertEquals(".zshrc", marker.name);
+        assertEquals(Path.of("/home/testuser/.zshrc"), marker.location);
+        assertNull(marker.markerFilePath);
+
+        assertEquals(true, marker.linuxOverride.shouldLink);
+        assertEquals(Path.of("/home/testuser/.linux_zshrc"), marker.linuxOverride.location);
+
+        assertEquals(false, marker.win32Override.shouldLink);
+        assertNull(marker.win32Override.location);
+
+        assertEquals(true, marker.darwinOverride.shouldLink);
+        assertEquals(Path.of("/Users/testuser/.zshrc"), marker.darwinOverride.location);
+    }
+
+    @Test
+    public void testFromMarkerFileContents_withPartialPlatformOverrides() {
+        String markerFileContents =
+"""
+name: .zshrc
+location: /home/testuser/.zshrc
+linux:
+    shouldLink: true
+    location: /home/testuser/.linux_zshrc
+darwin:
+    shouldLink: false
+""";
+
+        List<DotfileMarkerModel> markerModels = DotfileMarkerModel.fromMarkerFileContents(null, markerFileContents);
+        assertEquals(1, markerModels.size());
+
+        DotfileMarkerModel marker = markerModels.get(0);
+        assertEquals(".zshrc", marker.name);
+        assertEquals(Path.of("/home/testuser/.zshrc"), marker.location);
+        assertNull(marker.markerFilePath);
+
+        assertEquals(true, marker.linuxOverride.shouldLink);
+        assertEquals(Path.of("/home/testuser/.linux_zshrc"), marker.linuxOverride.location);
+
+        assertNull(marker.win32Override);
+
+        assertEquals(false, marker.darwinOverride.shouldLink);
+        assertNull(marker.darwinOverride.location);
+    }
+
+    @Test
+    public void testFromMarkerFileContents_noLocationInPlatformOverride() {
+        String markerFileContents =
+"""
+name: .zshrc
+location: /home/testuser/.zshrc
+linux:
+    shouldLink: true
+""";
+
+        assertThrows(IllegalArgumentException.class, () -> DotfileMarkerModel.fromMarkerFileContents(null, markerFileContents));
+    }
+
+    @Test 
+    public void testFromMarkerFileContents_missingShouldLink() {
+        String markerFileContents =
+"""
+name: .zshrc
+location: /home/testuser/.zshrc
+linux:
+    location: /home/testuser/.linux_zshrc
+""";
+
+        assertThrows(IllegalArgumentException.class, () -> DotfileMarkerModel.fromMarkerFileContents(null, markerFileContents));
+    }
+
+    @Test
+    public void testFromMarkerFileContents_invalidShouldLinkType() {
+        String markerFileContents =
+"""
+name: .zshrc
+location: /home/testuser/.zshrc
+linux:
+    shouldLink: "not_a_boolean"
+    location: /home/testuser/.linux_zshrc
+""";
+
+        assertThrows(IllegalArgumentException.class, () -> DotfileMarkerModel.fromMarkerFileContents(null, markerFileContents));
+    }
+
+    @Test
+    public void testFromMarkerFileContents_multipleMarkersWithOverrides() {
+        String markerFileContents =
+"""
+---
+name: .zshrc
+location: /home/testuser/.zshrc
+win32:
+    shouldLink: false
+---
+name: .vimrc
+location: /home/testuser/.vimrc
+darwin:
+    shouldLink: true
+    location: /Users/testuser/.config/.vimrc
+win32:
+    shouldLink: false
+---
+name: .gitconfig
+location: /home/testuser/.gitconfig
+""";
+
+        List<DotfileMarkerModel> markerModels = DotfileMarkerModel.fromMarkerFileContents(null, markerFileContents);
+        assertEquals(3, markerModels.size());
+
+        DotfileMarkerModel zshrcMarker = markerModels.get(0);
+        assertEquals(".zshrc", zshrcMarker.name);
+        assertEquals(Path.of("/home/testuser/.zshrc"), zshrcMarker.location);
+        assertNull(zshrcMarker.markerFilePath);
+        assertNull(zshrcMarker.linuxOverride);
+        assertEquals(false, zshrcMarker.win32Override.shouldLink);
+        assertNull(zshrcMarker.win32Override.location);
+        assertNull(zshrcMarker.darwinOverride);
+
+        DotfileMarkerModel vimrcMarker = markerModels.get(1);
+        assertEquals(".vimrc", vimrcMarker.name);
+        assertEquals(Path.of("/home/testuser/.vimrc"), vimrcMarker.location);
+        assertNull(vimrcMarker.markerFilePath);
+        assertNull(vimrcMarker.linuxOverride);
+        assertEquals(false, vimrcMarker.win32Override.shouldLink);
+        assertNull(vimrcMarker.win32Override.location);
+        assertEquals(true, vimrcMarker.darwinOverride.shouldLink);
+        assertEquals(Path.of("/Users/testuser/.config/.vimrc"), vimrcMarker.darwinOverride.location);
+
+        DotfileMarkerModel gitconfigMarker = markerModels.get(2);
+        assertEquals(".gitconfig", gitconfigMarker.name);
+        assertEquals(Path.of("/home/testuser/.gitconfig"), gitconfigMarker.location);
+        assertNull(gitconfigMarker.markerFilePath);
+        assertNull(gitconfigMarker.linuxOverride);
+        assertNull(gitconfigMarker.win32Override);
+        assertNull(gitconfigMarker.darwinOverride);
     }
 }

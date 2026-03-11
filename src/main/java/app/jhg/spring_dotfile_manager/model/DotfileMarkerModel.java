@@ -8,6 +8,46 @@ import java.util.Map;
 import org.yaml.snakeyaml.Yaml;
 
 public class DotfileMarkerModel {
+
+    public static class PlatformOverrideModel {
+        
+        public final Platform platform;
+        public final boolean shouldLink;
+        public final Path location;
+
+        private PlatformOverrideModel(Platform platform, boolean shouldLink, Path location) {
+            this.platform = platform;
+            this.shouldLink = shouldLink;
+            this.location = location;
+        }
+
+        public static PlatformOverrideModel parsePlatformRawSubdocument(Platform platform, Object rawSubdocument) {
+            if (!(rawSubdocument instanceof Map<?, ?> rawSubdocumentMap)) {
+                throw new IllegalArgumentException("Invalid marker file contents: expected platform override subdocument to be a mapping");
+            }
+
+            if (!rawSubdocumentMap.containsKey("shouldLink")) {
+                throw new IllegalArgumentException("Invalid marker file contents: platform override subdocument must contain 'shouldLink' key");
+            }
+            if (!(rawSubdocumentMap.get("shouldLink") instanceof Boolean shouldLink)) {
+                throw new IllegalArgumentException("Invalid marker file contents: 'shouldLink' value in platform override subdocument must be a boolean");
+            }
+            if (shouldLink && !rawSubdocumentMap.containsKey("location")) {
+                throw new IllegalArgumentException("Invalid marker file contents: platform override subdocument must contain 'location' key when 'shouldLink' is true");
+            }
+
+            Object rawLocation = rawSubdocumentMap.get("location");
+            Path locationPath = null;
+            if (shouldLink) {
+                if (!(rawLocation instanceof String location) || location.isBlank()) {
+                    throw new IllegalArgumentException("Invalid marker file contents: 'location' value in platform override subdocument must be a non-blank string");
+                }
+                locationPath = Path.of(location);
+            }
+
+            return new PlatformOverrideModel(platform, shouldLink, locationPath);
+        }
+    }
     
     public final String name;
     public final Path location;
