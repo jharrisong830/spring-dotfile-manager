@@ -4,6 +4,13 @@ spring:
   shell:
     interactive:
       enabled: false
+    command:
+      history:
+        enabled: false
+      clear:
+        enabled: false
+      script:
+        enabled: false
 
 spring-dotfile-manager:
   config:
