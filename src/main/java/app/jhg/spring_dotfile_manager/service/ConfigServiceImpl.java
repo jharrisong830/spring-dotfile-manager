@@ -16,8 +16,6 @@ public class ConfigServiceImpl implements ConfigService {
 
     private final FileService fileService;
 
-    private static final String DEFAULT_REPO_PATH = "{HOME}/dotfiles";
-
     public ConfigServiceImpl(
         @Value("${spring-dotfile-manager.config.path}") String configFilePath,
         FileService fileService
@@ -26,11 +24,12 @@ public class ConfigServiceImpl implements ConfigService {
         this.fileService = fileService;
     }
 
-
-    public void initializeConfig() throws FileExistsException, IOException {
-        initializeConfig(DEFAULT_REPO_PATH);
-    }
-
+    /**
+     * Initializes the configuration file with the provided dotfile repository path. If the configuration file already exists, a FileExistsException is thrown. If an I/O error occurs during file operations, an IOException is thrown.
+     * @param dotfileRepoPath The path to the user's dotfile repository to be stored in the configuration file.
+     * @throws FileExistsException if the configuration file already exists.
+     * @throws IOException if an I/O error occurs during file operations.
+     */
     public void initializeConfig(String dotfileRepoPath) throws FileExistsException, IOException {
         SDFMConfigModel config = new SDFMConfigModel(dotfileRepoPath);
         fileService.writeFile(configFilePath, config.getConfigFileContents());

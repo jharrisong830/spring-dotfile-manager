@@ -1,5 +1,12 @@
-{"properties": [{
-  "name": "spring-dotfile-manager.config.path",
-  "type": "java.lang.String",
-  "description": "A description for 'spring-dotfile-manager.config.path'"
-}]}
+{"properties": [
+  {
+    "name": "spring-dotfile-manager.config.path",
+    "type": "java.lang.String",
+    "description": "A description for 'spring-dotfile-manager.config.path'"
+  },
+  {
+    "name": "spring-dotfile-manager.config.default-repo-path",
+    "type": "java.lang.String",
+    "description": "A description for 'spring-dotfile-manager.config.default-repo-path'"
+  }
+]}

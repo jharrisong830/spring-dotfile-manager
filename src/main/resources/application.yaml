@@ -8,3 +8,4 @@ spring:
 spring-dotfile-manager:
   config:
     path: "{HOME}/.config/spring-dotfile-manager/config.yaml"
+    default-repo-path: "{HOME}/dotfiles"
