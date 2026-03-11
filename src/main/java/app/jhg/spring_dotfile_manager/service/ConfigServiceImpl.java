@@ -45,7 +45,7 @@ public class ConfigServiceImpl implements ConfigService {
     public String readConfig() throws IOException {
         String configContent = fileService.readFile(configFilePath);
         SDFMConfigModel config = SDFMConfigModel.fromConfigFileContents(configContent);
-        return config.getDotfileRepoPath();
+        return config.dotfileRepoPath;
     }
 
     /**

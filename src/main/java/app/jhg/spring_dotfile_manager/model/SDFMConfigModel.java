@@ -4,12 +4,9 @@ import java.util.Map;
 
 import org.yaml.snakeyaml.Yaml;
 
-import lombok.Getter;
-
 public class SDFMConfigModel {
     
-    @Getter
-    private String dotfileRepoPath;
+    public final String dotfileRepoPath;
 
     public SDFMConfigModel(String dotfileRepoPath) {
         this.dotfileRepoPath = dotfileRepoPath;

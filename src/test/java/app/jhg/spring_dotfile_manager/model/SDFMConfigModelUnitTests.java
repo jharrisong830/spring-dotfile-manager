@@ -26,7 +26,7 @@ public class SDFMConfigModelUnitTests {
         
         SDFMConfigModel configModel = SDFMConfigModel.fromConfigFileContents(configFileContents);
 
-        assertEquals(repoPath, configModel.getDotfileRepoPath());
+        assertEquals(repoPath, configModel.dotfileRepoPath);
         assertEquals(configFileContents, configModel.getConfigFileContents().trim());
     }
 

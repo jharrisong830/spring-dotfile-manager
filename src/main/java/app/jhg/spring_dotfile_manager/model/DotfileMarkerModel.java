@@ -1,5 +1,79 @@
 package app.jhg.spring_dotfile_manager.model;
 
+import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+
+import org.yaml.snakeyaml.Yaml;
+
 public class DotfileMarkerModel {
-    // TODO
+    
+    public final String name;
+    public final Path location;
+    public final Path markerFilePath;
+
+    public final PlatformOverrideModel linuxOverride;
+    public final PlatformOverrideModel win32Override;
+    public final PlatformOverrideModel darwinOverride;
+
+    private DotfileMarkerModel(
+        String name,
+        Path location,
+        Path markerFilePath,
+        PlatformOverrideModel linuxOverride,
+        PlatformOverrideModel win32Override,
+        PlatformOverrideModel darwinOverride
+    ) {
+        this.name = name;
+        this.location = location;
+        this.markerFilePath = markerFilePath;
+        this.linuxOverride = linuxOverride;
+        this.win32Override = win32Override;
+        this.darwinOverride = darwinOverride;
+    }
+
+
+    public static List<DotfileMarkerModel> fromMarkerFileContents(String markerFileContents) {
+        Yaml yaml = new Yaml();
+        Iterable<Object> markerFileRawDocuments;
+
+        try {
+            markerFileRawDocuments = yaml.loadAll(markerFileContents);
+        } catch (ClassCastException e) {
+            throw new IllegalArgumentException("Invalid marker file contents: expected a YAML sequence of mappings", e);
+        }
+
+        List<DotfileMarkerModel> markerModels = new ArrayList<>();
+        for (Object rawDocument : markerFileRawDocuments) {
+            if (rawDocument != null) { // skip empty documents
+                markerModels.add(parseRawDocumentObject(rawDocument));
+            }
+        }
+        return markerModels;
+    }
+
+    private static DotfileMarkerModel parseRawDocumentObject(Object rawDocument) {
+        if (!(rawDocument instanceof Map<?, ?> rawDocumentMap)) {
+            throw new IllegalArgumentException("Invalid marker file contents: expected a YAML sequence of mappings");
+        }
+
+        if (!rawDocumentMap.containsKey("name") || !rawDocumentMap.containsKey("location")) {
+            throw new IllegalArgumentException("Invalid marker file contents: each document must contain 'name' and 'location' keys");
+        }
+
+        Object rawName = rawDocumentMap.get("name");
+        Object rawLocation = rawDocumentMap.get("location");
+
+        if (!(rawName instanceof String name) || name.isBlank()) {
+            throw new IllegalArgumentException("Invalid marker file contents: 'name' value must be a non-blank string");
+        }
+        if (!(rawLocation instanceof String location) || location.isBlank()) {
+            throw new IllegalArgumentException("Invalid marker file contents: 'location' value must be a non-blank string");
+        }
+
+        // TODO: other fields + platform overrides
+
+        return new DotfileMarkerModel(name, Path.of(location), null, null, null, null);
+    }
 }
