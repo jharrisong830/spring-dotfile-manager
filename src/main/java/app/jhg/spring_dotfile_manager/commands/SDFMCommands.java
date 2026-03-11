@@ -1,6 +1,7 @@
 package app.jhg.spring_dotfile_manager.commands;
 
 import java.io.IOException;
+import java.io.PrintWriter;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.shell.core.command.CommandContext;
@@ -53,17 +54,37 @@ public class SDFMCommands {
         }
 
         configService.initializeConfig(dotfileRepoPath);
-
-        context.outputWriter().println("Wrote configuration file to " + configService.getConfigFilePath());
-        context.outputWriter().println("Using dotfile repository path: '" + formatterService.formatWithHomeDirectory(dotfileRepoPath) + "'");
-        context.outputWriter().flush();
+        printConfig(context.outputWriter(), dotfileRepoPath);
     }
 
     @Command(name = "get-config", description = "Get the current dotfile repository configuration")
     public void getConfig(CommandContext context) throws IOException {
         String dotfileRepoPath = configService.readConfig();
+        printConfig(context.outputWriter(), dotfileRepoPath);
+    }
 
-        context.outputWriter().println("Using dotfile repository path: '" + formatterService.formatWithHomeDirectory(dotfileRepoPath) + "'");
-        context.outputWriter().flush();
+    @Command(name = "set-config", description = "Set the dotfile repository path in the configuration")
+    public void setConfig(
+        @Argument(
+            index = 0,
+            description = "New dotfile repository path"
+        ) String dotfileRepoPath,
+        CommandContext context
+    ) throws Exception {
+        dotfileRepoPath = dotfileRepoPath.trim();
+        if (dotfileRepoPath.isEmpty()) {
+            context.outputWriter().println("No dotfile repository path provided.");
+            context.outputWriter().flush();
+            return;
+        }
+
+        configService.updateConfig(dotfileRepoPath);
+        printConfig(context.outputWriter(), dotfileRepoPath);
+    }
+
+    private void printConfig(PrintWriter outputWriter, String dotfileRepoPath) {
+        outputWriter.println("Configuration at: " + configService.getConfigFilePath());
+        outputWriter.println("Using dotfile repository path: '" + formatterService.formatWithHomeDirectory(dotfileRepoPath) + "'");
+        outputWriter.flush();
     }
 }
