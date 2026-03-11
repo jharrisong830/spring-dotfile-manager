@@ -11,6 +11,8 @@ spring:
         enabled: false
       script:
         enabled: false
+  main:
+    banner-mode: "off"
 
 spring-dotfile-manager:
   config:

@@ -1,8 +1,11 @@
 package app.jhg.spring_dotfile_manager.service;
 
 import java.io.IOException;
+import java.nio.file.Path;
 
 public interface ConfigService {
+
+    public Path getConfigFilePath();
 
     /**
      * Initializes the configuration file with the provided dotfile repository path. If the configuration file already exists, a FileAlreadyExistsException is thrown. If an I/O error occurs during file operations, an IOException is thrown.

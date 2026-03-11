@@ -8,19 +8,22 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import app.jhg.spring_dotfile_manager.model.SDFMConfigModel;
+import lombok.Getter;
 
 @Service
 public class ConfigServiceImpl implements ConfigService {
     
+    @Getter
     private final Path configFilePath;
 
     private final FileService fileService;
 
     public ConfigServiceImpl(
         @Value("${spring-dotfile-manager.config.path}") String configFilePath,
-        FileService fileService
+        FileService fileService,
+        FormatterService formatterService
     ) {
-        this.configFilePath = Path.of(configFilePath.replaceAll("\\{HOME\\}", System.getProperty("user.home")));
+        this.configFilePath = Path.of(formatterService.formatWithHomeDirectory(configFilePath));
         this.fileService = fileService;
     }
 
