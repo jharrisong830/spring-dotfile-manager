@@ -9,7 +9,8 @@ import org.springframework.stereotype.Service;
 @Service
 public class FormatterServiceImpl implements FormatterService {
     
-    private static final Pattern HOME_DIR_REGEX = Pattern.compile("(?:\\{HOME\\})|(?:~)"); // matches "{HOME}" or "~"
+    private static final Pattern HOME_DIR_REGEX = Pattern.compile("\\{HOME\\}"); // matches "{HOME}"
+    private static final Pattern TILDE_REGEX = Pattern.compile("^~"); // matches "~" at the beginning of a string
 
     private final String homeDirectoryString;
 
@@ -20,6 +21,7 @@ public class FormatterServiceImpl implements FormatterService {
 
     @Override
     public String formatWithHomeDirectory(String original) {
+        original = TILDE_REGEX.matcher(original).replaceFirst(Matcher.quoteReplacement(homeDirectoryString));
         return HOME_DIR_REGEX.matcher(original).replaceAll(Matcher.quoteReplacement(homeDirectoryString));
     }
 }

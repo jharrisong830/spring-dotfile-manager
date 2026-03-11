@@ -39,9 +39,29 @@ public class FormatterServiceUnitTests {
     }
 
     @Test
+    public void testFormatWithHomeDirectory_tildeNotAtStart() {
+        String input = "/path/to/~/dotfiles";
+        String expectedOutput = "/path/to/~/dotfiles";
+
+        String actualOutput = formatterService.formatWithHomeDirectory(input);
+
+        assertEquals(expectedOutput, actualOutput);
+    }
+
+    @Test
+    public void testFormatWithHomeDirectory_tildeAndHome() {
+        String input = "~{HOME}/dotfiles";
+        String expectedOutput = "/home/user/home/user/dotfiles";
+
+        String actualOutput = formatterService.formatWithHomeDirectory(input);
+
+        assertEquals(expectedOutput, actualOutput);
+    }
+
+    @Test
     public void testFormatWithHomeDirectory_multiplePlaceholders() {
         String input = "{HOME}/dotfiles:~/.config:{HOME}/.local";
-        String expectedOutput = "/home/user/dotfiles:/home/user/.config:/home/user/.local";
+        String expectedOutput = "/home/user/dotfiles:~/.config:/home/user/.local";
 
         String actualOutput = formatterService.formatWithHomeDirectory(input);
 
