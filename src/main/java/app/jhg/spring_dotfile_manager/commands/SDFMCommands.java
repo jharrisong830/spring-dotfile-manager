@@ -31,7 +31,7 @@ public class SDFMCommands {
     }
 
     
-    @Command(name = "init", description = "Initialize the configuration for Spring Dotfile Manager")
+    @Command(name = "init", description = "Initialize the configuration for Spring Dotfile Manager", exitStatusExceptionMapper = "exitStatusExceptionMapper")
     public void init(
         @Argument(
             index = 0, 
@@ -57,13 +57,13 @@ public class SDFMCommands {
         printConfig(context.outputWriter(), dotfileRepoPath);
     }
 
-    @Command(name = "get-config", description = "Get the current dotfile repository configuration")
+    @Command(name = "get-config", description = "Get the current dotfile repository configuration", exitStatusExceptionMapper = "exitStatusExceptionMapper")
     public void getConfig(CommandContext context) throws IOException {
         String dotfileRepoPath = configService.readConfig();
         printConfig(context.outputWriter(), dotfileRepoPath);
     }
 
-    @Command(name = "set-config", description = "Set the dotfile repository path in the configuration")
+    @Command(name = "set-config", description = "Set the dotfile repository path in the configuration", exitStatusExceptionMapper = "exitStatusExceptionMapper")
     public void setConfig(
         @Argument(
             index = 0,
@@ -72,10 +72,8 @@ public class SDFMCommands {
         CommandContext context
     ) throws Exception {
         dotfileRepoPath = dotfileRepoPath.trim();
-        if (dotfileRepoPath.isEmpty()) {
-            context.outputWriter().println("No dotfile repository path provided.");
-            context.outputWriter().flush();
-            return;
+        if (dotfileRepoPath.isEmpty()) {            
+            throw new IllegalArgumentException("Dotfile repository path cannot be empty. Please provide a valid path.");
         }
 
         configService.updateConfig(dotfileRepoPath);

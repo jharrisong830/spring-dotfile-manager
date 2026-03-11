@@ -42,4 +42,12 @@ public class SDFMConfigurationUnitTests {
         assertEquals(1, result.code());
         assertTrue(result.description().contains("something unexpected"));
     }
+
+    @Test
+    public void testExitStatusExceptionMapper_illegalArgumentException() {
+        ExitStatus result = mapper.apply(new IllegalArgumentException("invalid argument"));
+
+        assertEquals(1, result.code());
+        assertTrue(result.description().contains("invalid argument"));
+    }
 }
