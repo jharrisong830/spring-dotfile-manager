@@ -14,7 +14,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.shell.core.InputReader;
 import org.springframework.shell.core.command.CommandContext;
 
 import app.jhg.spring_dotfile_manager.service.ConfigService;
@@ -31,9 +30,6 @@ public class SDFMCommandsUnitTests {
 
     @Mock
     private CommandContext context;
-
-    @Mock
-    private InputReader inputReader;
 
     @Mock
     private PrintWriter outputWriter;
@@ -58,23 +54,9 @@ public class SDFMCommandsUnitTests {
     }
 
     @Test
-    public void testInit_noPathProvided_userEntersPath() throws Exception {
-        when(context.inputReader()).thenReturn(inputReader);
-        when(context.outputWriter()).thenReturn(outputWriter);
-        doNothing().when(outputWriter).println(anyString());
-        when(inputReader.readInput(any())).thenReturn("~/entered-dotfiles");
-
-        commands.init("", context);
-
-        verify(configService).initializeConfig("~/entered-dotfiles");
-    }
-
-    @Test
     public void testInit_noPathProvided_userEntersNothing_usesDefault() throws Exception {
-        when(context.inputReader()).thenReturn(inputReader);
         when(context.outputWriter()).thenReturn(outputWriter);
         doNothing().when(outputWriter).println(anyString());
-        when(inputReader.readInput(any())).thenReturn("");
 
         commands.init("", context);
 
@@ -82,23 +64,9 @@ public class SDFMCommandsUnitTests {
     }
 
     @Test
-    public void testInit_whitespaceOnlyPathProvided_promptsUser() throws Exception {
-        when(context.inputReader()).thenReturn(inputReader);
-        when(context.outputWriter()).thenReturn(outputWriter);
-        doNothing().when(outputWriter).println(anyString());
-        when(inputReader.readInput(any())).thenReturn("~/entered-dotfiles");
-
-        commands.init("   ", context);
-
-        verify(configService).initializeConfig("~/entered-dotfiles");
-    }
-
-    @Test
     public void testInit_noPathProvided_userEntersWhitespace_usesDefault() throws Exception {
-        when(context.inputReader()).thenReturn(inputReader);
         when(context.outputWriter()).thenReturn(outputWriter);
         doNothing().when(outputWriter).println(anyString());
-        when(inputReader.readInput(any())).thenReturn("   ");
 
         commands.init("", context);
 

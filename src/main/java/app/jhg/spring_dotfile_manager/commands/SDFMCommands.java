@@ -41,7 +41,9 @@ public class SDFMCommands {
     ) throws Exception {
         dotfileRepoPath = dotfileRepoPath.trim();
         if (dotfileRepoPath.isEmpty()) {
-            dotfileRepoPath = context.inputReader().readInput("Enter path to your dotfile repository (none = accept default)").trim();
+            context.outputWriter().println("No dotfile repository path provided.");
+            context.outputWriter().println("Default repository path is: '" + formatterService.formatWithHomeDirectory(defaultRepoPath) + "'");
+            context.outputWriter().println("Delete the file and re-run with a custom path, or run set-config to change the path later.");
         }
 
         if (dotfileRepoPath.isEmpty()) {
