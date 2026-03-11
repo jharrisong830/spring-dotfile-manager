@@ -1,6 +1,9 @@
 spring:
   application:
     name: spring-dotfile-manager
+  shell:
+    interactive:
+      enabled: false
 
 spring-dotfile-manager:
   config:

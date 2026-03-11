@@ -10,4 +10,6 @@ public class SDFMCommands {
     public void init() {
         // TODO: initialize a config file with user input, default otherwise
     }
+
+    
 }
