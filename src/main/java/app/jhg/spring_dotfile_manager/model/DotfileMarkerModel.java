@@ -86,13 +86,13 @@ public class DotfileMarkerModel {
         List<DotfileMarkerModel> markerModels = new ArrayList<>();
         for (Object rawDocument : markerFileRawDocuments) {
             if (rawDocument != null) { // skip empty documents
-                markerModels.add(parseRawDocumentObject(markerFilePath, rawDocument));
+                markerModels.add(parseRawDocument(markerFilePath, rawDocument));
             }
         }
         return markerModels;
     }
 
-    private static DotfileMarkerModel parseRawDocumentObject(Path markerFilePath, Object rawDocument) {
+    private static DotfileMarkerModel parseRawDocument(Path markerFilePath, Object rawDocument) {
         if (!(rawDocument instanceof Map<?, ?> rawDocumentMap)) {
             throw new IllegalArgumentException("Invalid marker file contents: expected a YAML sequence of mappings");
         }
