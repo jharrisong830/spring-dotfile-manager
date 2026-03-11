@@ -4,8 +4,11 @@ import java.util.Map;
 
 import org.yaml.snakeyaml.Yaml;
 
+import lombok.Getter;
+
 public class SDFMConfigModel {
     
+    @Getter
     private String dotfileRepoPath;
 
     public SDFMConfigModel(String dotfileRepoPath) {
@@ -16,5 +19,17 @@ public class SDFMConfigModel {
         Yaml yaml = new Yaml();
         Map<String, String> configFileMap = Map.of("dotfile-repo-path", dotfileRepoPath);
         return yaml.dumpAsMap(configFileMap);
+    }
+
+    public static SDFMConfigModel fromConfigFileContents(String configFileContents) {
+        Yaml yaml = new Yaml();
+        Map<String, String> configFileMap = yaml.load(configFileContents);
+
+        if (configFileMap == null || !configFileMap.containsKey("dotfile-repo-path")) {
+            throw new IllegalArgumentException("Invalid configuration file contents: missing 'dotfile-repo-path' key");
+        }
+        
+        String dotfileRepoPath = configFileMap.get("dotfile-repo-path");
+        return new SDFMConfigModel(dotfileRepoPath);
     }
 }
