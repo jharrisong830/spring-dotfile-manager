@@ -14,7 +14,7 @@ public class SDFMConfiguration {
     @Bean
     public ExitStatusExceptionMapper exitStatusExceptionMapper() {
         return e -> {
-            if (e instanceof FileAlreadyExistsException) {
+            if (e instanceof FileAlreadyExistsException) { // check first bc subclass of IOException
                 return new ExitStatus(1, "A file operation couldn't be completed because the specified file already exists: " + e.getMessage());
             } else if (e instanceof IOException) {
                 return new ExitStatus(1, "An I/O error occurred during a file operation: " + e.getMessage());

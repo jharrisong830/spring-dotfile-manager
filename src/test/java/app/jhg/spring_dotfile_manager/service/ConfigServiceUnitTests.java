@@ -23,7 +23,7 @@ public class ConfigServiceUnitTests {
     @Mock
     private FileService fileService;
 
-    private ConfigServiceImpl configService;
+    private ConfigService configService;
 
     private static final String CONFIG_PATH = "/tmp/test-sdfm/config.yaml";
     private static final String REPO_PATH = "~/dotfiles";
@@ -83,6 +83,12 @@ public class ConfigServiceUnitTests {
     @Test
     public void testReadConfig_invalidConfigFormat() throws IOException {
         when(fileService.readFile(any(Path.class))).thenReturn("invalid config content");
+        assertThrows(IllegalArgumentException.class, () -> configService.readConfig());
+    }
+
+    @Test
+    public void testReadConfig_missingKey() throws IOException {
+        when(fileService.readFile(any(Path.class))).thenReturn("other-key: some-value");
         assertThrows(IllegalArgumentException.class, () -> configService.readConfig());
     }
 
