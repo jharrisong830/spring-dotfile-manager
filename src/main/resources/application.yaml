@@ -1,3 +1,7 @@
 spring:
   application:
     name: spring-dotfile-manager
+
+spring-dotfile-manager:
+  config:
+    path: "{HOME}/.config/spring-dotfile-manager/config.yaml"
