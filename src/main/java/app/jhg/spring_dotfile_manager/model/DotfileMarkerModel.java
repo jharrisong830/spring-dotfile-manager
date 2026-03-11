@@ -6,22 +6,21 @@ import java.util.List;
 import java.util.Map;
 
 import org.yaml.snakeyaml.Yaml;
+import org.yaml.snakeyaml.error.YAMLException;
 
 public class DotfileMarkerModel {
 
     public static class PlatformOverrideModel {
-        
-        public final Platform platform;
+
         public final boolean shouldLink;
         public final Path location;
 
-        private PlatformOverrideModel(Platform platform, boolean shouldLink, Path location) {
-            this.platform = platform;
+        private PlatformOverrideModel(boolean shouldLink, Path location) {
             this.shouldLink = shouldLink;
             this.location = location;
         }
 
-        public static PlatformOverrideModel parsePlatformRawSubdocument(Platform platform, Object rawSubdocument) {
+        public static PlatformOverrideModel parsePlatformRawSubdocument(Object rawSubdocument) {
             if (!(rawSubdocument instanceof Map<?, ?> rawSubdocumentMap)) {
                 throw new IllegalArgumentException("Invalid marker file contents: expected platform override subdocument to be a mapping");
             }
@@ -37,7 +36,7 @@ public class DotfileMarkerModel {
             }
 
             Object rawLocation = rawSubdocumentMap.get("location");
-            Path locationPath = null;
+            Path locationPath = null; // will always be null if shouldLink is false
             if (shouldLink) {
                 if (!(rawLocation instanceof String location) || location.isBlank()) {
                     throw new IllegalArgumentException("Invalid marker file contents: 'location' value in platform override subdocument must be a non-blank string");
@@ -45,7 +44,7 @@ public class DotfileMarkerModel {
                 locationPath = Path.of(location);
             }
 
-            return new PlatformOverrideModel(platform, shouldLink, locationPath);
+            return new PlatformOverrideModel(shouldLink, locationPath);
         }
     }
     
@@ -80,8 +79,8 @@ public class DotfileMarkerModel {
 
         try {
             markerFileRawDocuments = yaml.loadAll(markerFileContents);
-        } catch (ClassCastException e) {
-            throw new IllegalArgumentException("Invalid marker file contents: expected a YAML sequence of mappings", e);
+        } catch (YAMLException e) {
+            throw new IllegalArgumentException("Invalid marker file contents: could not parse YAML", e);
         }
 
         List<DotfileMarkerModel> markerModels = new ArrayList<>();
@@ -117,15 +116,15 @@ public class DotfileMarkerModel {
         PlatformOverrideModel darwinOverride = null;
 
         if (rawDocumentMap.containsKey("linux")) {
-            linuxOverride = PlatformOverrideModel.parsePlatformRawSubdocument(Platform.LINUX, rawDocumentMap.get("linux"));
+            linuxOverride = PlatformOverrideModel.parsePlatformRawSubdocument(rawDocumentMap.get("linux"));
         }
 
         if (rawDocumentMap.containsKey("win32")) {
-            win32Override = PlatformOverrideModel.parsePlatformRawSubdocument(Platform.WIN32, rawDocumentMap.get("win32"));
+            win32Override = PlatformOverrideModel.parsePlatformRawSubdocument(rawDocumentMap.get("win32"));
         }
 
         if (rawDocumentMap.containsKey("darwin")) {
-            darwinOverride = PlatformOverrideModel.parsePlatformRawSubdocument(Platform.DARWIN, rawDocumentMap.get("darwin"));
+            darwinOverride = PlatformOverrideModel.parsePlatformRawSubdocument(rawDocumentMap.get("darwin"));
         }
 
         return new DotfileMarkerModel(name, Path.of(location), markerFilePath, linuxOverride, win32Override, darwinOverride);
