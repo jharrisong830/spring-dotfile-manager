@@ -9,8 +9,10 @@ public class SDFMConfigModel {
     }
 
     public String getConfigFileContents() {
-        return String.format("""
-            dotfile-repo-path: "%s"
-            """, this.dotfileRepoPath);
+        return String.format(
+"""
+dotfile-repo-path: "%s"
+""", 
+            this.dotfileRepoPath);
     }
 }
