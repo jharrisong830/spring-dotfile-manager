@@ -8,9 +8,13 @@ public class PlatformOverrideModel {
     public final boolean shouldLink;
     public final Path location;
 
-    public PlatformOverrideModel(Platform platform, boolean shouldLink, Path location) {
+    private PlatformOverrideModel(Platform platform, boolean shouldLink, Path location) {
         this.platform = platform;
         this.shouldLink = shouldLink;
         this.location = location;
+    }
+
+    public static PlatformOverrideModel parsePlatformRawSubdocument(Platform platform, Object rawSubdocument) {
+        return null;
     }
 }

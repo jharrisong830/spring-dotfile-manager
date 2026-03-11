@@ -34,7 +34,7 @@ public class DotfileMarkerModel {
     }
 
 
-    public static List<DotfileMarkerModel> fromMarkerFileContents(String markerFileContents) {
+    public static List<DotfileMarkerModel> fromMarkerFileContents(Path markerFilePath, String markerFileContents) {
         Yaml yaml = new Yaml();
         Iterable<Object> markerFileRawDocuments;
 
@@ -47,13 +47,13 @@ public class DotfileMarkerModel {
         List<DotfileMarkerModel> markerModels = new ArrayList<>();
         for (Object rawDocument : markerFileRawDocuments) {
             if (rawDocument != null) { // skip empty documents
-                markerModels.add(parseRawDocumentObject(rawDocument));
+                markerModels.add(parseRawDocumentObject(markerFilePath, rawDocument));
             }
         }
         return markerModels;
     }
 
-    private static DotfileMarkerModel parseRawDocumentObject(Object rawDocument) {
+    private static DotfileMarkerModel parseRawDocumentObject(Path markerFilePath, Object rawDocument) {
         if (!(rawDocument instanceof Map<?, ?> rawDocumentMap)) {
             throw new IllegalArgumentException("Invalid marker file contents: expected a YAML sequence of mappings");
         }
@@ -72,8 +72,22 @@ public class DotfileMarkerModel {
             throw new IllegalArgumentException("Invalid marker file contents: 'location' value must be a non-blank string");
         }
 
-        // TODO: other fields + platform overrides
+        PlatformOverrideModel linuxOverride = null;
+        PlatformOverrideModel win32Override = null;
+        PlatformOverrideModel darwinOverride = null;
 
-        return new DotfileMarkerModel(name, Path.of(location), null, null, null, null);
+        if (rawDocumentMap.containsKey("linux")) {
+            linuxOverride = PlatformOverrideModel.parsePlatformRawSubdocument(Platform.LINUX, rawDocumentMap.get("linux"));
+        }
+
+        if (rawDocumentMap.containsKey("win32")) {
+            win32Override = PlatformOverrideModel.parsePlatformRawSubdocument(Platform.WIN32, rawDocumentMap.get("win32"));
+        }
+
+        if (rawDocumentMap.containsKey("darwin")) {
+            darwinOverride = PlatformOverrideModel.parsePlatformRawSubdocument(Platform.DARWIN, rawDocumentMap.get("darwin"));
+        }
+
+        return new DotfileMarkerModel(name, Path.of(location), markerFilePath, linuxOverride, win32Override, darwinOverride);
     }
 }

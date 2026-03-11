@@ -17,7 +17,7 @@ name: .zshrc
 location: /home/testuser/.zshrc
 """;
 
-        List<DotfileMarkerModel> markerModels = DotfileMarkerModel.fromMarkerFileContents(markerFileContents);
+        List<DotfileMarkerModel> markerModels = DotfileMarkerModel.fromMarkerFileContents(null, markerFileContents);
         assertEquals(1, markerModels.size());
 
         DotfileMarkerModel marker = markerModels.get(0);
@@ -37,7 +37,7 @@ name: .vimrc
 location: /home/testuser/.vimrc
 """;
         
-        List<DotfileMarkerModel> markerModels = DotfileMarkerModel.fromMarkerFileContents(markerFileContents);
+        List<DotfileMarkerModel> markerModels = DotfileMarkerModel.fromMarkerFileContents(null, markerFileContents);
         assertEquals(2, markerModels.size());
 
         DotfileMarkerModel zshrcMarker = markerModels.get(0);
@@ -60,7 +60,7 @@ name: .vimrc
 location: /home/testuser/.vimrc
 """;
 
-        List<DotfileMarkerModel> markerModels = DotfileMarkerModel.fromMarkerFileContents(markerFileContents);
+        List<DotfileMarkerModel> markerModels = DotfileMarkerModel.fromMarkerFileContents(null, markerFileContents);
         assertEquals(2, markerModels.size());
 
         DotfileMarkerModel zshrcMarker = markerModels.get(0);
@@ -85,7 +85,7 @@ location: /home/testuser/.vimrc
 ---                
 """;
 
-        List<DotfileMarkerModel> markerModels = DotfileMarkerModel.fromMarkerFileContents(markerFileContents);
+        List<DotfileMarkerModel> markerModels = DotfileMarkerModel.fromMarkerFileContents(null, markerFileContents);
         assertEquals(2, markerModels.size());
 
         DotfileMarkerModel zshrcMarker = markerModels.get(0);
