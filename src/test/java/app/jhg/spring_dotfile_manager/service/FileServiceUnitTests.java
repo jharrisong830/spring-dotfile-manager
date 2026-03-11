@@ -21,7 +21,7 @@ public class FileServiceUnitTests {
     @Test
     public void testExists_fileExists() throws IOException {
         Path filePath = tempDir.resolve("testFile.txt");
-        filePath.toFile().createNewFile();
+        Files.createFile(filePath);
 
         assertTrue(fileService.exists(filePath));
     }
@@ -36,7 +36,7 @@ public class FileServiceUnitTests {
     @Test
     public void testExists_directoryExists() throws IOException {
         Path dirPath = tempDir.resolve("testDir");
-        dirPath.toFile().mkdir();
+        Files.createDirectory(dirPath);
 
         assertTrue(fileService.exists(dirPath));
     }
@@ -45,7 +45,7 @@ public class FileServiceUnitTests {
     @Test
     public void testIsDirectory_isDirectory() throws IOException {
         Path dirPath = tempDir.resolve("testDir");
-        dirPath.toFile().mkdir();
+        Files.createDirectory(dirPath);
 
         assertTrue(fileService.isDirectory(dirPath));
     }
@@ -53,7 +53,7 @@ public class FileServiceUnitTests {
     @Test
     public void testIsDirectory_isNotDirectory() throws IOException {
         Path filePath = tempDir.resolve("testFile.txt");
-        filePath.toFile().createNewFile();
+        Files.createFile(filePath);
 
         assertFalse(fileService.isDirectory(filePath));
     }
@@ -79,7 +79,7 @@ public class FileServiceUnitTests {
     @Test
     public void testIsSymbolicLink_isNotSymbolicLink() throws IOException {
         Path filePath = tempDir.resolve("testFile.txt");
-        filePath.toFile().createNewFile();
+        Files.createFile(filePath);
 
         assertFalse(fileService.isSymbolicLink(filePath));
     }
@@ -124,13 +124,21 @@ public class FileServiceUnitTests {
         Path filePath = tempDir.resolve("testFile.txt");
 
         assertDoesNotThrow(() -> fileService.writeFile(filePath, "Test content"));
-        assertTrue(Files.exists(filePath)); // file should be written afterwards
+        assertTrue(Files.exists(filePath));
+        assertDoesNotThrow(() -> assertEquals("Test content", Files.readString(filePath)));
+    }
+
+    @Test
+    public void testWriteFile_parentDirectoryDoesNotExist() {
+        Path filePath = tempDir.resolve("nonExistentDir/testFile.txt");
+
+        assertThrows(IOException.class, () -> fileService.writeFile(filePath, "Test content"));
     }
 
     @Test
     public void testWriteFile_fileAlreadyExists() throws IOException {
         Path filePath = tempDir.resolve("testFile.txt");
-        filePath.toFile().createNewFile();
+        Files.createFile(filePath);
 
         assertThrows(FileExistsException.class, () -> fileService.writeFile(filePath, "Test content"));
     }
@@ -155,7 +163,7 @@ public class FileServiceUnitTests {
     @Test
     public void testReadFile_isDirectory() throws IOException {
         Path dirPath = tempDir.resolve("testDir");
-        dirPath.toFile().mkdir();
+        Files.createDirectory(dirPath);
 
         assertThrows(IOException.class, () -> fileService.readFile(dirPath));
     }

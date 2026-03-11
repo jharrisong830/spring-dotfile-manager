@@ -8,6 +8,7 @@ import static org.mockito.Mockito.*;
 import java.io.IOException;
 import java.nio.file.Path;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
@@ -27,7 +28,7 @@ public class ConfigServiceUnitTests {
     private static final String CONFIG_PATH = "/tmp/test-sdfm/config.yaml";
     private static final String REPO_PATH = "~/dotfiles";
 
-    @org.junit.jupiter.api.BeforeEach
+    @BeforeEach
     void setUp() {
         configService = new ConfigServiceImpl(CONFIG_PATH, fileService);
     }
@@ -37,7 +38,7 @@ public class ConfigServiceUnitTests {
         assertDoesNotThrow(() -> configService.initializeConfig(REPO_PATH));
 
         verify(fileService).createDirectories(eq(Path.of(CONFIG_PATH).getParent()));
-        verify(fileService).writeFile(any(Path.class), eq(new SDFMConfigModel(REPO_PATH).getConfigFileContents()));
+        verify(fileService).writeFile(eq(Path.of(CONFIG_PATH)), eq(new SDFMConfigModel(REPO_PATH).getConfigFileContents()));
     }
 
     @Test

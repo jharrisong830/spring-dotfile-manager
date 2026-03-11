@@ -30,6 +30,7 @@ public class ConfigServiceImpl implements ConfigService {
      * @throws FileExistsException if the configuration file already exists.
      * @throws IOException if an I/O error occurs during file operations.
      */
+    @Override
     public void initializeConfig(String dotfileRepoPath) throws FileExistsException, IOException {
         fileService.createDirectories(configFilePath.getParent());
         SDFMConfigModel config = new SDFMConfigModel(dotfileRepoPath);

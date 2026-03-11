@@ -16,6 +16,7 @@ public class FileServiceImpl implements FileService {
      * @param path the path to check
      * @return true if the path exists, false otherwise
      */
+    @Override
     public boolean exists(Path path) {
         return Files.exists(path);
     }
@@ -25,6 +26,7 @@ public class FileServiceImpl implements FileService {
      * @param path the path to check
      * @return true if the path is a directory, false otherwise
      */
+    @Override
     public boolean isDirectory(Path path) {
         return Files.isDirectory(path);
     }
@@ -34,6 +36,7 @@ public class FileServiceImpl implements FileService {
      * @param path the path to check
      * @return true if the path is a symbolic link, false otherwise
      */
+    @Override
     public boolean isSymbolicLink(Path path) {
         return Files.isSymbolicLink(path);
     }
@@ -43,6 +46,7 @@ public class FileServiceImpl implements FileService {
      * @param path the path of the directory to create
      * @throws IOException if an I/O error occurs creating the directory
      */
+    @Override
     public void createDirectories(Path path) throws IOException {
         Files.createDirectories(path);
     }
@@ -54,9 +58,10 @@ public class FileServiceImpl implements FileService {
      * @throws FileExistsException if a file already exists at the specified path
      * @throws IOException if an I/O error occurs writing to or creating the file
      */
+    @Override
     public void writeFile(Path path, String content) throws FileExistsException, IOException {
         if (exists(path)) {
-            throw new FileExistsException("File already exists at path '" + path.toString() + "'");
+            throw new FileExistsException("File already exists at path '" + path + "'");
         }
 
         Files.writeString(path, content);
@@ -68,6 +73,7 @@ public class FileServiceImpl implements FileService {
      * @return the content of the file as a string
      * @throws IOException if an I/O error occurs reading from the file
      */
+    @Override
     public String readFile(Path path) throws IOException {
         return Files.readString(path);
     }

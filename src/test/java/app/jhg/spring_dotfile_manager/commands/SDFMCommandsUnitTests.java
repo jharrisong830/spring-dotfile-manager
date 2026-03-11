@@ -66,6 +66,26 @@ public class SDFMCommandsUnitTests {
     }
 
     @Test
+    public void testInit_whitespaceOnlyPathProvided_promptsUser() throws Exception {
+        when(context.inputReader()).thenReturn(inputReader);
+        when(inputReader.readInput(any())).thenReturn("~/entered-dotfiles");
+
+        commands.init("   ", context);
+
+        verify(configService).initializeConfig("~/entered-dotfiles");
+    }
+
+    @Test
+    public void testInit_noPathProvided_userEntersWhitespace_usesDefault() throws Exception {
+        when(context.inputReader()).thenReturn(inputReader);
+        when(inputReader.readInput(any())).thenReturn("   ");
+
+        commands.init("", context);
+
+        verify(configService).initializeConfig(DEFAULT_REPO_PATH);
+    }
+
+    @Test
     public void testInit_fileExistsException_propagates() throws Exception {
         doThrow(new FileExistsException("already exists"))
             .when(configService).initializeConfig(any());
