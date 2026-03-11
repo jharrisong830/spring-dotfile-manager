@@ -23,7 +23,13 @@ public class SDFMConfigModel {
 
     public static SDFMConfigModel fromConfigFileContents(String configFileContents) {
         Yaml yaml = new Yaml();
-        Map<String, String> configFileMap = yaml.load(configFileContents);
+        Map<String, String> configFileMap;
+        
+        try {
+            configFileMap = yaml.load(configFileContents);
+        } catch (ClassCastException e) {
+            throw new IllegalArgumentException("Invalid configuration file contents: expected a YAML mapping", e);
+        }
 
         if (configFileMap == null || !configFileMap.containsKey("dotfile-repo-path")) {
             throw new IllegalArgumentException("Invalid configuration file contents: missing 'dotfile-repo-path' key");

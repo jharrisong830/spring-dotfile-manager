@@ -3,13 +3,12 @@ package app.jhg.spring_dotfile_manager.commands;
 import static org.junit.jupiter.api.Assertions.*;
 
 import java.io.IOException;
+import java.nio.file.FileAlreadyExistsException;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.shell.core.command.ExitStatus;
 import org.springframework.shell.core.command.exit.ExitStatusExceptionMapper;
-
-import app.jhg.spring_dotfile_manager.exception.FileExistsException;
 
 public class SDFMConfigurationUnitTests {
 
@@ -21,8 +20,8 @@ public class SDFMConfigurationUnitTests {
     }
 
     @Test
-    public void testExitStatusExceptionMapper_fileExistsException() {
-        ExitStatus result = mapper.apply(new FileExistsException("config.yaml"));
+    public void testExitStatusExceptionMapper_fileAlreadyExistsException() {
+        ExitStatus result = mapper.apply(new FileAlreadyExistsException("config.yaml"));
 
         assertEquals(1, result.code());
         assertTrue(result.description().contains("config.yaml"));

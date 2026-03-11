@@ -3,13 +3,12 @@ package app.jhg.spring_dotfile_manager.service;
 import static org.junit.jupiter.api.Assertions.*;
 
 import java.io.IOException;
+import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
-
-import app.jhg.spring_dotfile_manager.exception.FileExistsException;
 
 public class FileServiceUnitTests {
 
@@ -140,7 +139,7 @@ public class FileServiceUnitTests {
         Path filePath = tempDir.resolve("testFile.txt");
         Files.createFile(filePath);
 
-        assertThrows(FileExistsException.class, () -> fileService.writeFile(filePath, "Test content"));
+        assertThrows(FileAlreadyExistsException.class, () -> fileService.writeFile(filePath, "Test content"));
     }
 
 

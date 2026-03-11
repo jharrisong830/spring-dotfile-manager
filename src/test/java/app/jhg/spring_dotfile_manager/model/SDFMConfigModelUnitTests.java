@@ -51,4 +51,10 @@ invalid-key: /home/user/dotfiles
         String configFileContents = "";
         assertThrows(IllegalArgumentException.class, () -> SDFMConfigModel.fromConfigFileContents(configFileContents));
     }
+
+    @Test
+    public void testFromConfigFileContents_nonMapValue() {
+        String configFileContents = "not-a-map";
+        assertThrows(IllegalArgumentException.class, () -> SDFMConfigModel.fromConfigFileContents(configFileContents));
+    }
 }

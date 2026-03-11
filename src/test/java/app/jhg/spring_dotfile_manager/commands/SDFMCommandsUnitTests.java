@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 import java.io.IOException;
+import java.nio.file.FileAlreadyExistsException;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -13,7 +14,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.shell.core.InputReader;
 import org.springframework.shell.core.command.CommandContext;
 
-import app.jhg.spring_dotfile_manager.exception.FileExistsException;
 import app.jhg.spring_dotfile_manager.service.ConfigService;
 
 @ExtendWith(MockitoExtension.class)
@@ -86,11 +86,11 @@ public class SDFMCommandsUnitTests {
     }
 
     @Test
-    public void testInit_fileExistsException_propagates() throws Exception {
-        doThrow(new FileExistsException("already exists"))
+    public void testInit_fileAlreadyExistsException_propagates() throws Exception {
+        doThrow(new FileAlreadyExistsException("already exists"))
             .when(configService).initializeConfig(any());
 
-        assertThrows(FileExistsException.class, () -> commands.init("~/my-dotfiles", context));
+        assertThrows(FileAlreadyExistsException.class, () -> commands.init("~/my-dotfiles", context));
     }
 
     @Test

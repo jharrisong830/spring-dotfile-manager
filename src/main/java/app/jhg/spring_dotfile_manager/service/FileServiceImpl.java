@@ -1,12 +1,11 @@
 package app.jhg.spring_dotfile_manager.service;
 
 import java.io.IOException;
+import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
 import org.springframework.stereotype.Service;
-
-import app.jhg.spring_dotfile_manager.exception.FileExistsException;
 
 @Service
 public class FileServiceImpl implements FileService {
@@ -52,18 +51,28 @@ public class FileServiceImpl implements FileService {
     }
 
     /**
-     * writes the given content to a file at the specified path. If a file already exists at the path, a FileExistsException is thrown.
+     * writes the given content to a file at the specified path. If a file already exists at the path, a FileAlreadyExistsException is thrown.
      * @param path the path to write the file to
      * @param content the content to write to the file
-     * @throws FileExistsException if a file already exists at the specified path
      * @throws IOException if an I/O error occurs writing to or creating the file
      */
     @Override
-    public void writeFile(Path path, String content) throws FileExistsException, IOException {
+    public void writeFile(Path path, String content) throws IOException {
         if (exists(path)) {
-            throw new FileExistsException("File already exists at path '" + path + "'");
+            throw new FileAlreadyExistsException("File already exists at path '" + path + "'");
         }
 
+        overwriteFile(path, content);
+    }
+
+    /**
+     * overwrites the file at the given path with the provided content. If no file exists at the path, a new file will be created.
+     * @param path the path to write the file to
+     * @param content the content to write to the file
+     * @throws IOException if an I/O error occurs writing to or creating the file
+     */
+    @Override
+    public void overwriteFile(Path path, String content) throws IOException {
         Files.writeString(path, content);
     }
 
