@@ -31,6 +31,7 @@ public class ConfigServiceImpl implements ConfigService {
      * @throws IOException if an I/O error occurs during file operations.
      */
     public void initializeConfig(String dotfileRepoPath) throws FileExistsException, IOException {
+        fileService.createDirectories(configFilePath.getParent());
         SDFMConfigModel config = new SDFMConfigModel(dotfileRepoPath);
         fileService.writeFile(configFilePath, config.getConfigFileContents());
     }

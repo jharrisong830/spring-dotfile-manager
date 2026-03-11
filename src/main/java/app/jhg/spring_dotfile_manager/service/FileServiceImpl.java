@@ -39,6 +39,15 @@ public class FileServiceImpl implements FileService {
     }
 
     /**
+     * creates the directory at the given path, including any missing parent directories
+     * @param path the path of the directory to create
+     * @throws IOException if an I/O error occurs creating the directory
+     */
+    public void createDirectories(Path path) throws IOException {
+        Files.createDirectories(path);
+    }
+
+    /**
      * writes the given content to a file at the specified path. If a file already exists at the path, a FileExistsException is thrown.
      * @param path the path to write the file to
      * @param content the content to write to the file

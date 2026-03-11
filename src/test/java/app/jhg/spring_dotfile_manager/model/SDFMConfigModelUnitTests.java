@@ -11,9 +11,11 @@ public class SDFMConfigModelUnitTests {
         String repoPath = "/home/user/dotfiles";
         SDFMConfigModel configModel = new SDFMConfigModel(repoPath);
 
-        String expectedContents = """
-            dotfile-repo-path: "%s"
-            """.formatted(repoPath);
+        String expectedContents = 
+"""
+dotfile-repo-path: "%s"
+"""
+            .formatted(repoPath);
 
         assertEquals(expectedContents, configModel.getConfigFileContents());
     }

@@ -93,6 +93,33 @@ public class FileServiceUnitTests {
 
 
     @Test
+    public void testCreateDirectories_directoryDoesNotExist() {
+        Path dirPath = tempDir.resolve("newDir");
+
+        assertDoesNotThrow(() -> fileService.createDirectories(dirPath));
+        assertTrue(Files.exists(dirPath));
+        assertTrue(Files.isDirectory(dirPath));
+    }
+
+    @Test
+    public void testCreateDirectories_directoryAlreadyExists() throws IOException {
+        Path dirPath = tempDir.resolve("existingDir");
+        Files.createDirectory(dirPath);
+
+        assertDoesNotThrow(() -> fileService.createDirectories(dirPath));
+    }
+
+    @Test
+    public void testCreateDirectories_nestedDirectories() {
+        Path dirPath = tempDir.resolve("a/b/c");
+
+        assertDoesNotThrow(() -> fileService.createDirectories(dirPath));
+        assertTrue(Files.exists(dirPath));
+        assertTrue(Files.isDirectory(dirPath));
+    }
+
+
+    @Test
     public void testWriteFile_fileDoesNotExist() {
         Path filePath = tempDir.resolve("testFile.txt");
 
