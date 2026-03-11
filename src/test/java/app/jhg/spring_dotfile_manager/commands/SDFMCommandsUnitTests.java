@@ -1,9 +1,12 @@
 package app.jhg.spring_dotfile_manager.commands;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.nio.file.FileAlreadyExistsException;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -15,6 +18,7 @@ import org.springframework.shell.core.InputReader;
 import org.springframework.shell.core.command.CommandContext;
 
 import app.jhg.spring_dotfile_manager.service.ConfigService;
+import app.jhg.spring_dotfile_manager.service.FormatterService;
 
 @ExtendWith(MockitoExtension.class)
 public class SDFMCommandsUnitTests {
@@ -23,10 +27,16 @@ public class SDFMCommandsUnitTests {
     private ConfigService configService;
 
     @Mock
+    private FormatterService formatterService;
+
+    @Mock
     private CommandContext context;
 
     @Mock
     private InputReader inputReader;
+
+    @Mock
+    private PrintWriter outputWriter;
 
     private SDFMCommands commands;
 
@@ -34,20 +44,24 @@ public class SDFMCommandsUnitTests {
 
     @BeforeEach
     void setUp() {
-        commands = new SDFMCommands(DEFAULT_REPO_PATH, configService);
+        commands = new SDFMCommands(DEFAULT_REPO_PATH, configService, formatterService);
     }
 
     @Test
     public void testInit_pathProvidedAsArgument() throws Exception {
+        when(context.outputWriter()).thenReturn(outputWriter);
+        doNothing().when(outputWriter).println(anyString());
+
         commands.init("~/my-dotfiles", context);
 
         verify(configService).initializeConfig("~/my-dotfiles");
-        verifyNoInteractions(context);
     }
 
     @Test
     public void testInit_noPathProvided_userEntersPath() throws Exception {
         when(context.inputReader()).thenReturn(inputReader);
+        when(context.outputWriter()).thenReturn(outputWriter);
+        doNothing().when(outputWriter).println(anyString());
         when(inputReader.readInput(any())).thenReturn("~/entered-dotfiles");
 
         commands.init("", context);
@@ -58,6 +72,8 @@ public class SDFMCommandsUnitTests {
     @Test
     public void testInit_noPathProvided_userEntersNothing_usesDefault() throws Exception {
         when(context.inputReader()).thenReturn(inputReader);
+        when(context.outputWriter()).thenReturn(outputWriter);
+        doNothing().when(outputWriter).println(anyString());
         when(inputReader.readInput(any())).thenReturn("");
 
         commands.init("", context);
@@ -68,6 +84,8 @@ public class SDFMCommandsUnitTests {
     @Test
     public void testInit_whitespaceOnlyPathProvided_promptsUser() throws Exception {
         when(context.inputReader()).thenReturn(inputReader);
+        when(context.outputWriter()).thenReturn(outputWriter);
+        doNothing().when(outputWriter).println(anyString());
         when(inputReader.readInput(any())).thenReturn("~/entered-dotfiles");
 
         commands.init("   ", context);
@@ -78,6 +96,8 @@ public class SDFMCommandsUnitTests {
     @Test
     public void testInit_noPathProvided_userEntersWhitespace_usesDefault() throws Exception {
         when(context.inputReader()).thenReturn(inputReader);
+        when(context.outputWriter()).thenReturn(outputWriter);
+        doNothing().when(outputWriter).println(anyString());
         when(inputReader.readInput(any())).thenReturn("   ");
 
         commands.init("", context);
