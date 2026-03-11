@@ -20,7 +20,7 @@ public class ConfigServiceImpl implements ConfigService {
         @Value("${spring-dotfile-manager.config.path}") String configFilePath,
         FileService fileService
     ) {
-        this.configFilePath = Path.of(configFilePath);
+        this.configFilePath = Path.of(configFilePath.replaceAll("\\{HOME\\}", System.getProperty("user.home")));
         this.fileService = fileService;
     }
 
