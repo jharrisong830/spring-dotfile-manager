@@ -13,7 +13,7 @@ public class SDFMConfigModelUnitTests {
 
         String expectedContents = 
 """
-dotfile-repo-path: "%s"
+dotfile-repo-path: %s
 """
             .formatted(repoPath);
 

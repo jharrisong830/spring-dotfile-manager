@@ -1,5 +1,9 @@
 package app.jhg.spring_dotfile_manager.model;
 
+import java.util.Map;
+
+import org.yaml.snakeyaml.Yaml;
+
 public class SDFMConfigModel {
     
     private String dotfileRepoPath;
@@ -9,10 +13,8 @@ public class SDFMConfigModel {
     }
 
     public String getConfigFileContents() {
-        return String.format(
-"""
-dotfile-repo-path: "%s"
-""", 
-            this.dotfileRepoPath);
+        Yaml yaml = new Yaml();
+        Map<String, String> configFileMap = Map.of("dotfile-repo-path", dotfileRepoPath);
+        return yaml.dumpAsMap(configFileMap);
     }
 }
