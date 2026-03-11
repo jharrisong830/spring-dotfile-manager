@@ -1,9 +1,9 @@
 package app.jhg.spring_dotfile_manager.service;
 
 import java.io.IOException;
-import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardOpenOption;
 
 import org.springframework.stereotype.Service;
 
@@ -58,11 +58,7 @@ public class FileServiceImpl implements FileService {
      */
     @Override
     public void writeFile(Path path, String content) throws IOException {
-        if (exists(path)) {
-            throw new FileAlreadyExistsException("File already exists at path '" + path + "'");
-        }
-
-        overwriteFile(path, content);
+        Files.writeString(path, content, StandardOpenOption.CREATE_NEW);
     }
 
     /**

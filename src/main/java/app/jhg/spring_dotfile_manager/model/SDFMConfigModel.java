@@ -36,8 +36,11 @@ public class SDFMConfigModel {
         }
 
         Object rawValue = configFileMap.get("dotfile-repo-path");
-        if (!(rawValue instanceof String dotfileRepoPath)) {
-            throw new IllegalArgumentException("Invalid configuration file contents: 'dotfile-repo-path' must be a string");
+        if (rawValue == null) {
+            throw new IllegalArgumentException("Invalid configuration file contents: 'dotfile-repo-path' value is missing");
+        }
+        if (!(rawValue instanceof String dotfileRepoPath) || dotfileRepoPath.isBlank()) {
+            throw new IllegalArgumentException("Invalid configuration file contents: 'dotfile-repo-path' must be a non-blank string");
         }
         return new SDFMConfigModel(dotfileRepoPath);
     }
