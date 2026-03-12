@@ -18,7 +18,9 @@ public class SDFMConfiguration {
     @Bean
     public ExitStatusExceptionMapper exitStatusExceptionMapper() {
         return e -> {
-            Throwable cause = e instanceof InvocationTargetException ? e.getCause() : e;
+            Throwable cause = e instanceof InvocationTargetException ite
+                ? (ite.getCause() != null ? ite.getCause() : ite)
+                : e;
 
             if (cause instanceof FileAlreadyExistsException) { // check first bc subclass of IOException
                 return new ExitStatus(1, "A file operation couldn't be completed because the specified file already exists: " + Objects.toString(cause.getMessage(), "(no message)"));
