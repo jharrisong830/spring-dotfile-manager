@@ -26,11 +26,19 @@ public class ConfigServiceUnitTests {
     private ConfigService configService;
 
     private static final String CONFIG_PATH = "/tmp/test-sdfm/config.yaml";
+    private static final String TILDE_CONFIG_PATH = "~/test-sdfm/config.yaml";
     private static final String REPO_PATH = "~/dotfiles";
 
     @BeforeEach
     void setUp() {
         configService = new ConfigServiceImpl(CONFIG_PATH, fileService);
+    }
+
+    @Test
+    public void testConstructor_expandsTildeInConfigPath() {
+        ConfigService service = new ConfigServiceImpl(TILDE_CONFIG_PATH, fileService);
+        Path expectedPath = Path.of(System.getProperty("user.home"), "test-sdfm/config.yaml");
+        assertEquals(expectedPath, ((ConfigServiceImpl) service).getConfigFilePath());
     }
 
     @Test
@@ -114,5 +122,14 @@ public class ConfigServiceUnitTests {
     public void testUpdateConfig_configFileDoesNotExist() {
         when(fileService.exists(any(Path.class))).thenReturn(false);
         assertThrows(IOException.class, () -> configService.updateConfig("~/new-dotfiles"));
+    }
+
+    @Test
+    public void testUpdateConfig_emptyPath_doesNotValidate() throws IOException {
+        // ConfigServiceImpl does not validate the path; that is the command layer's responsibility.
+        // An empty string is passed through and written to the config file as-is.
+        when(fileService.exists(any(Path.class))).thenReturn(true);
+        assertDoesNotThrow(() -> configService.updateConfig(""));
+        verify(fileService).overwriteFile(eq(Path.of(CONFIG_PATH)), eq(new SDFMConfigModel("").getConfigFileContents()));
     }
 }

@@ -12,22 +12,22 @@ public class SDFMConfigModelUnitTests {
         String repoPath = "/home/user/dotfiles";
         SDFMConfigModel configModel = new SDFMConfigModel(repoPath);
 
-        String expectedContents = "dotfile-repo-path: %s"
+        String expectedContents = "dotfile-repo-path: %s\n"
             .formatted(repoPath);
 
-        assertEquals(expectedContents, configModel.getConfigFileContents().trim());
+        assertEquals(expectedContents, configModel.getConfigFileContents());
     }
 
     @Test
     public void testFromConfigFileContents() {
         String repoPath = "/home/user/dotfiles";
-        String configFileContents = "dotfile-repo-path: %s"            
+        String configFileContents = "dotfile-repo-path: %s\n"
             .formatted(repoPath);
-        
+
         SDFMConfigModel configModel = SDFMConfigModel.fromConfigFileContents(configFileContents);
 
         assertEquals(repoPath, configModel.dotfileRepoPath);
-        assertEquals(configFileContents, configModel.getConfigFileContents().trim());
+        assertEquals(configFileContents, configModel.getConfigFileContents());
     }
 
     @Test

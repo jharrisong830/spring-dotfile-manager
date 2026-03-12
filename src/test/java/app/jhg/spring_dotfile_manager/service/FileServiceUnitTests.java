@@ -182,6 +182,25 @@ public class FileServiceUnitTests {
 
 
     @Test
+    public void testOverwriteFile_replacesExistingContent() throws IOException {
+        Path filePath = tempDir.resolve("testFile.txt");
+        Files.writeString(filePath, "original content");
+
+        fileService.overwriteFile(filePath, "new content");
+
+        assertEquals("new content", Files.readString(filePath));
+    }
+
+    @Test
+    public void testOverwriteFile_createsFileIfAbsent() throws IOException {
+        Path filePath = tempDir.resolve("newFile.txt");
+
+        assertDoesNotThrow(() -> fileService.overwriteFile(filePath, "content"));
+        assertEquals("content", Files.readString(filePath));
+    }
+
+
+    @Test
     public void testGlob_basicMatch() throws IOException {
         Files.createFile(tempDir.resolve("a.yaml"));
         Files.createFile(tempDir.resolve("b.yaml"));

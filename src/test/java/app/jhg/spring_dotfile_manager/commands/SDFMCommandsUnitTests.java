@@ -57,6 +57,8 @@ public class SDFMCommandsUnitTests {
         commands.init("~/my-dotfiles", context);
 
         verify(configService).initializeConfig("~/my-dotfiles");
+        verify(outputWriter).println(contains("Configuration at:"));
+        verify(outputWriter).println(contains("Using dotfile repository path:"));
     }
 
     @Test
@@ -74,7 +76,7 @@ public class SDFMCommandsUnitTests {
         when(context.outputWriter()).thenReturn(outputWriter);
         doNothing().when(outputWriter).println(anyString());
 
-        commands.init("", context);
+        commands.init("   ", context);
 
         verify(configService).initializeConfig(DEFAULT_REPO_PATH);
     }
@@ -107,6 +109,7 @@ public class SDFMCommandsUnitTests {
         verify(configService).readConfig();
         verify(outputWriter).println(contains("Configuration at:"));
         verify(outputWriter).println(contains("Using dotfile repository path:"));
+        verify(outputWriter).println(contains("my-dotfiles"));
     }
 
     @Test
@@ -144,6 +147,18 @@ public class SDFMCommandsUnitTests {
             .when(configService).updateConfig(any());
 
         assertThrows(IllegalArgumentException.class, () -> commands.setConfig("~/new-dotfiles", context));
+    }
+
+    @Test
+    public void testSetConfig_emptyPath_throwsIllegalArgumentException() throws Exception {
+        assertThrows(IllegalArgumentException.class, () -> commands.setConfig("", context));
+        verify(configService, never()).updateConfig(any());
+    }
+
+    @Test
+    public void testSetConfig_blankPath_throwsIllegalArgumentException() throws Exception {
+        assertThrows(IllegalArgumentException.class, () -> commands.setConfig("   ", context));
+        verify(configService, never()).updateConfig(any());
     }
 
 

@@ -101,6 +101,7 @@ public class DotfileServiceUnitTests {
         assertEquals(".zshrc", result.get(0).name);
         assertEquals(markerPath, result.get(0).markerFilePath);
         assertEquals(".bashrc", result.get(1).name);
+        assertEquals(Path.of(System.getProperty("user.home"), ".bashrc"), result.get(1).location);
         assertEquals(markerPath, result.get(1).markerFilePath);
     }
 
@@ -168,6 +169,19 @@ public class DotfileServiceUnitTests {
         assertEquals(".zshrc", result.get(0).name);
         assertEquals(".bashrc", result.get(1).name);
         assertEquals(".vimrc", result.get(2).name);
+    }
+
+    @Test
+    public void testGetAllDotfileMarkerModels_illegalArgumentExceptionMidIteration_propagates() throws IOException {
+        Path pathA = Path.of(RESOLVED_REPO_PATH, "zshrc.dotfile");
+        Path pathB = Path.of(RESOLVED_REPO_PATH, "bad.dotfile");
+
+        when(configService.readConfig()).thenReturn(RAW_REPO_PATH);
+        when(fileService.glob(eq(Path.of(RESOLVED_REPO_PATH)), eq(GLOB_PATTERN))).thenReturn(List.of(pathA, pathB));
+        when(fileService.readFile(pathA)).thenReturn("name: .zshrc\nlocation: ~/.zshrc\n");
+        when(fileService.readFile(pathB)).thenReturn("not valid marker content");
+
+        assertThrows(IllegalArgumentException.class, () -> dotfileService.getAllDotfileMarkerModels());
     }
 
     @Test

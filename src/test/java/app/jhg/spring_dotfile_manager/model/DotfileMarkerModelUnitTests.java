@@ -310,6 +310,48 @@ linux:
     }
 
     @Test
+    public void testFromMarkerFileContents_nameTemplatePlaceholder_expandsInBaseLocation() {
+        String markerFileContents =
+"""
+name: .zshrc
+location: /home/testuser/{NAME}
+""";
+
+        List<DotfileMarkerModel> markerModels = DotfileMarkerModel.fromMarkerFileContents(null, markerFileContents);
+        assertEquals(1, markerModels.size());
+        assertEquals(Path.of("/home/testuser/.zshrc"), markerModels.get(0).location);
+    }
+
+    @Test
+    public void testFromMarkerFileContents_nameTemplatePlaceholder_expandsInPlatformOverrideLocation() {
+        String markerFileContents =
+"""
+name: .zshrc
+location: /home/testuser/.zshrc
+darwin:
+    shouldLink: true
+    location: /Users/testuser/{NAME}
+""";
+
+        List<DotfileMarkerModel> markerModels = DotfileMarkerModel.fromMarkerFileContents(null, markerFileContents);
+        assertEquals(1, markerModels.size());
+        assertEquals(Path.of("/Users/testuser/.zshrc"), markerModels.get(0).darwinOverride.location);
+    }
+
+    @Test
+    public void testFromMarkerFileContents_tildeExpansion_expandsInBaseLocation() {
+        String markerFileContents =
+"""
+name: .zshrc
+location: ~/.zshrc
+""";
+
+        List<DotfileMarkerModel> markerModels = DotfileMarkerModel.fromMarkerFileContents(null, markerFileContents);
+        assertEquals(1, markerModels.size());
+        assertEquals(Path.of(System.getProperty("user.home"), ".zshrc"), markerModels.get(0).location);
+    }
+
+    @Test
     public void testFromMarkerFileContents_multipleMarkersWithOverrides() {
         String markerFileContents =
 """

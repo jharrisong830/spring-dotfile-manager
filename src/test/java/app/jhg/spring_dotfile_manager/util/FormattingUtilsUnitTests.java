@@ -47,7 +47,7 @@ public class FormattingUtilsUnitTests {
     }
 
     @Test
-    public void testFormatWithHomeDirectory_multiplePlaceholders() {
+    public void testFormatWithHomeDirectory_multipleHomePlaceholders() {
         String input = "{HOME}/dotfiles:~/.config:{HOME}/.local";
         String expectedOutput = HOME + "/dotfiles:~/.config:" + HOME + "/.local";
 
@@ -86,5 +86,10 @@ public class FormattingUtilsUnitTests {
     @Test
     public void testFormatWithFilename_emptyString() {
         assertEquals("", FormattingUtils.formatWithName("", ".zshrc"));
+    }
+
+    @Test
+    public void testFormatWithFilename_nameContainsRegexSpecialCharacters() {
+        assertEquals("/home/user/.zsh$rc", FormattingUtils.formatWithName("/home/user/{NAME}", ".zsh$rc"));
     }
 }

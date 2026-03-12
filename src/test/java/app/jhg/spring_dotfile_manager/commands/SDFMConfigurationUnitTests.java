@@ -2,8 +2,11 @@ package app.jhg.spring_dotfile_manager.commands;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
 import java.nio.file.FileAlreadyExistsException;
+import java.nio.file.NoSuchFileException;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -49,5 +52,39 @@ public class SDFMConfigurationUnitTests {
 
         assertEquals(1, result.code());
         assertTrue(result.description().contains("invalid argument"));
+    }
+
+    @Test
+    public void testExitStatusExceptionMapper_noSuchFileException() {
+        ExitStatus result = mapper.apply(new NoSuchFileException("missing.yaml"));
+
+        assertEquals(1, result.code());
+        assertTrue(result.description().contains("missing.yaml"));
+    }
+
+    @Test
+    public void testExitStatusExceptionMapper_fileNotFoundException() {
+        ExitStatus result = mapper.apply(new FileNotFoundException("missing.yaml"));
+
+        assertEquals(1, result.code());
+        assertTrue(result.description().contains("missing.yaml"));
+    }
+
+    @Test
+    public void testExitStatusExceptionMapper_invocationTargetException_unwrapsCause() {
+        IOException cause = new IOException("disk full");
+        ExitStatus result = mapper.apply(new InvocationTargetException(cause));
+
+        assertEquals(1, result.code());
+        assertTrue(result.description().contains("disk full"));
+    }
+
+    @Test
+    public void testExitStatusExceptionMapper_invocationTargetException_nullCause_usesWrapper() {
+        InvocationTargetException ite = new InvocationTargetException(null, "wrapper message");
+        ExitStatus result = mapper.apply(ite);
+
+        assertEquals(1, result.code());
+        assertTrue(result.description().contains("wrapper message"));
     }
 }
