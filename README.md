@@ -18,7 +18,7 @@ You can run commands from the repository itself, or build an executable for your
 java -jar ./target/spring-dotfile-manager-0.0.1-SNAPSHOT.jar ...
 
 # use the Maven Spring Boot plugin
-./mvnw spring-boot:run -Dspring-boot.run.args='...'
+./mvnw spring-boot:run -Dspring-boot.run.arguments='...'
 ```
 
 ## Usage
