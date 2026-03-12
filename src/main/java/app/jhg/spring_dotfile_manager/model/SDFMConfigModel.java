@@ -3,6 +3,7 @@ package app.jhg.spring_dotfile_manager.model;
 import java.util.Map;
 
 import org.yaml.snakeyaml.Yaml;
+import org.yaml.snakeyaml.error.YAMLException;
 
 public class SDFMConfigModel {
     
@@ -24,7 +25,7 @@ public class SDFMConfigModel {
         
         try {
             configFileMap = yaml.load(configFileContents);
-        } catch (ClassCastException e) {
+        } catch (YAMLException | ClassCastException e) {
             throw new IllegalArgumentException("Invalid configuration file contents: expected a YAML mapping", e);
         }
 
