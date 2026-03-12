@@ -20,6 +20,11 @@ public class DotfileMarkerModel {
             this.location = location;
         }
 
+        @Override
+        public String toString() {
+            return "PlatformOverrideModel{shouldLink=" + shouldLink + ", location=" + location + "}";
+        }
+
         public static PlatformOverrideModel parsePlatformRawSubdocument(Object rawSubdocument) {
             if (!(rawSubdocument instanceof Map<?, ?> rawSubdocumentMap)) {
                 throw new IllegalArgumentException("Invalid marker file contents: expected platform override subdocument to be a mapping");
@@ -70,6 +75,11 @@ public class DotfileMarkerModel {
         this.linuxOverride = linuxOverride;
         this.win32Override = win32Override;
         this.darwinOverride = darwinOverride;
+    }
+
+    @Override
+    public String toString() {
+        return "DotfileMarkerModel{name='" + name + "', location=" + location + ", markerFilePath=" + markerFilePath + ", linuxOverride=" + linuxOverride + ", win32Override=" + win32Override + ", darwinOverride=" + darwinOverride + "}";
     }
 
 

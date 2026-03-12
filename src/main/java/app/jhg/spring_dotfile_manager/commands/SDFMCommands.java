@@ -2,6 +2,7 @@ package app.jhg.spring_dotfile_manager.commands;
 
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.util.List;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.shell.core.command.CommandContext;
@@ -9,7 +10,9 @@ import org.springframework.shell.core.command.annotation.Argument;
 import org.springframework.shell.core.command.annotation.Command;
 import org.springframework.stereotype.Component;
 
+import app.jhg.spring_dotfile_manager.model.DotfileMarkerModel;
 import app.jhg.spring_dotfile_manager.service.ConfigService;
+import app.jhg.spring_dotfile_manager.service.DotfileService;
 import app.jhg.spring_dotfile_manager.service.FormatterService;
 
 @Component
@@ -19,15 +22,18 @@ public class SDFMCommands {
 
     private final ConfigService configService;
     private final FormatterService formatterService;
+    private final DotfileService dotfileService;
 
     public SDFMCommands(
         @Value("${spring-dotfile-manager.config.default-repo-path}") String defaultRepoPath,
         ConfigService configService,
-        FormatterService formatterService
+        FormatterService formatterService,
+        DotfileService dotfileService
     ) {
         this.defaultRepoPath = defaultRepoPath;
         this.configService = configService;
         this.formatterService = formatterService;
+        this.dotfileService = dotfileService;
     }
 
     
@@ -79,6 +85,21 @@ public class SDFMCommands {
         configService.updateConfig(dotfileRepoPath);
         printConfig(context.outputWriter(), dotfileRepoPath);
     }
+
+    @Command(name = "list", description = "List all dotfiles in the configured repository", exitStatusExceptionMapper = "exitStatusExceptionMapper")
+    public void list(CommandContext context) throws Exception {
+        List<DotfileMarkerModel> markerModels = dotfileService.getAllDotfileMarkerModels();
+        if (markerModels.isEmpty()) {
+            context.outputWriter().println("No dotfiles found in the configured repository.");
+        } else {
+            context.outputWriter().println("Dotfiles in configured repository:");
+            for (DotfileMarkerModel model : markerModels) {
+                context.outputWriter().println("- " + model);
+            }
+        }
+        context.outputWriter().flush();
+    }
+
 
     private void printConfig(PrintWriter outputWriter, String dotfileRepoPath) {
         outputWriter.println("Configuration at: " + configService.getConfigFilePath());

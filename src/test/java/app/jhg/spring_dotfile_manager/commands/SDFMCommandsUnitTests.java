@@ -18,7 +18,12 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.shell.core.command.CommandContext;
 
+import java.nio.file.Path;
+import java.util.List;
+
+import app.jhg.spring_dotfile_manager.model.DotfileMarkerModel;
 import app.jhg.spring_dotfile_manager.service.ConfigService;
+import app.jhg.spring_dotfile_manager.service.DotfileService;
 import app.jhg.spring_dotfile_manager.service.FormatterService;
 
 @ExtendWith(MockitoExtension.class)
@@ -29,6 +34,9 @@ public class SDFMCommandsUnitTests {
 
     @Mock
     private FormatterService formatterService;
+
+    @Mock
+    private DotfileService dotfileService;
 
     @Mock
     private CommandContext context;
@@ -42,7 +50,7 @@ public class SDFMCommandsUnitTests {
 
     @BeforeEach
     void setUp() {
-        commands = new SDFMCommands(DEFAULT_REPO_PATH, configService, formatterService);
+        commands = new SDFMCommands(DEFAULT_REPO_PATH, configService, formatterService, dotfileService);
     }
 
     @Test
@@ -140,5 +148,40 @@ public class SDFMCommandsUnitTests {
             .when(configService).updateConfig(any());
 
         assertThrows(IllegalArgumentException.class, () -> commands.setConfig("~/new-dotfiles", context));
+    }
+
+
+    @Test
+    public void testList_noMarkersFound_printsEmptyMessage() throws Exception {
+        when(dotfileService.getAllDotfileMarkerModels()).thenReturn(List.of());
+        when(context.outputWriter()).thenReturn(outputWriter);
+
+        commands.list(context);
+
+        verify(outputWriter).println(contains("No dotfiles found"));
+        verify(outputWriter, never()).println(contains("- "));
+    }
+
+    @Test
+    public void testList_markersFound_printsEachMarker() throws Exception {
+        List<DotfileMarkerModel> models = DotfileMarkerModel.fromMarkerFileContents(
+            Path.of("/repo/zshrc.dotfile"),
+            "name: .zshrc\nlocation: /home/user/.zshrc\n---\nname: .bashrc\nlocation: /home/user/.bashrc\n"
+        );
+        when(dotfileService.getAllDotfileMarkerModels()).thenReturn(models);
+        when(context.outputWriter()).thenReturn(outputWriter);
+
+        commands.list(context);
+
+        verify(outputWriter).println(contains("Dotfiles in configured repository:"));
+        verify(outputWriter, times(2)).println(contains("- "));
+    }
+
+    @Test
+    public void testList_ioException_propagates() throws Exception {
+        doThrow(new IOException("repo not found"))
+            .when(dotfileService).getAllDotfileMarkerModels();
+
+        assertThrows(IOException.class, () -> commands.list(context));
     }
 }

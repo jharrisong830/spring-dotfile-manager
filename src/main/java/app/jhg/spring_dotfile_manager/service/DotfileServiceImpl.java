@@ -6,9 +6,11 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Service;
 
 import app.jhg.spring_dotfile_manager.model.DotfileMarkerModel;
 
+@Service
 public class DotfileServiceImpl implements DotfileService {
     
     private final String dotfileGlobPattern;
@@ -18,7 +20,7 @@ public class DotfileServiceImpl implements DotfileService {
     private final FormatterService formatterService;
 
     public DotfileServiceImpl(
-        @Value("${spring-dotfile-manager.config.dotfile-glob-pattern}") String dotfileGlobPattern,
+        @Value("${spring-dotfile-manager.dotfile-glob-pattern}") String dotfileGlobPattern,
         ConfigService configService, 
         FileService fileService,
         FormatterService formatterService
