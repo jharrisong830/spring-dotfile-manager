@@ -48,11 +48,8 @@ public class SDFMCommands {
             context.outputWriter().println("No dotfile repository path provided.");
             context.outputWriter().println("Default repository path is: '" + FormattingUtils.formatWithHomeDirectory(defaultRepoPath) + "'");
             context.outputWriter().println("Delete the file and re-run with a custom path, or run set-config to change the path later.");
-
             context.outputWriter().flush();
-        }
-
-        if (dotfileRepoPath.isEmpty()) {
+            
             dotfileRepoPath = defaultRepoPath;
         }
 
