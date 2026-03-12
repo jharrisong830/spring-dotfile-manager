@@ -13,7 +13,9 @@ import org.springframework.stereotype.Service;
 
 @Service
 public class FileServiceImpl implements FileService {
-    
+
+    private static final PathMatchingResourcePatternResolver RESOLVER = new PathMatchingResourcePatternResolver();
+
     @Override
     public boolean exists(Path path) {
         return Files.exists(path);
@@ -58,10 +60,9 @@ public class FileServiceImpl implements FileService {
             throw new IOException("Base directory is not a directory: " + baseDirectory);
         }
 
-        String fullGlobPattern = "file:" + baseDirectory + "/" + globPattern;
+        String fullGlobPattern = baseDirectory.toUri().toString() + "/" + globPattern;
 
-        PathMatchingResourcePatternResolver resolver = new PathMatchingResourcePatternResolver();
-        Resource[] resources = resolver.getResources(fullGlobPattern);
+        Resource[] resources = RESOLVER.getResources(fullGlobPattern);
         
         List<Path> markerPaths = new ArrayList<>();
         for (Resource resource : resources) {
