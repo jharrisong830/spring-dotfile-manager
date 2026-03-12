@@ -4,7 +4,11 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
+import java.util.ArrayList;
+import java.util.List;
 
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -43,5 +47,27 @@ public class FileServiceImpl implements FileService {
     @Override
     public String readFile(Path path) throws IOException {
         return Files.readString(path);
+    }
+
+    @Override
+    public List<Path> glob(Path baseDirectory, String globPattern) throws IOException {
+        if (!Files.exists(baseDirectory)) {
+            throw new IOException("Base directory does not exist: " + baseDirectory);
+        }
+        if (!Files.isDirectory(baseDirectory)) {
+            throw new IOException("Base directory is not a directory: " + baseDirectory);
+        }
+
+        String fullGlobPattern = "file:" + baseDirectory + "/" + globPattern;
+
+        PathMatchingResourcePatternResolver resolver = new PathMatchingResourcePatternResolver();
+        Resource[] resources = resolver.getResources(fullGlobPattern);
+        
+        List<Path> markerPaths = new ArrayList<>();
+        for (Resource resource : resources) {
+            markerPaths.add(resource.getFilePath());
+        }
+
+        return markerPaths;
     }
 }

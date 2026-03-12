@@ -2,6 +2,7 @@ package app.jhg.spring_dotfile_manager.service;
 
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.List;
 
 public interface FileService {
 
@@ -56,4 +57,13 @@ public interface FileService {
      * @throws IOException if an I/O error occurs reading from the file
      */
     public String readFile(Path path) throws IOException;
+
+    /**
+     * performs a glob operation starting from the specified base directory and using the provided glob pattern, returning a list of matching file paths
+     * @param baseDirectory
+     * @param globPattern
+     * @return a list of file paths that match the glob pattern starting from the base directory
+     * @throws IOException if an I/O error occurs during the glob operation
+     */
+    public List<Path> glob(Path baseDirectory, String globPattern) throws IOException;
 }

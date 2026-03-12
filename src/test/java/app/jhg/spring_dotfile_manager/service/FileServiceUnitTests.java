@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.List;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -177,5 +178,77 @@ public class FileServiceUnitTests {
 
         String readContent = fileService.readFile(symbolicLink);
         assertEquals(content, readContent);
+    }
+
+
+    @Test
+    public void testGlob_basicMatch() throws IOException {
+        Files.createFile(tempDir.resolve("a.yaml"));
+        Files.createFile(tempDir.resolve("b.yaml"));
+        Files.createFile(tempDir.resolve("c.txt"));
+
+        List<Path> result = fileService.glob(tempDir, "*.yaml");
+
+        assertEquals(2, result.size());
+        assertTrue(result.contains(tempDir.resolve("a.yaml")));
+        assertTrue(result.contains(tempDir.resolve("b.yaml")));
+    }
+
+    @Test
+    public void testGlob_noMatches() throws IOException {
+        Files.createFile(tempDir.resolve("a.txt"));
+        Files.createFile(tempDir.resolve("b.txt"));
+
+        List<Path> result = fileService.glob(tempDir, "*.yaml");
+
+        assertTrue(result.isEmpty());
+    }
+
+    @Test
+    public void testGlob_recursivePattern() throws IOException {
+        Path subDir = tempDir.resolve("sub");
+        Files.createDirectories(subDir);
+        Files.createFile(tempDir.resolve("root.yaml"));
+        Files.createFile(subDir.resolve("nested.yaml"));
+
+        List<Path> result = fileService.glob(tempDir, "**/*.yaml");
+
+        assertEquals(2, result.size());
+        assertTrue(result.contains(tempDir.resolve("root.yaml")));
+        assertTrue(result.contains(subDir.resolve("nested.yaml")));
+    }
+
+    @Test
+    public void testGlob_patternExcludesNonMatchingFiles() throws IOException {
+        Files.createFile(tempDir.resolve("match.yaml"));
+        Files.createFile(tempDir.resolve("no-match.txt"));
+        Files.createFile(tempDir.resolve("also-no-match.json"));
+
+        List<Path> result = fileService.glob(tempDir, "*.yaml");
+
+        assertEquals(1, result.size());
+        assertTrue(result.contains(tempDir.resolve("match.yaml")));
+    }
+
+    @Test
+    public void testGlob_emptyBaseDirectory() throws IOException {
+        List<Path> result = fileService.glob(tempDir, "**/*.yaml");
+
+        assertTrue(result.isEmpty());
+    }
+
+    @Test
+    public void testGlob_baseDirectoryDoesNotExist() {
+        Path nonExistent = tempDir.resolve("does-not-exist");
+
+        assertThrows(IOException.class, () -> fileService.glob(nonExistent, "*.yaml"));
+    }
+
+    @Test
+    public void testGlob_baseDirectoryIsNotADirectory() throws IOException {
+        Path file = tempDir.resolve("a-file.txt");
+        Files.createFile(file);
+
+        assertThrows(IOException.class, () -> fileService.glob(file, "*.yaml"));
     }
 }
