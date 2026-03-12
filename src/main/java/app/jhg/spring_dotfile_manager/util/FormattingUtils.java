@@ -1,11 +1,15 @@
 package app.jhg.spring_dotfile_manager.util;
 
+import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public final class FormattingUtils {
 
-    private static final String HOME = System.getProperty("user.home");
+    private static final String HOME = Objects.requireNonNull(
+        System.getProperty("user.home"),
+        "System property 'user.home' is not set"
+    );
 
     private static final Pattern HOME_DIR_REGEX = Pattern.compile("\\{HOME\\}"); // matches "{HOME}"
     private static final Pattern TILDE_REGEX = Pattern.compile("^~"); // matches "~" at the beginning of a string
