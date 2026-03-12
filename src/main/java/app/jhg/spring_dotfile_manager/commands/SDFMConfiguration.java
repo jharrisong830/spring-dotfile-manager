@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.NoSuchFileException;
+import java.util.Objects;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -20,15 +21,15 @@ public class SDFMConfiguration {
             Throwable cause = e instanceof InvocationTargetException ? e.getCause() : e;
 
             if (cause instanceof FileAlreadyExistsException) { // check first bc subclass of IOException
-                return new ExitStatus(1, "A file operation couldn't be completed because the specified file already exists: " + cause.getMessage());
+                return new ExitStatus(1, "A file operation couldn't be completed because the specified file already exists: " + Objects.toString(cause.getMessage(), "(no message)"));
             } else if (cause instanceof NoSuchFileException || cause instanceof FileNotFoundException) {
-                return new ExitStatus(1, "A file operation couldn't be completed because the specified file was not found: " + cause.getMessage());
+                return new ExitStatus(1, "A file operation couldn't be completed because the specified file was not found: " + Objects.toString(cause.getMessage(), "(no message)"));
             } else if (cause instanceof IOException) {
-                return new ExitStatus(1, "An I/O error occurred during a file operation: " + cause.getMessage());
+                return new ExitStatus(1, "An I/O error occurred during a file operation: " + Objects.toString(cause.getMessage(), "(no message)"));
             } else if (cause instanceof IllegalArgumentException) {
-                return new ExitStatus(1, "Invalid argument: " + cause.getMessage());
+                return new ExitStatus(1, "Invalid argument: " + Objects.toString(cause.getMessage(), "(no message)"));
             }
-            return new ExitStatus(1, "Unknown exception: " + cause.getMessage());
+            return new ExitStatus(1, "Unknown exception: " + Objects.toString(cause.getMessage(), "(no message)"));
         };
     }
 }

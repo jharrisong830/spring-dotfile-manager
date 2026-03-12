@@ -2,7 +2,6 @@ package app.jhg.spring_dotfile_manager.service;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
@@ -24,9 +23,6 @@ public class ConfigServiceUnitTests {
     @Mock
     private FileService fileService;
 
-    @Mock
-    private FormatterService formatterService;
-
     private ConfigService configService;
 
     private static final String CONFIG_PATH = "/tmp/test-sdfm/config.yaml";
@@ -34,8 +30,7 @@ public class ConfigServiceUnitTests {
 
     @BeforeEach
     void setUp() {
-        when(formatterService.formatWithHomeDirectory(anyString())).thenReturn(CONFIG_PATH);
-        configService = new ConfigServiceImpl(CONFIG_PATH, fileService, formatterService);
+        configService = new ConfigServiceImpl(CONFIG_PATH, fileService);
     }
 
     @Test

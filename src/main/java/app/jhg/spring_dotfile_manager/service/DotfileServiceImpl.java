@@ -9,6 +9,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import app.jhg.spring_dotfile_manager.model.DotfileMarkerModel;
+import app.jhg.spring_dotfile_manager.util.FormattingUtils;
 
 @Service
 public class DotfileServiceImpl implements DotfileService {
@@ -17,24 +18,21 @@ public class DotfileServiceImpl implements DotfileService {
 
     private final ConfigService configService;
     private final FileService fileService;
-    private final FormatterService formatterService;
 
     public DotfileServiceImpl(
         @Value("${spring-dotfile-manager.dotfile-glob-pattern}") String dotfileGlobPattern,
-        ConfigService configService, 
-        FileService fileService,
-        FormatterService formatterService
+        ConfigService configService,
+        FileService fileService
     ) {
         this.dotfileGlobPattern = dotfileGlobPattern;
         this.configService = configService;
         this.fileService = fileService;
-        this.formatterService = formatterService;
     }
 
 
     @Override
     public List<Path> getAllDotfileMarkerPaths() throws IOException {
-        Path dotfileRepoPath = Path.of(formatterService.formatWithHomeDirectory(configService.readConfig()));
+        Path dotfileRepoPath = Path.of(FormattingUtils.formatWithHomeDirectory(configService.readConfig()));
         return fileService.glob(dotfileRepoPath, dotfileGlobPattern);
     }
 
@@ -50,7 +48,7 @@ public class DotfileServiceImpl implements DotfileService {
 
     @Override
     public List<DotfileMarkerModel> getDotfileMarkerModelsByPath(Path path) throws IOException {
-        String content = formatterService.formatWithHomeDirectory(fileService.readFile(path));
+        String content = fileService.readFile(path);
         return DotfileMarkerModel.fromMarkerFileContents(path, content);
     }
 }

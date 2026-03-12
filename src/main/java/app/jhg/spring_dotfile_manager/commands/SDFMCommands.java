@@ -13,7 +13,7 @@ import org.springframework.stereotype.Component;
 import app.jhg.spring_dotfile_manager.model.DotfileMarkerModel;
 import app.jhg.spring_dotfile_manager.service.ConfigService;
 import app.jhg.spring_dotfile_manager.service.DotfileService;
-import app.jhg.spring_dotfile_manager.service.FormatterService;
+import app.jhg.spring_dotfile_manager.util.FormattingUtils;
 
 @Component
 public class SDFMCommands {
@@ -21,18 +21,15 @@ public class SDFMCommands {
     private final String defaultRepoPath;
 
     private final ConfigService configService;
-    private final FormatterService formatterService;
     private final DotfileService dotfileService;
 
     public SDFMCommands(
         @Value("${spring-dotfile-manager.config.default-repo-path}") String defaultRepoPath,
         ConfigService configService,
-        FormatterService formatterService,
         DotfileService dotfileService
     ) {
         this.defaultRepoPath = defaultRepoPath;
         this.configService = configService;
-        this.formatterService = formatterService;
         this.dotfileService = dotfileService;
     }
 
@@ -49,7 +46,7 @@ public class SDFMCommands {
         dotfileRepoPath = dotfileRepoPath.trim();
         if (dotfileRepoPath.isEmpty()) {
             context.outputWriter().println("No dotfile repository path provided.");
-            context.outputWriter().println("Default repository path is: '" + formatterService.formatWithHomeDirectory(defaultRepoPath) + "'");
+            context.outputWriter().println("Default repository path is: '" + FormattingUtils.formatWithHomeDirectory(defaultRepoPath) + "'");
             context.outputWriter().println("Delete the file and re-run with a custom path, or run set-config to change the path later.");
 
             context.outputWriter().flush();
@@ -103,7 +100,7 @@ public class SDFMCommands {
 
     private void printConfig(PrintWriter outputWriter, String dotfileRepoPath) {
         outputWriter.println("Configuration at: " + configService.getConfigFilePath());
-        outputWriter.println("Using dotfile repository path: '" + formatterService.formatWithHomeDirectory(dotfileRepoPath) + "'");
+        outputWriter.println("Using dotfile repository path: '" + FormattingUtils.formatWithHomeDirectory(dotfileRepoPath) + "'");
         outputWriter.flush();
     }
 }

@@ -24,16 +24,12 @@ import java.util.List;
 import app.jhg.spring_dotfile_manager.model.DotfileMarkerModel;
 import app.jhg.spring_dotfile_manager.service.ConfigService;
 import app.jhg.spring_dotfile_manager.service.DotfileService;
-import app.jhg.spring_dotfile_manager.service.FormatterService;
 
 @ExtendWith(MockitoExtension.class)
 public class SDFMCommandsUnitTests {
 
     @Mock
     private ConfigService configService;
-
-    @Mock
-    private FormatterService formatterService;
 
     @Mock
     private DotfileService dotfileService;
@@ -50,7 +46,7 @@ public class SDFMCommandsUnitTests {
 
     @BeforeEach
     void setUp() {
-        commands = new SDFMCommands(DEFAULT_REPO_PATH, configService, formatterService, dotfileService);
+        commands = new SDFMCommands(DEFAULT_REPO_PATH, configService, dotfileService);
     }
 
     @Test
