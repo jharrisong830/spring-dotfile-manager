@@ -76,6 +76,7 @@ public class DotfileServiceUnitTests {
     @Test
     public void testGetDotfileMarkerModelsByPath_singleMarker() throws IOException {
         Path markerPath = Path.of(RESOLVED_REPO_PATH, "zshrc.dotfile");
+        Path expectedSource = Path.of(RESOLVED_REPO_PATH, ".zshrc");
         String rawContent = "name: .zshrc\nlocation: ~/.zshrc\n";
 
         when(fileService.readFile(markerPath)).thenReturn(rawContent);
@@ -85,12 +86,15 @@ public class DotfileServiceUnitTests {
         assertEquals(1, result.size());
         assertEquals(".zshrc", result.get(0).name);
         assertEquals(Path.of(System.getProperty("user.home"), ".zshrc"), result.get(0).location);
-        assertEquals(markerPath, result.get(0).markerFilePath);
+        assertEquals(expectedSource, result.get(0).sourceLocation);
     }
 
     @Test
     public void testGetDotfileMarkerModelsByPath_multipleMarkers() throws IOException {
         Path markerPath = Path.of(RESOLVED_REPO_PATH, "shell.dotfile");
+        Path expectedSourceZsh = Path.of(RESOLVED_REPO_PATH, ".zshrc");
+        Path expectedSourceBash = Path.of(RESOLVED_REPO_PATH, ".bashrc");
+
         String rawContent = "name: .zshrc\nlocation: ~/.zshrc\n---\nname: .bashrc\nlocation: ~/.bashrc\n";
 
         when(fileService.readFile(markerPath)).thenReturn(rawContent);
@@ -99,10 +103,10 @@ public class DotfileServiceUnitTests {
 
         assertEquals(2, result.size());
         assertEquals(".zshrc", result.get(0).name);
-        assertEquals(markerPath, result.get(0).markerFilePath);
+        assertEquals(expectedSourceZsh, result.get(0).sourceLocation);
         assertEquals(".bashrc", result.get(1).name);
         assertEquals(Path.of(System.getProperty("user.home"), ".bashrc"), result.get(1).location);
-        assertEquals(markerPath, result.get(1).markerFilePath);
+        assertEquals(expectedSourceBash, result.get(1).sourceLocation);
     }
 
     @Test

@@ -60,7 +60,7 @@ public class DotfileMarkerModel {
     
     public final String name;
     public final Path location;
-    public final Path markerFilePath;
+    public final Path sourceLocation;
 
     public final PlatformOverrideModel linuxOverride;
     public final PlatformOverrideModel win32Override;
@@ -76,7 +76,7 @@ public class DotfileMarkerModel {
     ) {
         this.name = name;
         this.location = location;
-        this.markerFilePath = markerFilePath;
+        this.sourceLocation = getSourceLocationFromMarkerPath(markerFilePath, name);
         this.linuxOverride = linuxOverride;
         this.win32Override = win32Override;
         this.darwinOverride = darwinOverride;
@@ -84,7 +84,7 @@ public class DotfileMarkerModel {
 
     @Override
     public String toString() {
-        return "DotfileMarkerModel{name='" + name + "', location=" + location + ", markerFilePath=" + markerFilePath + ", linuxOverride=" + linuxOverride + ", win32Override=" + win32Override + ", darwinOverride=" + darwinOverride + "}";
+        return "DotfileMarkerModel{name='" + name + "', location=" + location + ", sourceLocation=" + sourceLocation + ", linuxOverride=" + linuxOverride + ", win32Override=" + win32Override + ", darwinOverride=" + darwinOverride + "}";
     }
 
 
@@ -146,5 +146,9 @@ public class DotfileMarkerModel {
         }
 
         return new DotfileMarkerModel(name, Path.of(location), markerFilePath, linuxOverride, win32Override, darwinOverride);
+    }
+
+    private static Path getSourceLocationFromMarkerPath(Path markerFilePath, String name) {
+        return markerFilePath.getParent().resolve(name);
     }
 }
