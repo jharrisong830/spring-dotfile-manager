@@ -29,6 +29,16 @@ public interface DotfileService {
      */
     public List<DotfileMarkerModel> getDotfileMarkerModelsByPath(Path path) throws IOException;
 
-
+    /**
+     * relinks all dotfiles
+     * @throws IOException if there is a regular file or directory where a link is supposed to be made, or if there is any I/O error
+     */
     public void relinkDotfiles() throws IOException;
+
+    /**
+     * relinks an individual marker file
+     * @param marker the dotfile marker representing the dotfile to be linked
+     * @throws IOException if there is a regular file or directory where a link is supposed to be made, or if there is any I/O error
+     */
+    public void relinkDotfile(DotfileMarkerModel marker) throws IOException;
 }
