@@ -52,6 +52,11 @@ public class FileServiceImpl implements FileService {
     }
 
     @Override
+    public void deleteFile(Path path) throws IOException {
+        Files.delete(path);
+    }
+
+    @Override
     public List<Path> glob(Path baseDirectory, String globPattern) throws IOException {
         if (!Files.exists(baseDirectory)) {
             throw new IOException("Base directory does not exist: " + baseDirectory);

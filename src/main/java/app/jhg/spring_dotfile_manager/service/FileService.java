@@ -59,6 +59,13 @@ public interface FileService {
     public String readFile(Path path) throws IOException;
 
     /**
+     * deletes the file at the specified path
+     * @param path the path to the file to delete
+     * @throws IOException if an I/O error occurs deleting the file
+     */
+    public void deleteFile(Path path) throws IOException;
+
+    /**
      * performs a glob operation starting from the specified base directory and using the provided glob pattern, returning a list of matching file paths
      * @param baseDirectory
      * @param globPattern

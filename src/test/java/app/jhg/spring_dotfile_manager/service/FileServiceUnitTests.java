@@ -201,6 +201,56 @@ public class FileServiceUnitTests {
 
 
     @Test
+    public void testDeleteFile_regularFile() throws IOException {
+        Path filePath = tempDir.resolve("testFile.txt");
+        Files.createFile(filePath);
+
+        fileService.deleteFile(filePath);
+
+        assertFalse(Files.exists(filePath));
+    }
+
+    @Test
+    public void testDeleteFile_symbolicLink() throws IOException {
+        Path targetFile = tempDir.resolve("targetFile.txt");
+        Files.createFile(targetFile);
+        Path symbolicLink = tempDir.resolve("symbolicLink.txt");
+        Files.createSymbolicLink(symbolicLink, targetFile);
+
+        fileService.deleteFile(symbolicLink);
+
+        assertFalse(Files.exists(symbolicLink));
+        assertTrue(Files.exists(targetFile));
+    }
+
+    @Test
+    public void testDeleteFile_emptyDirectory() throws IOException {
+        Path dirPath = tempDir.resolve("emptyDir");
+        Files.createDirectory(dirPath);
+
+        fileService.deleteFile(dirPath);
+
+        assertFalse(Files.exists(dirPath));
+    }
+
+    @Test
+    public void testDeleteFile_nonExistentPath() {
+        Path filePath = tempDir.resolve("nonExistentFile.txt");
+
+        assertThrows(IOException.class, () -> fileService.deleteFile(filePath));
+    }
+
+    @Test
+    public void testDeleteFile_nonEmptyDirectory() throws IOException {
+        Path dirPath = tempDir.resolve("nonEmptyDir");
+        Files.createDirectory(dirPath);
+        Files.createFile(dirPath.resolve("child.txt"));
+
+        assertThrows(IOException.class, () -> fileService.deleteFile(dirPath));
+    }
+
+
+    @Test
     public void testGlob_basicMatch() throws IOException {
         Files.createFile(tempDir.resolve("a.yaml"));
         Files.createFile(tempDir.resolve("b.yaml"));
