@@ -51,4 +51,21 @@ public class DotfileServiceImpl implements DotfileService {
         String content = fileService.readFile(path);
         return DotfileMarkerModel.fromMarkerFileContents(path, content);
     }
+
+    @Override
+    public void relinkDotfiles() throws IOException {
+        List<DotfileMarkerModel> markerModels = getAllDotfileMarkerModels();
+        for (DotfileMarkerModel markerModel : markerModels) {
+            if (fileService.isSymbolicLink(markerModel.location)) {
+                // happy path: unlink and re-create the link
+                fileService.deleteFile(markerModel.location);
+                fileService.createSymlink(markerModel.location, markerModel.sourceLocation);
+            } else if (!fileService.exists(markerModel.location)) {
+                // happy path 2: create the link if nothing exists
+                fileService.createSymlink(markerModel.location, markerModel.sourceLocation);
+            } else {
+                throw new IOException("FILE/DIR EXISTS. IMPLEMENT LATER"); // TODO: implement prompts for if existing files should be overwritten
+            }
+        }
+    }
 }

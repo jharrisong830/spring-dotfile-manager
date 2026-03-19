@@ -28,4 +28,7 @@ public interface DotfileService {
      * @throws IOException if there is an error reading the dotfile marker file
      */
     public List<DotfileMarkerModel> getDotfileMarkerModelsByPath(Path path) throws IOException;
+
+
+    public void relinkDotfiles() throws IOException;
 }
