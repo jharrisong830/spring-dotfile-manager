@@ -195,4 +195,55 @@ public class SDFMCommandsUnitTests {
 
         assertThrows(IOException.class, () -> commands.list(context));
     }
+
+
+    @Test
+    public void testRelink_noMarkersFound_printsEmptyMessage_skipsRelink() throws Exception {
+        when(dotfileService.getAllDotfileMarkerModels()).thenReturn(List.of());
+        when(context.outputWriter()).thenReturn(outputWriter);
+
+        commands.relink(context);
+
+        verify(outputWriter).println(contains("No dotfiles found"));
+        verify(dotfileService, never()).relinkDotfiles();
+    }
+
+    @Test
+    public void testRelink_markersFound_printsHeader_callsRelink() throws Exception {
+        List<DotfileMarkerModel> models = DotfileMarkerModel.fromMarkerFileContents(
+            Path.of("/repo/zshrc.dotfile"),
+            "name: .zshrc\nlocation: /home/user/.zshrc\n"
+        );
+        when(dotfileService.getAllDotfileMarkerModels()).thenReturn(models);
+        when(context.outputWriter()).thenReturn(outputWriter);
+
+        commands.relink(context);
+
+        verify(outputWriter).println(contains("Relinking dotfiles"));
+        verify(dotfileService).relinkDotfiles();
+    }
+
+    @Test
+    public void testRelink_getAllDotfileMarkerModelsThrows_propagates() throws Exception {
+        doThrow(new IOException("repo not found"))
+            .when(dotfileService).getAllDotfileMarkerModels();
+
+        assertThrows(IOException.class, () -> commands.relink(context));
+
+        verify(dotfileService, never()).relinkDotfiles();
+    }
+
+    @Test
+    public void testRelink_relinkDotfilesThrows_propagates() throws Exception {
+        List<DotfileMarkerModel> models = DotfileMarkerModel.fromMarkerFileContents(
+            Path.of("/repo/zshrc.dotfile"),
+            "name: .zshrc\nlocation: /home/user/.zshrc\n"
+        );
+        when(dotfileService.getAllDotfileMarkerModels()).thenReturn(models);
+        when(context.outputWriter()).thenReturn(outputWriter);
+        doThrow(new IOException("file exists"))
+            .when(dotfileService).relinkDotfiles();
+
+        assertThrows(IOException.class, () -> commands.relink(context));
+    }
 }

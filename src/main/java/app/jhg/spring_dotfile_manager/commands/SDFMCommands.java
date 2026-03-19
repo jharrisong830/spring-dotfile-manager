@@ -94,6 +94,18 @@ public class SDFMCommands {
         context.outputWriter().flush();
     }
 
+    @Command(name = "relink", description = "Relink all dotfiles in the configured repository", exitStatusExceptionMapper = "exitStatusExceptionMapper")
+    public void relink(CommandContext context) throws Exception {
+        List<DotfileMarkerModel> markerModels = dotfileService.getAllDotfileMarkerModels();
+        if (markerModels.isEmpty()) {
+            context.outputWriter().println("No dotfiles found to relink in the configured repository.");
+        } else {
+            context.outputWriter().println("Relinking dotfiles in configured repository...");
+            dotfileService.relinkDotfiles();
+        }
+        context.outputWriter().flush();
+    }
+
 
     private void printConfig(PrintWriter outputWriter, String dotfileRepoPath) {
         outputWriter.println("Configuration at: " + configService.getConfigFilePath());
