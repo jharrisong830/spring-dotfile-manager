@@ -37,6 +37,11 @@ public class FileServiceImpl implements FileService {
     }
 
     @Override
+    public void createSymlink(Path linkPath, Path source) throws IOException {
+        Files.createSymbolicLink(linkPath, source);
+    }
+
+    @Override
     public void writeFile(Path path, String content) throws IOException {
         Files.writeString(path, content, StandardOpenOption.CREATE_NEW);
     }

@@ -201,6 +201,50 @@ public class FileServiceUnitTests {
 
 
     @Test
+    public void testCreateSymlink_toFile() throws IOException {
+        Path target = tempDir.resolve("target.txt");
+        Files.createFile(target);
+        Path link = tempDir.resolve("link.txt");
+
+        fileService.createSymlink(link, target);
+
+        assertTrue(Files.isSymbolicLink(link));
+        assertEquals(target, Files.readSymbolicLink(link));
+    }
+
+    @Test
+    public void testCreateSymlink_toDirectory() throws IOException {
+        Path target = tempDir.resolve("targetDir");
+        Files.createDirectory(target);
+        Path link = tempDir.resolve("linkDir");
+
+        fileService.createSymlink(link, target);
+
+        assertTrue(Files.isSymbolicLink(link));
+        assertEquals(target, Files.readSymbolicLink(link));
+    }
+
+    @Test
+    public void testCreateSymlink_linkAlreadyExists() throws IOException {
+        Path target = tempDir.resolve("target.txt");
+        Files.createFile(target);
+        Path link = tempDir.resolve("link.txt");
+        Files.createFile(link);
+
+        assertThrows(FileAlreadyExistsException.class, () -> fileService.createSymlink(link, target));
+    }
+
+    @Test
+    public void testCreateSymlink_parentDirectoryDoesNotExist() throws IOException {
+        Path target = tempDir.resolve("target.txt");
+        Files.createFile(target);
+        Path link = tempDir.resolve("nonExistentDir/link.txt");
+
+        assertThrows(IOException.class, () -> fileService.createSymlink(link, target));
+    }
+
+
+    @Test
     public void testDeleteFile_regularFile() throws IOException {
         Path filePath = tempDir.resolve("testFile.txt");
         Files.createFile(filePath);

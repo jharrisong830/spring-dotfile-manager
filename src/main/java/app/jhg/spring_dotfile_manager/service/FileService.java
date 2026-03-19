@@ -35,6 +35,14 @@ public interface FileService {
     public void createDirectories(Path path) throws IOException;
 
     /**
+     * creates a symlink to the specified source at the given link path
+     * @param linkPath path at which the link should be created
+     * @param source where the symlink should point to
+     * @throws IOException if an I/O error occurs creating the symlink
+     */
+    public void createSymlink(Path linkPath, Path source) throws IOException;
+
+    /**
      * writes the given content to a file at the specified path. If a file already exists at the path, a FileAlreadyExistsException is thrown.
      * @param path the path to write the file to
      * @param content the content to write to the file
@@ -67,8 +75,8 @@ public interface FileService {
 
     /**
      * performs a glob operation starting from the specified base directory and using the provided glob pattern, returning a list of matching file paths
-     * @param baseDirectory
-     * @param globPattern
+     * @param baseDirectory directory to search under
+     * @param globPattern pattern to match against under the base directory
      * @return a list of file paths that match the glob pattern starting from the base directory
      * @throws IOException if an I/O error occurs during the glob operation
      */
