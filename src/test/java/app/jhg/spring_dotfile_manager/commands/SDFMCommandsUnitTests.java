@@ -6,8 +6,10 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.contains;
 import static org.mockito.Mockito.*;
 
+import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.io.StringReader;
 import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.NoSuchFileException;
 
@@ -44,9 +46,13 @@ public class SDFMCommandsUnitTests {
 
     private static final String DEFAULT_REPO_PATH = "~/dotfiles";
 
+    private SDFMCommands commandsWithStdin(String input) {
+        return new SDFMCommands(DEFAULT_REPO_PATH, configService, dotfileService, new BufferedReader(new StringReader(input)));
+    }
+
     @BeforeEach
     void setUp() {
-        commands = new SDFMCommands(DEFAULT_REPO_PATH, configService, dotfileService);
+        commands = commandsWithStdin("");
     }
 
     @Test
@@ -64,7 +70,6 @@ public class SDFMCommandsUnitTests {
     @Test
     public void testInit_noPathProvided_userEntersNothing_usesDefault() throws Exception {
         when(context.outputWriter()).thenReturn(outputWriter);
-        doNothing().when(outputWriter).println(anyString());
 
         commands.init("", context);
 
@@ -74,11 +79,21 @@ public class SDFMCommandsUnitTests {
     @Test
     public void testInit_noPathProvided_userEntersWhitespace_usesDefault() throws Exception {
         when(context.outputWriter()).thenReturn(outputWriter);
-        doNothing().when(outputWriter).println(anyString());
+        SDFMCommands cmds = commandsWithStdin("   ");
 
-        commands.init("   ", context);
+        cmds.init("", context);
 
         verify(configService).initializeConfig(DEFAULT_REPO_PATH);
+    }
+
+    @Test
+    public void testInit_noPathProvided_userEntersCustomPath_usesCustomPath() throws Exception {
+        when(context.outputWriter()).thenReturn(outputWriter);
+        SDFMCommands cmds = commandsWithStdin("~/custom-dotfiles");
+
+        cmds.init("", context);
+
+        verify(configService).initializeConfig("~/custom-dotfiles");
     }
 
     @Test

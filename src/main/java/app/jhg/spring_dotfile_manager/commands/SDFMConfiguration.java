@@ -1,7 +1,9 @@
 package app.jhg.spring_dotfile_manager.commands;
 
+import java.io.BufferedReader;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.lang.reflect.InvocationTargetException;
 import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.NoSuchFileException;
@@ -14,6 +16,11 @@ import org.springframework.shell.core.command.exit.ExitStatusExceptionMapper;
 
 @Configuration
 public class SDFMConfiguration {
+
+    @Bean
+    public BufferedReader stdinReader() {
+        return new BufferedReader(new InputStreamReader(System.in));
+    }
 
     @Bean
     public ExitStatusExceptionMapper exitStatusExceptionMapper() {

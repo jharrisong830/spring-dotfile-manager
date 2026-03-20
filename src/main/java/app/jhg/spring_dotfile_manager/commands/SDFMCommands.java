@@ -1,6 +1,8 @@
 package app.jhg.spring_dotfile_manager.commands;
 
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.util.List;
 
@@ -22,15 +24,18 @@ public class SDFMCommands {
 
     private final ConfigService configService;
     private final DotfileService dotfileService;
+    private final BufferedReader stdinReader;
 
     public SDFMCommands(
         @Value("${spring-dotfile-manager.config.default-repo-path}") String defaultRepoPath,
         ConfigService configService,
-        DotfileService dotfileService
+        DotfileService dotfileService,
+        BufferedReader stdinReader
     ) {
         this.defaultRepoPath = defaultRepoPath;
         this.configService = configService;
         this.dotfileService = dotfileService;
+        this.stdinReader = stdinReader;
     }
 
     
@@ -46,11 +51,17 @@ public class SDFMCommands {
         dotfileRepoPath = dotfileRepoPath.trim();
         if (dotfileRepoPath.isEmpty()) {
             context.outputWriter().println("No dotfile repository path provided.");
-            context.outputWriter().println("Default repository path is: '" + FormattingUtils.formatWithHomeDirectory(defaultRepoPath) + "'");
-            context.outputWriter().println("Delete the file and re-run with a custom path, or run set-config to change the path later.");
+            context.outputWriter().println("Enter desired path, or <Enter> to accept default (" + FormattingUtils.formatWithHomeDirectory(defaultRepoPath) + ")");
             context.outputWriter().flush();
-            
-            dotfileRepoPath = defaultRepoPath;
+
+            String line = stdinReader.readLine();
+            String customPath = line != null ? line.trim() : "";
+
+            if (!customPath.isEmpty()) {
+                dotfileRepoPath = customPath;
+            } else {
+                dotfileRepoPath = defaultRepoPath;
+            }
         }
 
         configService.initializeConfig(dotfileRepoPath);
