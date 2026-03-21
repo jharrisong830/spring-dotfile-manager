@@ -84,7 +84,14 @@ public class DotfileMarkerModel {
 
     @Override
     public String toString() {
-        return "DotfileMarkerModel{name='" + name + "', location=" + location + ", sourceLocation=" + sourceLocation + ", linuxOverride=" + linuxOverride + ", win32Override=" + win32Override + ", darwinOverride=" + darwinOverride + "}";
+        return "DotfileMarkerModel{"
+            + "name='" + name + "'"
+            + ", location=" + location
+            + ", sourceLocation=" + sourceLocation
+            + ", linuxOverride=" + linuxOverride
+            + ", win32Override=" + win32Override
+            + ", darwinOverride=" + darwinOverride
+            + "}";
     }
 
 
