@@ -263,7 +263,7 @@ public class FileServiceUnitTests {
 
         fileService.deleteFile(symbolicLink);
 
-        assertFalse(Files.exists(symbolicLink));
+        assertFalse(Files.isSymbolicLink(symbolicLink));
         assertTrue(Files.exists(targetFile));
     }
 
@@ -313,7 +313,7 @@ public class FileServiceUnitTests {
 
         fileService.forceDelete(link);
 
-        assertFalse(Files.exists(link));
+        assertFalse(Files.isSymbolicLink(link));
         assertTrue(Files.exists(target));
     }
 
