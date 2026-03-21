@@ -30,11 +30,11 @@ public class ListCommand implements Callable<Integer> {
         List<DotfileMarkerModel> markers = dotfileService.getAllDotfileMarkerModels();
         
         if (markers.isEmpty()) {
-            System.out.println("No dotfiles found in the configured repository.");
+            log.info("No dotfiles found in the configured repository.");
         } else {
-            System.out.println("Dotfiles in configured repository:");
+            log.info("Dotfiles in configured repository:");
             for (DotfileMarkerModel marker : markers) {
-                System.out.println("- " + marker);
+                log.info("- {}", marker);
             }
         }
 
