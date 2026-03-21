@@ -7,7 +7,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 public class SpringDotfileManagerApplication {
 
     public static void main(String[] args) {
-        SpringApplication.run(SpringDotfileManagerApplication.class, args);
+        System.exit(SpringApplication.exit(SpringApplication.run(SpringDotfileManagerApplication.class, args)));
     }
 
 }
