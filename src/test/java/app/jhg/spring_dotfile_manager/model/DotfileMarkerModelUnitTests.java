@@ -139,14 +139,14 @@ location: /home/testuser/.vimrc
 - item2
 """;
 
-        assertThrows(IllegalArgumentException.class, () -> DotfileMarkerModel.fromMarkerFileContents(null, markerFileContents));
+        assertThrows(IllegalArgumentException.class, () -> DotfileMarkerModel.fromMarkerFileContents(Path.of(TEST_MARKER_FILENAME), markerFileContents));
     }
 
     @Test
     public void testFromMarkerFileContents_scalarDocument() {
         String markerFileContents = "just a string\n";
 
-        assertThrows(IllegalArgumentException.class, () -> DotfileMarkerModel.fromMarkerFileContents(null, markerFileContents));
+        assertThrows(IllegalArgumentException.class, () -> DotfileMarkerModel.fromMarkerFileContents(Path.of(TEST_MARKER_FILENAME), markerFileContents));
     }
 
     @Test
@@ -156,7 +156,7 @@ location: /home/testuser/.vimrc
 name: .zshrc
 """;
 
-        assertThrows(IllegalArgumentException.class, () -> DotfileMarkerModel.fromMarkerFileContents(null, markerFileContents));
+        assertThrows(IllegalArgumentException.class, () -> DotfileMarkerModel.fromMarkerFileContents(Path.of(TEST_MARKER_FILENAME), markerFileContents));
     }
 
     @Test
@@ -167,7 +167,7 @@ name: ""
 location: /home/testuser/.zshrc
 """;
 
-        assertThrows(IllegalArgumentException.class, () -> DotfileMarkerModel.fromMarkerFileContents(null, markerFileContents));
+        assertThrows(IllegalArgumentException.class, () -> DotfileMarkerModel.fromMarkerFileContents(Path.of(TEST_MARKER_FILENAME), markerFileContents));
     }
 
     @Test
@@ -178,7 +178,7 @@ name: .zshrc
 location: "   "
 """;
 
-        assertThrows(IllegalArgumentException.class, () -> DotfileMarkerModel.fromMarkerFileContents(null, markerFileContents));
+        assertThrows(IllegalArgumentException.class, () -> DotfileMarkerModel.fromMarkerFileContents(Path.of(TEST_MARKER_FILENAME), markerFileContents));
     }
 
     @Test
@@ -189,7 +189,7 @@ name: .zshrc
 location: 123
 """;
 
-        assertThrows(IllegalArgumentException.class, () -> DotfileMarkerModel.fromMarkerFileContents(null, markerFileContents));
+        assertThrows(IllegalArgumentException.class, () -> DotfileMarkerModel.fromMarkerFileContents(Path.of(TEST_MARKER_FILENAME), markerFileContents));
     }
 
     @Test
@@ -267,7 +267,7 @@ linux:
     shouldLink: true
 """;
 
-        assertThrows(IllegalArgumentException.class, () -> DotfileMarkerModel.fromMarkerFileContents(null, markerFileContents));
+        assertThrows(IllegalArgumentException.class, () -> DotfileMarkerModel.fromMarkerFileContents(Path.of(TEST_MARKER_FILENAME), markerFileContents));
     }
 
     @Test
@@ -281,7 +281,21 @@ linux:
     location: ""
 """;
 
-        assertThrows(IllegalArgumentException.class, () -> DotfileMarkerModel.fromMarkerFileContents(null, markerFileContents));
+        assertThrows(IllegalArgumentException.class, () -> DotfileMarkerModel.fromMarkerFileContents(Path.of(TEST_MARKER_FILENAME), markerFileContents));
+    }
+
+    @Test
+    public void testFromMarkerFileContents_whitespaceLocationInPlatformOverride() {
+        String markerFileContents =
+"""
+name: .zshrc
+location: /home/testuser/.zshrc
+linux:
+    shouldLink: true
+    location: "   "
+""";
+
+        assertThrows(IllegalArgumentException.class, () -> DotfileMarkerModel.fromMarkerFileContents(Path.of(TEST_MARKER_FILENAME), markerFileContents));
     }
 
     @Test
@@ -294,7 +308,7 @@ linux:
     location: /home/testuser/.linux_zshrc
 """;
 
-        assertThrows(IllegalArgumentException.class, () -> DotfileMarkerModel.fromMarkerFileContents(null, markerFileContents));
+        assertThrows(IllegalArgumentException.class, () -> DotfileMarkerModel.fromMarkerFileContents(Path.of(TEST_MARKER_FILENAME), markerFileContents));
     }
 
     @Test
@@ -308,7 +322,7 @@ linux:
     location: /home/testuser/.linux_zshrc
 """;
 
-        assertThrows(IllegalArgumentException.class, () -> DotfileMarkerModel.fromMarkerFileContents(null, markerFileContents));
+        assertThrows(IllegalArgumentException.class, () -> DotfileMarkerModel.fromMarkerFileContents(Path.of(TEST_MARKER_FILENAME), markerFileContents));
     }
 
     @Test
