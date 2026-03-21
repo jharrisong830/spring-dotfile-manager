@@ -153,4 +153,44 @@ public class RelinkCommandUnitTests {
         assertEquals(0, result);
         verify(dotfileService, never()).overwriteExistingDotfile(any());
     }
+
+    @Test
+    public void testCall_fileAlreadyExists_userConfirmsYes_overwriteFails_doesNotPropagate() throws Exception {
+        List<DotfileMarkerModel> markers = DotfileMarkerModel.fromMarkerFileContents(
+            Path.of("/repo/zshrc.dotfile"),
+            "name: .zshrc\nlocation: /home/user/.zshrc\n"
+        );
+        when(dotfileService.getAllDotfileMarkerModels()).thenReturn(markers);
+        doThrow(new FileAlreadyExistsException("/home/user/.zshrc"))
+            .when(dotfileService).relinkDotfile(any());
+        when(stdinReader.readLine()).thenReturn("yes");
+        doThrow(new IOException("permission denied"))
+            .when(dotfileService).overwriteExistingDotfile(any());
+
+        int result = command.call();
+
+        assertEquals(0, result);
+    }
+
+    @Test
+    public void testCall_fileAlreadyExists_userConfirmsYes_overwriteFailsOnFirst_continuesLoop() throws Exception {
+        List<DotfileMarkerModel> markers = DotfileMarkerModel.fromMarkerFileContents(
+            Path.of("/repo/shell.dotfile"),
+            "name: .zshrc\nlocation: /home/user/.zshrc\n---\nname: .bashrc\nlocation: /home/user/.bashrc\n"
+        );
+        when(dotfileService.getAllDotfileMarkerModels()).thenReturn(markers);
+        doThrow(new FileAlreadyExistsException("/home/user/.zshrc"))
+            .when(dotfileService).relinkDotfile(markers.get(0));
+        doThrow(new FileAlreadyExistsException("/home/user/.bashrc"))
+            .when(dotfileService).relinkDotfile(markers.get(1));
+        when(stdinReader.readLine()).thenReturn("yes");
+        doThrow(new IOException("permission denied"))
+            .when(dotfileService).overwriteExistingDotfile(markers.get(0));
+
+        int result = command.call();
+
+        assertEquals(0, result);
+        verify(dotfileService).overwriteExistingDotfile(markers.get(0));
+        verify(dotfileService).overwriteExistingDotfile(markers.get(1));
+    }
 }

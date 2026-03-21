@@ -1,6 +1,7 @@
 package app.jhg.spring_dotfile_manager.commands;
 
 import java.io.BufferedReader;
+import java.io.IOException;
 import java.nio.file.FileAlreadyExistsException;
 import java.util.List;
 import java.util.concurrent.Callable;
@@ -48,8 +49,12 @@ public class RelinkCommand implements Callable<Integer> {
                     String response = line != null ? line.trim() : "";
 
                     if (response.equalsIgnoreCase("yes")) {
-                        dotfileService.overwriteExistingDotfile(marker);
-                        log.info("Overwrote existing file/directory with symlink to {}", marker.sourceLocation);
+                        try {
+                            dotfileService.overwriteExistingDotfile(marker);
+                            log.info("Overwrote existing file/directory with symlink to {}", marker.sourceLocation);
+                        } catch (IOException overwriteException) {
+                            log.error("Failed to overwrite {}: {}", marker.location, overwriteException.getMessage());
+                        }
                     } else {
                         log.info("Skipped relinking for {}", marker.location);
                     }
