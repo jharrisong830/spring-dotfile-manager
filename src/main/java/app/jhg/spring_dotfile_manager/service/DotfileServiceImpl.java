@@ -1,6 +1,7 @@
 package app.jhg.spring_dotfile_manager.service;
 
 import java.io.IOException;
+import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
@@ -70,7 +71,14 @@ public class DotfileServiceImpl implements DotfileService {
             // happy path 2: create the link if nothing exists
             fileService.createSymlink(marker.location, marker.sourceLocation);
         } else {
-            throw new IOException("FILE/DIR EXISTS. IMPLEMENT LATER"); // TODO: implement prompts for if existing files should be overwritten
+            // throw an exception, catch in the caller, and then prompt the user if they want to overwrite it
+            throw new FileAlreadyExistsException("Regular file/directory exists at " + marker.location + " and is not a symbolic link. Please move or delete it before relinking.");
         }
+    }
+
+    @Override
+    public void overwriteExistingDotfile(DotfileMarkerModel marker) throws IOException {
+        fileService.forceDelete(marker.location);
+        fileService.createSymlink(marker.location, marker.sourceLocation);
     }
 }

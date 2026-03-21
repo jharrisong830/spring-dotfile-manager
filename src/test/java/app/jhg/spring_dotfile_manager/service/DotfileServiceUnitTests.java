@@ -326,4 +326,51 @@ public class DotfileServiceUnitTests {
         verify(fileService, never()).deleteFile(any());
         verify(fileService, never()).createSymlink(any(), any());
     }
+
+
+    @Test
+    public void testOverwriteExistingDotfile_forceDeletesAndCreatesSymlink() throws IOException {
+        DotfileMarkerModel marker = DotfileMarkerModel.fromMarkerFileContents(
+            Path.of(RESOLVED_REPO_PATH, "zshrc.dotfile"),
+            "name: .zshrc\nlocation: ~/.zshrc\n"
+        ).get(0);
+        Path location = Path.of(System.getProperty("user.home"), ".zshrc");
+        Path source = Path.of(RESOLVED_REPO_PATH, ".zshrc");
+
+        dotfileService.overwriteExistingDotfile(marker);
+
+        verify(fileService).forceDelete(location);
+        verify(fileService).createSymlink(location, source);
+    }
+
+    @Test
+    public void testOverwriteExistingDotfile_forceDeleteThrows_propagates() throws IOException {
+        DotfileMarkerModel marker = DotfileMarkerModel.fromMarkerFileContents(
+            Path.of(RESOLVED_REPO_PATH, "zshrc.dotfile"),
+            "name: .zshrc\nlocation: ~/.zshrc\n"
+        ).get(0);
+        Path location = Path.of(System.getProperty("user.home"), ".zshrc");
+
+        doThrow(new IOException("delete failed"))
+            .when(fileService).forceDelete(location);
+
+        assertThrows(IOException.class, () -> dotfileService.overwriteExistingDotfile(marker));
+
+        verify(fileService, never()).createSymlink(any(), any());
+    }
+
+    @Test
+    public void testOverwriteExistingDotfile_createSymlinkThrows_propagates() throws IOException {
+        DotfileMarkerModel marker = DotfileMarkerModel.fromMarkerFileContents(
+            Path.of(RESOLVED_REPO_PATH, "zshrc.dotfile"),
+            "name: .zshrc\nlocation: ~/.zshrc\n"
+        ).get(0);
+        Path location = Path.of(System.getProperty("user.home"), ".zshrc");
+        Path source = Path.of(RESOLVED_REPO_PATH, ".zshrc");
+
+        doThrow(new IOException("symlink failed"))
+            .when(fileService).createSymlink(location, source);
+
+        assertThrows(IOException.class, () -> dotfileService.overwriteExistingDotfile(marker));
+    }
 }

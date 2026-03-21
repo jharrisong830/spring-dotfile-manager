@@ -1,5 +1,7 @@
 package app.jhg.spring_dotfile_manager.commands;
 
+import java.io.BufferedReader;
+import java.nio.file.FileAlreadyExistsException;
 import java.util.List;
 import java.util.concurrent.Callable;
 
@@ -20,9 +22,11 @@ import picocli.CommandLine.Command;
 public class RelinkCommand implements Callable<Integer> {
     
     private final DotfileService dotfileService;
+    private final BufferedReader stdinReader;
 
-    public RelinkCommand(DotfileService dotfileService) {
+    public RelinkCommand(DotfileService dotfileService, BufferedReader stdinReader) {
         this.dotfileService = dotfileService;
+        this.stdinReader = stdinReader;
     }
 
     @Override
@@ -33,7 +37,23 @@ public class RelinkCommand implements Callable<Integer> {
             log.info("No dotfiles found to relink in the configured repository.");
         } else {
             for (DotfileMarkerModel marker : markers) {
-                dotfileService.relinkDotfile(marker);
+                try {
+                    dotfileService.relinkDotfile(marker);
+                } catch (FileAlreadyExistsException e) {
+                    // a file or directory already exists here, prompt before overwriting
+                    log.info(e.getMessage());
+                    log.info("Do you want to overwrite it with a symlink to {}? (only 'yes' will be accepted)", marker.sourceLocation);
+
+                    String line = stdinReader.readLine();
+                    String response = line != null ? line.trim() : "";
+
+                    if (response.equalsIgnoreCase("yes")) {
+                        dotfileService.overwriteExistingDotfile(marker);
+                        log.info("Overwrote existing file/directory with symlink to {}", marker.sourceLocation);
+                    } else {
+                        log.info("Skipped relinking for {}", marker.location);
+                    }
+                }
             }
         }
 

@@ -41,4 +41,11 @@ public interface DotfileService {
      * @throws IOException if there is a regular file or directory where a link is supposed to be made, or if there is any I/O error
      */
     public void relinkDotfile(DotfileMarkerModel marker) throws IOException;
+
+    /**
+     * overwrites an existing regular file or directory at the marker's location with a symlink to the marker's source location. This is only called after the user has confirmed they want to overwrite the existing file/directory.
+     * @param marker the dotfile marker representing the dotfile to be linked
+     * @throws IOException if there is any I/O error during the overwrite process
+     */
+    public void overwriteExistingDotfile(DotfileMarkerModel marker) throws IOException;
 }

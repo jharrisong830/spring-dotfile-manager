@@ -4,7 +4,9 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.Path;
 import java.util.List;
 
@@ -23,11 +25,14 @@ public class RelinkCommandUnitTests {
     @Mock
     private DotfileService dotfileService;
 
+    @Mock
+    private BufferedReader stdinReader;
+
     private RelinkCommand command;
 
     @BeforeEach
     void setUp() {
-        command = new RelinkCommand(dotfileService);
+        command = new RelinkCommand(dotfileService, stdinReader);
     }
 
     @Test
@@ -38,6 +43,7 @@ public class RelinkCommandUnitTests {
 
         assertEquals(0, result);
         verify(dotfileService, never()).relinkDotfile(any());
+        verify(dotfileService, never()).overwriteExistingDotfile(any());
     }
 
     @Test
@@ -53,6 +59,7 @@ public class RelinkCommandUnitTests {
         assertEquals(0, result);
         verify(dotfileService).relinkDotfile(markers.get(0));
         verify(dotfileService).relinkDotfile(markers.get(1));
+        verify(dotfileService, never()).overwriteExistingDotfile(any());
     }
 
     @Test
@@ -62,6 +69,7 @@ public class RelinkCommandUnitTests {
 
         assertThrows(IOException.class, command::call);
         verify(dotfileService, never()).relinkDotfile(any());
+        verify(dotfileService, never()).overwriteExistingDotfile(any());
     }
 
     @Test
@@ -71,9 +79,78 @@ public class RelinkCommandUnitTests {
             "name: .zshrc\nlocation: /home/user/.zshrc\n"
         );
         when(dotfileService.getAllDotfileMarkerModels()).thenReturn(markers);
-        doThrow(new IOException("file exists"))
+        doThrow(new IOException("unexpected i/o error"))
             .when(dotfileService).relinkDotfile(any());
 
         assertThrows(IOException.class, command::call);
+        verify(dotfileService, never()).overwriteExistingDotfile(any());
+    }
+
+    @Test
+    public void testCall_fileAlreadyExists_userConfirmsYes_overwrites() throws Exception {
+        List<DotfileMarkerModel> markers = DotfileMarkerModel.fromMarkerFileContents(
+            Path.of("/repo/zshrc.dotfile"),
+            "name: .zshrc\nlocation: /home/user/.zshrc\n"
+        );
+        when(dotfileService.getAllDotfileMarkerModels()).thenReturn(markers);
+        doThrow(new FileAlreadyExistsException("/home/user/.zshrc"))
+            .when(dotfileService).relinkDotfile(any());
+        when(stdinReader.readLine()).thenReturn("yes");
+
+        int result = command.call();
+
+        assertEquals(0, result);
+        verify(dotfileService).overwriteExistingDotfile(markers.get(0));
+    }
+
+    @Test
+    public void testCall_fileAlreadyExists_userConfirmsYes_caseInsensitive_overwrites() throws Exception {
+        List<DotfileMarkerModel> markers = DotfileMarkerModel.fromMarkerFileContents(
+            Path.of("/repo/zshrc.dotfile"),
+            "name: .zshrc\nlocation: /home/user/.zshrc\n"
+        );
+        when(dotfileService.getAllDotfileMarkerModels()).thenReturn(markers);
+        doThrow(new FileAlreadyExistsException("/home/user/.zshrc"))
+            .when(dotfileService).relinkDotfile(any());
+        when(stdinReader.readLine()).thenReturn("YES");
+
+        int result = command.call();
+
+        assertEquals(0, result);
+        verify(dotfileService).overwriteExistingDotfile(markers.get(0));
+    }
+
+    @Test
+    public void testCall_fileAlreadyExists_userDeclines_skips() throws Exception {
+        List<DotfileMarkerModel> markers = DotfileMarkerModel.fromMarkerFileContents(
+            Path.of("/repo/zshrc.dotfile"),
+            "name: .zshrc\nlocation: /home/user/.zshrc\n"
+        );
+        when(dotfileService.getAllDotfileMarkerModels()).thenReturn(markers);
+        doThrow(new FileAlreadyExistsException("/home/user/.zshrc"))
+            .when(dotfileService).relinkDotfile(any());
+        when(stdinReader.readLine()).thenReturn("no");
+
+        int result = command.call();
+
+        assertEquals(0, result);
+        verify(dotfileService, never()).overwriteExistingDotfile(any());
+    }
+
+    @Test
+    public void testCall_fileAlreadyExists_nullResponse_skips() throws Exception {
+        List<DotfileMarkerModel> markers = DotfileMarkerModel.fromMarkerFileContents(
+            Path.of("/repo/zshrc.dotfile"),
+            "name: .zshrc\nlocation: /home/user/.zshrc\n"
+        );
+        when(dotfileService.getAllDotfileMarkerModels()).thenReturn(markers);
+        doThrow(new FileAlreadyExistsException("/home/user/.zshrc"))
+            .when(dotfileService).relinkDotfile(any());
+        when(stdinReader.readLine()).thenReturn(null);
+
+        int result = command.call();
+
+        assertEquals(0, result);
+        verify(dotfileService, never()).overwriteExistingDotfile(any());
     }
 }
