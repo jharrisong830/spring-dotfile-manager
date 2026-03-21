@@ -13,6 +13,7 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import picocli.CommandLine;
+import picocli.CommandLine.IExecutionExceptionHandler;
 
 @Configuration
 @Slf4j
@@ -46,7 +47,7 @@ public class SDFMConfiguration {
     public CommandLine commandLine(
         RootCommand rootCommand,
         ApplicationContext ctx,
-        CommandLine.IExecutionExceptionHandler executionExceptionHandler
+        IExecutionExceptionHandler executionExceptionHandler
     ) {
         CommandLine.IFactory factory = new CommandLine.IFactory() {
             @Override
