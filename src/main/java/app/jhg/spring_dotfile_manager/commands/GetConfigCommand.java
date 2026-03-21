@@ -7,10 +7,10 @@ import org.springframework.stereotype.Component;
 import app.jhg.spring_dotfile_manager.service.ConfigService;
 import app.jhg.spring_dotfile_manager.util.FormattingUtils;
 import lombok.extern.slf4j.Slf4j;
-import picocli.CommandLine;
+import picocli.CommandLine.Command;
 
 @Component
-@CommandLine.Command(
+@Command(
     name = "get-config",
     description = "Get the current dotfile repository configuration",
     mixinStandardHelpOptions = true

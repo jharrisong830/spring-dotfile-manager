@@ -5,13 +5,14 @@ import app.jhg.spring_dotfile_manager.util.FormattingUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
-import picocli.CommandLine;
+import picocli.CommandLine.Command;
+import picocli.CommandLine.Parameters;
 
 import java.io.BufferedReader;
 import java.util.concurrent.Callable;
 
 @Component
-@CommandLine.Command(
+@Command(
     name = "init",
     description = "Initialize the configuration for Spring Dotfile Manager",
     mixinStandardHelpOptions = true
@@ -19,7 +20,7 @@ import java.util.concurrent.Callable;
 @Slf4j
 public class InitCommand implements Callable<Integer> {
 
-    @CommandLine.Parameters(
+    @Parameters(
         index = "0",
         description = "Path to your dotfile repository",
         defaultValue = ""

@@ -1,14 +1,15 @@
 package app.jhg.spring_dotfile_manager.commands;
 
 import org.springframework.stereotype.Component;
-import picocli.CommandLine;
+import picocli.CommandLine.Command;
+import picocli.CommandLine.HelpCommand;
 
 @Component
-@CommandLine.Command(
+@Command(
     name = "sdfm",
     subcommands = {
         InitCommand.class,
-        CommandLine.HelpCommand.class
+        HelpCommand.class
     },
     mixinStandardHelpOptions = true
 )
