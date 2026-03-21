@@ -74,6 +74,13 @@ public interface FileService {
     public void deleteFile(Path path) throws IOException;
 
     /**
+     * force deletes the file or directory at the specified path, deleting directories recursively
+     * @param path the path to the file or directory to delete
+     * @throws IOException if an I/O error occurs deleting the file/directory
+     */
+    public void forceDelete(Path path) throws IOException;
+
+    /**
      * performs a glob operation starting from the specified base directory and using the provided glob pattern, returning a list of matching file paths
      * @param baseDirectory directory to search under
      * @param globPattern pattern to match against under the base directory

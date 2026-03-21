@@ -5,6 +5,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 
 import org.springframework.core.io.Resource;
@@ -59,6 +60,24 @@ public class FileServiceImpl implements FileService {
     @Override
     public void deleteFile(Path path) throws IOException {
         Files.delete(path);
+    }
+
+    @Override
+    public void forceDelete(Path path) throws IOException {
+        if (isDirectory(path)) {
+            // delete directory contents along with the directory itself
+            Files.walk(path)
+                .sorted(Comparator.reverseOrder())
+                .forEach(p -> {
+                    try {
+                        deleteFile(p);
+                    } catch (IOException e) {
+                        throw new RuntimeException("Failed to delete file during force delete: " + p, e);
+                    }
+                });
+        } else {
+            deleteFile(path);
+        }
     }
 
     @Override

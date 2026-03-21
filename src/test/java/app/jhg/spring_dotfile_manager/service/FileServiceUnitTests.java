@@ -295,6 +295,74 @@ public class FileServiceUnitTests {
 
 
     @Test
+    public void testForceDelete_regularFile() throws IOException {
+        Path filePath = tempDir.resolve("testFile.txt");
+        Files.createFile(filePath);
+
+        fileService.forceDelete(filePath);
+
+        assertFalse(Files.exists(filePath));
+    }
+
+    @Test
+    public void testForceDelete_symbolicLink() throws IOException {
+        Path target = tempDir.resolve("target.txt");
+        Files.createFile(target);
+        Path link = tempDir.resolve("link.txt");
+        Files.createSymbolicLink(link, target);
+
+        fileService.forceDelete(link);
+
+        assertFalse(Files.exists(link));
+        assertTrue(Files.exists(target));
+    }
+
+    @Test
+    public void testForceDelete_emptyDirectory() throws IOException {
+        Path dirPath = tempDir.resolve("emptyDir");
+        Files.createDirectory(dirPath);
+
+        fileService.forceDelete(dirPath);
+
+        assertFalse(Files.exists(dirPath));
+    }
+
+    @Test
+    public void testForceDelete_directoryWithFiles() throws IOException {
+        Path dirPath = tempDir.resolve("dir");
+        Files.createDirectory(dirPath);
+        Path file1 = dirPath.resolve("a.txt");
+        Path file2 = dirPath.resolve("b.txt");
+        Files.createFile(file1);
+        Files.createFile(file2);
+
+        fileService.forceDelete(dirPath);
+
+        assertFalse(Files.exists(dirPath));
+        assertFalse(Files.exists(file1));
+        assertFalse(Files.exists(file2));
+    }
+
+    @Test
+    public void testForceDelete_directoryWithNestedContents() throws IOException {
+        Path dirPath = tempDir.resolve("dir");
+        Path subDir = dirPath.resolve("subDir");
+        Files.createDirectories(subDir);
+        Path file1 = dirPath.resolve("a.txt");
+        Path file2 = subDir.resolve("b.txt");
+        Files.createFile(file1);
+        Files.createFile(file2);
+
+        fileService.forceDelete(dirPath);
+
+        assertFalse(Files.exists(dirPath));
+        assertFalse(Files.exists(subDir));
+        assertFalse(Files.exists(file1));
+        assertFalse(Files.exists(file2));
+    }
+
+
+    @Test
     public void testGlob_basicMatch() throws IOException {
         Files.createFile(tempDir.resolve("a.yaml"));
         Files.createFile(tempDir.resolve("b.yaml"));
