@@ -132,4 +132,11 @@ public class ConfigServiceUnitTests {
         assertDoesNotThrow(() -> configService.updateConfig(""));
         verify(fileService).overwriteFile(eq(Path.of(CONFIG_PATH)), eq(new SDFMConfigModel("").getConfigFileContents()));
     }
+
+    @Test
+    public void testReadConfig_emptyPath_throwsIllegalArgumentException() throws IOException {
+        when(fileService.readFile(any(Path.class))).thenReturn(new SDFMConfigModel("").getConfigFileContents());
+
+        assertThrows(IllegalArgumentException.class, () -> configService.readConfig());
+    }
 }
