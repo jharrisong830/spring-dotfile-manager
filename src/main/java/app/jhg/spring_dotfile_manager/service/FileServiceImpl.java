@@ -7,6 +7,7 @@ import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.stream.Stream;
 
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
@@ -66,15 +67,12 @@ public class FileServiceImpl implements FileService {
     public void forceDelete(Path path) throws IOException {
         if (isDirectory(path)) {
             // delete directory contents along with the directory itself
-            Files.walk(path)
-                .sorted(Comparator.reverseOrder())
-                .forEach(p -> {
-                    try {
-                        deleteFile(p);
-                    } catch (IOException e) {
-                        throw new RuntimeException("Failed to delete file during force delete: " + p, e);
-                    }
-                });
+            try (Stream<Path> stream = Files.walk(path)) {
+                List<Path> entries = stream.sorted(Comparator.reverseOrder()).toList();
+                for (Path p : entries) {
+                    deleteFile(p);
+                }
+            }
         } else {
             deleteFile(path);
         }
