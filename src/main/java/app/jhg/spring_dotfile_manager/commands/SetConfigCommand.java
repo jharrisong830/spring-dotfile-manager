@@ -37,8 +37,9 @@ public class SetConfigCommand implements Callable<Integer>{
     public Integer call() throws Exception {
         dotfileRepoPath = dotfileRepoPath.trim();
         if (dotfileRepoPath.isEmpty()) {
+            String currentConfig = configService.readConfig();
             log.info("No dotfile repository path provided.");
-            log.info("Enter desired path, or <Enter> to keep current configuration ({})", configService.readConfig());
+            log.info("Enter desired path, or <Enter> to keep current configuration ({})", currentConfig);
 
             String line = stdinReader.readLine();
             String customPath = line != null ? line.trim() : "";
@@ -46,7 +47,7 @@ public class SetConfigCommand implements Callable<Integer>{
             if (!customPath.isEmpty()) {
                 dotfileRepoPath = customPath;
             } else {
-                log.info("Keeping current configuration: {}", configService.readConfig());
+                log.info("Keeping current configuration: {}", currentConfig);
                 return 0;
             }
         }
