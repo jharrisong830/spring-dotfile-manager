@@ -5,7 +5,6 @@ import java.util.concurrent.Callable;
 import org.springframework.stereotype.Component;
 
 import app.jhg.spring_dotfile_manager.service.ConfigService;
-import app.jhg.spring_dotfile_manager.util.FormattingUtils;
 import lombok.extern.slf4j.Slf4j;
 import picocli.CommandLine.Command;
 
@@ -26,13 +25,7 @@ public class GetConfigCommand implements Callable<Integer> {
     
     @Override
     public Integer call() throws Exception {
-        String dotfileRepoPath = configService.readConfig();
-        printConfig(dotfileRepoPath);
+        configService.printConfig();
         return 0;
-    }
-
-    private void printConfig(String dotfileRepoPath) {
-        log.info("Configuration at: {}", configService.getConfigFilePath());
-        log.info("Using dotfile repository path: '{}'", FormattingUtils.formatWithHomeDirectory(dotfileRepoPath));
     }
 }

@@ -44,6 +44,7 @@ public class InitCommandUnitTests {
 
         assertEquals(0, result);
         verify(configService).initializeConfig("~/my-dotfiles");
+        verify(configService).printConfig();
     }
 
     @Test
@@ -56,6 +57,7 @@ public class InitCommandUnitTests {
 
         assertEquals(0, result);
         verify(configService).initializeConfig(DEFAULT_REPO_PATH);
+        verify(configService).printConfig();
     }
 
     @Test
@@ -67,6 +69,7 @@ public class InitCommandUnitTests {
 
         assertEquals(0, result);
         verify(configService).initializeConfig(DEFAULT_REPO_PATH);
+        verify(configService).printConfig();
     }
 
     @Test
@@ -78,6 +81,7 @@ public class InitCommandUnitTests {
 
         assertEquals(0, result);
         verify(configService).initializeConfig(DEFAULT_REPO_PATH);
+        verify(configService).printConfig();
     }
 
     @Test
@@ -89,6 +93,7 @@ public class InitCommandUnitTests {
 
         assertEquals(0, result);
         verify(configService).initializeConfig("~/custom-dotfiles");
+        verify(configService).printConfig();
     }
 
     @Test
@@ -103,25 +108,39 @@ public class InitCommandUnitTests {
 
         assertEquals(0, result);
         verify(configService).initializeConfig(DEFAULT_REPO_PATH);
+        verify(configService).printConfig();
     }
 
     @Test
-    public void testCall_fileAlreadyExistsException_propagates() throws Exception {
+    public void testCall_initializeConfig_fileAlreadyExistsException_propagates() throws Exception {
         doThrow(new FileAlreadyExistsException("already exists"))
             .when(configService).initializeConfig(any());
         InitCommand cmd = commandWithStdin("");
         parseArgs(cmd, "~/my-dotfiles");
 
         assertThrows(FileAlreadyExistsException.class, cmd::call);
+        verify(configService, never()).printConfig();
     }
 
     @Test
-    public void testCall_ioException_propagates() throws Exception {
+    public void testCall_initializeConfig_ioException_propagates() throws Exception {
         doThrow(new IOException("disk full"))
             .when(configService).initializeConfig(any());
         InitCommand cmd = commandWithStdin("");
         parseArgs(cmd, "~/my-dotfiles");
 
         assertThrows(IOException.class, cmd::call);
+        verify(configService, never()).printConfig();
+    }
+
+    @Test
+    public void testCall_printConfig_ioException_propagates() throws Exception {
+        doThrow(new IOException("disk full"))
+            .when(configService).printConfig();
+        InitCommand cmd = commandWithStdin("");
+        parseArgs(cmd, "~/my-dotfiles");
+
+        assertThrows(IOException.class, cmd::call);
+        verify(configService).initializeConfig("~/my-dotfiles");
     }
 }

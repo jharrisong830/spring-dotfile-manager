@@ -10,8 +10,10 @@ import org.springframework.stereotype.Service;
 import app.jhg.spring_dotfile_manager.model.SDFMConfigModel;
 import app.jhg.spring_dotfile_manager.util.FormattingUtils;
 import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 
 @Service
+@Slf4j
 public class ConfigServiceImpl implements ConfigService {
     
     @Getter
@@ -48,5 +50,11 @@ public class ConfigServiceImpl implements ConfigService {
         }
         SDFMConfigModel config = new SDFMConfigModel(newDotfileRepoPath);
         fileService.overwriteFile(configFilePath, config.getConfigFileContents());
+    }
+
+    @Override
+    public void printConfig() throws IOException {
+        log.info("Configuration at: {}", getConfigFilePath());
+        log.info("Using dotfile repository path: '{}'", FormattingUtils.formatWithHomeDirectory(readConfig()));
     }
 }

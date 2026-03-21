@@ -27,4 +27,10 @@ public interface ConfigService {
      * @throws IOException if an I/O error occurs during file operations.
      */
     public void updateConfig(String newDotfileRepoPath) throws IOException;
+
+    /**
+     * Prints the current configuration, including the path to the configuration file and the dotfile repository path specified in the configuration. If an I/O error occurs during file operations, an IOException is thrown.
+     * @throws IOException if an I/O error occurs during file operations.
+     */
+    public void printConfig() throws IOException;
 }

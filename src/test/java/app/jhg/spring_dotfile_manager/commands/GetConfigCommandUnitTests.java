@@ -28,27 +28,25 @@ public class GetConfigCommandUnitTests {
     }
 
     @Test
-    public void testCall_success_returnsZero() throws Exception {
-        when(configService.readConfig()).thenReturn("~/dotfiles");
-
+    public void testCall_success_callsPrintConfigAndReturnsZero() throws Exception {
         int result = command.call();
 
         assertEquals(0, result);
-        verify(configService).readConfig();
+        verify(configService).printConfig();
     }
 
     @Test
-    public void testCall_noSuchFileException_propagates() throws Exception {
+    public void testCall_printConfig_noSuchFileException_propagates() throws Exception {
         doThrow(new NoSuchFileException("config.yaml"))
-            .when(configService).readConfig();
+            .when(configService).printConfig();
 
         assertThrows(NoSuchFileException.class, command::call);
     }
 
     @Test
-    public void testCall_ioException_propagates() throws Exception {
+    public void testCall_printConfig_ioException_propagates() throws Exception {
         doThrow(new IOException("disk full"))
-            .when(configService).readConfig();
+            .when(configService).printConfig();
 
         assertThrows(IOException.class, command::call);
     }
