@@ -12,6 +12,7 @@ import picocli.CommandLine.HelpCommand;
         GetConfigCommand.class,
         SetConfigCommand.class,
         ListCommand.class,
+        RelinkCommand.class,
         HelpCommand.class
     },
     mixinStandardHelpOptions = true
