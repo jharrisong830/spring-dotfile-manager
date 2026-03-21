@@ -46,7 +46,8 @@ public class SetConfigCommand implements Callable<Integer>{
             if (!customPath.isEmpty()) {
                 dotfileRepoPath = customPath;
             } else {
-                throw new IllegalArgumentException("Dotfile repository path cannot be empty. Please provide a valid path.");
+                log.info("Keeping current configuration: {}", configService.readConfig());
+                return 0;
             }
         }
 

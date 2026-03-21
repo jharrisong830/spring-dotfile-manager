@@ -9,6 +9,9 @@ import picocli.CommandLine.HelpCommand;
     name = "sdfm",
     subcommands = {
         InitCommand.class,
+        GetConfigCommand.class,
+        SetConfigCommand.class,
+        ListCommand.class,
         HelpCommand.class
     },
     mixinStandardHelpOptions = true

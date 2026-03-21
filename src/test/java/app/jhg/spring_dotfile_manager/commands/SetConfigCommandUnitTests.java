@@ -65,31 +65,34 @@ public class SetConfigCommandUnitTests {
     }
 
     @Test
-    public void testCall_noPathProvided_stdinEmpty_throwsIllegalArgumentException() throws Exception {
+    public void testCall_noPathProvided_stdinEmpty_doesNothing() throws Exception {
         SetConfigCommand cmd = commandWithStdin("");
         parseArgs(cmd);
 
-        assertThrows(IllegalArgumentException.class, cmd::call);
+        int result = cmd.call();
+        assertEquals(0, result);
         verify(configService, never()).updateConfig(any());
     }
 
     @Test
-    public void testCall_noPathProvided_stdinWhitespace_throwsIllegalArgumentException() throws Exception {
+    public void testCall_noPathProvided_stdinWhitespace_doesNothing() throws Exception {
         SetConfigCommand cmd = commandWithStdin("   ");
         parseArgs(cmd);
 
-        assertThrows(IllegalArgumentException.class, cmd::call);
+        int result = cmd.call();
+        assertEquals(0, result);
         verify(configService, never()).updateConfig(any());
     }
 
     @Test
-    public void testCall_noPathProvided_stdinReturnsNull_throwsIllegalArgumentException() throws Exception {
+    public void testCall_noPathProvided_stdinReturnsNull_doesNothing() throws Exception {
         BufferedReader nullReader = mock(BufferedReader.class);
         when(nullReader.readLine()).thenReturn(null);
         SetConfigCommand cmd = new SetConfigCommand(configService, nullReader);
         parseArgs(cmd);
 
-        assertThrows(IllegalArgumentException.class, cmd::call);
+        int result = cmd.call();
+        assertEquals(0, result);
         verify(configService, never()).updateConfig(any());
     }
 
