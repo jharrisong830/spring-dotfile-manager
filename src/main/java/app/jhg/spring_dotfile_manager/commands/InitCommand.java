@@ -1,7 +1,6 @@
 package app.jhg.spring_dotfile_manager.commands;
 
 import app.jhg.spring_dotfile_manager.service.ConfigService;
-import app.jhg.spring_dotfile_manager.service.DotfileService;
 import app.jhg.spring_dotfile_manager.util.FormattingUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
