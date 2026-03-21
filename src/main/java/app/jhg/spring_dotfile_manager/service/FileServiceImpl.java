@@ -1,22 +1,19 @@
 package app.jhg.spring_dotfile_manager.service;
 
 import java.io.IOException;
+import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.PathMatcher;
 import java.nio.file.StandardOpenOption;
-import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Stream;
 
-import org.springframework.core.io.Resource;
-import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
 import org.springframework.stereotype.Service;
 
 @Service
 public class FileServiceImpl implements FileService {
-
-    private static final PathMatchingResourcePatternResolver RESOLVER = new PathMatchingResourcePatternResolver();
 
     @Override
     public boolean exists(Path path) {
@@ -87,15 +84,15 @@ public class FileServiceImpl implements FileService {
             throw new IOException("Base directory is not a directory: " + baseDirectory);
         }
 
-        String fullGlobPattern = baseDirectory.toUri().toString() + "/" + globPattern;
+        PathMatcher matcher = FileSystems.getDefault().getPathMatcher("glob:" + globPattern);
 
-        Resource[] resources = RESOLVER.getResources(fullGlobPattern);
-        
-        List<Path> markerPaths = new ArrayList<>();
-        for (Resource resource : resources) {
-            markerPaths.add(resource.getFilePath());
+        try (Stream<Path> stream = Files.find(baseDirectory, Integer.MAX_VALUE, (p, attrs) -> {
+            Path relative = baseDirectory.relativize(p);
+            // also try with a synthetic parent so that patterns like **/*.yaml match root-level files,
+            // consistent with the behaviour of PathMatchingResourcePatternResolver
+            return matcher.matches(relative) || matcher.matches(Path.of("_").resolve(relative));
+        })) {
+            return stream.toList();
         }
-
-        return markerPaths;
     }
 }
