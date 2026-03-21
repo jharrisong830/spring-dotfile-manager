@@ -34,6 +34,7 @@ public class SetConfigCommand implements Callable<Integer>{
         this.stdinReader = stdinReader;
     }
 
+    @Override
     public Integer call() throws Exception {
         dotfileRepoPath = dotfileRepoPath.trim();
         if (dotfileRepoPath.isEmpty()) {
