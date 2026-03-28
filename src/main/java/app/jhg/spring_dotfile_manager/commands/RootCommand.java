@@ -3,6 +3,7 @@ package app.jhg.spring_dotfile_manager.commands;
 import org.springframework.stereotype.Component;
 
 import app.jhg.spring_dotfile_manager.config.DebugMixin;
+import app.jhg.spring_dotfile_manager.config.DotfileRepoPathMixin;
 import app.jhg.spring_dotfile_manager.config.VersionProviderConfiguration;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.HelpCommand;
@@ -27,4 +28,11 @@ public class RootCommand {
 
     @Mixin
     private DebugMixin debugMixin;
+
+    @Mixin
+    private DotfileRepoPathMixin dotfileRepoPathMixin;
+
+    public RootCommand(DotfileRepoPathMixin dotfileRepoPathMixin) {
+        this.dotfileRepoPathMixin = dotfileRepoPathMixin;
+    }
 }

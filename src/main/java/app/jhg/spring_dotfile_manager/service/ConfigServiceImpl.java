@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 
 import app.jhg.spring_dotfile_manager.model.SDFMConfigModel;
 import app.jhg.spring_dotfile_manager.util.FormattingUtils;
+import app.jhg.spring_dotfile_manager.config.DotfileRepoPathMixin;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -25,14 +26,20 @@ public class ConfigServiceImpl implements ConfigService {
         @Value("${spring-dotfile-manager.config.path.linux}") String linuxPath,
         @Value("${spring-dotfile-manager.config.path.darwin}") String darwinPath,
         @Value("${spring-dotfile-manager.config.path.win32}") String win32Path,
-        FileService fileService
+        FileService fileService,
+        DotfileRepoPathMixin dotfileRepoPathMixin
     ) {
-        String rawPath = switch (FormattingUtils.getResolvedOsName(System.getProperty("os.name"))) {
-            case "linux"  -> linuxPath;
-            case "darwin" -> darwinPath;
-            case "win32"  -> win32Path;
-            default -> throw new UnsupportedOperationException("Unsupported OS: " + System.getProperty("os.name"));
-        };
+        String rawPath;
+        if (dotfileRepoPathMixin.getDotfileRepoPath() != null) {
+            rawPath = dotfileRepoPathMixin.getDotfileRepoPath();
+        } else {
+            rawPath = switch (FormattingUtils.getResolvedOsName(System.getProperty("os.name"))) {
+                case "linux"  -> linuxPath;
+                case "darwin" -> darwinPath;
+                case "win32"  -> win32Path;
+                default -> throw new UnsupportedOperationException("Unsupported OS: " + System.getProperty("os.name"));
+            };
+        }
         this.configFilePath = Path.of(FormattingUtils.formatWithHomeDirectory(rawPath));
         this.fileService = fileService;
     }

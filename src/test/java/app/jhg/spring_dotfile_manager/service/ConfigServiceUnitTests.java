@@ -15,6 +15,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import app.jhg.spring_dotfile_manager.config.DotfileRepoPathMixin;
 import app.jhg.spring_dotfile_manager.model.SDFMConfigModel;
 
 @ExtendWith(MockitoExtension.class)
@@ -22,6 +23,9 @@ public class ConfigServiceUnitTests {
 
     @Mock
     private FileService fileService;
+
+    @Mock
+    private DotfileRepoPathMixin dotfileRepoPathMixin;
 
     private ConfigService configService;
 
@@ -31,12 +35,13 @@ public class ConfigServiceUnitTests {
 
     @BeforeEach
     void setUp() {
-        configService = new ConfigServiceImpl(CONFIG_PATH, CONFIG_PATH, CONFIG_PATH, fileService);
+        when(dotfileRepoPathMixin.getDotfileRepoPath()).thenReturn(null);
+        configService = new ConfigServiceImpl(CONFIG_PATH, CONFIG_PATH, CONFIG_PATH, fileService, dotfileRepoPathMixin);
     }
 
     @Test
     public void testConstructor_expandsTildeInConfigPath() {
-        ConfigService service = new ConfigServiceImpl(TILDE_CONFIG_PATH, TILDE_CONFIG_PATH, TILDE_CONFIG_PATH, fileService);
+        ConfigService service = new ConfigServiceImpl(TILDE_CONFIG_PATH, TILDE_CONFIG_PATH, TILDE_CONFIG_PATH, fileService, dotfileRepoPathMixin);
         Path expectedPath = Path.of(System.getProperty("user.home"), "test-sdfm/config.yaml");
         assertEquals(expectedPath, ((ConfigServiceImpl) service).getConfigFilePath());
     }

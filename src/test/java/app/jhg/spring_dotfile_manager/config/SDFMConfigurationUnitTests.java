@@ -69,7 +69,11 @@ public class SDFMConfigurationUnitTests {
     @Test
     public void testFactory_beanFoundInContext_returnsBeanInstance() throws Exception {
         DebugMixin expectedBean = new DebugMixin();
+        DotfileRepoPathMixin expectedRepoPathMixin = new DotfileRepoPathMixin();
+        VersionProviderConfiguration expectedVersion = new VersionProviderConfiguration("1.2.3");
         when(ctx.getBean(DebugMixin.class)).thenReturn(expectedBean);
+        when(ctx.getBean(DotfileRepoPathMixin.class)).thenReturn(expectedRepoPathMixin);
+        when(ctx.getBean(VersionProviderConfiguration.class)).thenReturn(expectedVersion);
 
         CommandLine commandLine = new SDFMConfiguration().commandLine(rootCommand, ctx, handler);
         CommandLine.IFactory factory = commandLine.getFactory();
@@ -79,7 +83,11 @@ public class SDFMConfigurationUnitTests {
 
     @Test
     public void testFactory_noSuchBeanDefinition_fallsBackToDefault() throws Exception {
+        DotfileRepoPathMixin expectedRepoPathMixin = new DotfileRepoPathMixin();
+        VersionProviderConfiguration expectedVersion = new VersionProviderConfiguration("1.2.3");
         when(ctx.getBean(DebugMixin.class)).thenThrow(new NoSuchBeanDefinitionException(DebugMixin.class));
+        when(ctx.getBean(DotfileRepoPathMixin.class)).thenReturn(expectedRepoPathMixin);
+        when(ctx.getBean(VersionProviderConfiguration.class)).thenReturn(expectedVersion);
 
         CommandLine commandLine = new SDFMConfiguration().commandLine(rootCommand, ctx, handler);
         CommandLine.IFactory factory = commandLine.getFactory();
