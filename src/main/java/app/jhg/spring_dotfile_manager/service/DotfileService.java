@@ -49,4 +49,11 @@ public interface DotfileService {
      * @throws IOException if there is an I/O error during the unlinking process
      */
     public void unlinkDotfile(DotfileMarkerModel marker) throws IOException;
+
+    /**
+     * determines the target path for a given dotfile marker based on the current operating system and any platform-specific overrides specified in the marker. If the marker should not be linked on the current platform, this method returns null.
+     * @param marker the dotfile marker for which to determine the target path
+     * @return the target path for the given dotfile marker based on the current operating system and any platform-specific overrides specified in the marker, or null if the marker should not be linked on the current platform
+     */
+    public Path getTargetPathForCurrentSystem(DotfileMarkerModel marker);
 }

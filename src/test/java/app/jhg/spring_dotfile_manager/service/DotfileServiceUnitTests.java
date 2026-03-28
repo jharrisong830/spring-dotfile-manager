@@ -36,7 +36,7 @@ public class DotfileServiceUnitTests {
 
     @BeforeEach
     void setUp() {
-        dotfileService = new DotfileServiceImpl(GLOB_PATTERN, configService, fileService);
+        dotfileService = new DotfileServiceImpl(GLOB_PATTERN, "Linux", configService, fileService);
     }
 
     @Test
@@ -353,5 +353,113 @@ public class DotfileServiceUnitTests {
             .when(fileService).deleteFile(location);
 
         assertThrows(IOException.class, () -> dotfileService.unlinkDotfile(marker));
+    }
+
+
+    @Test
+    public void testGetTargetPathForCurrentSystem_noOverride_returnsDefaultLocation() {
+        DotfileMarkerModel marker = DotfileMarkerModel.fromMarkerFileContents(
+            Path.of(RESOLVED_REPO_PATH, "zshrc.dotfile"),
+            "name: .zshrc\nlocation: ~/.zshrc\n"
+        ).get(0);
+
+        Path result = dotfileService.getTargetPathForCurrentSystem(marker);
+
+        assertEquals(Path.of(System.getProperty("user.home"), ".zshrc"), result);
+    }
+
+    @Test
+    public void testGetTargetPathForCurrentSystem_overrideWithShouldLinkTrue_returnsOverrideLocation() {
+        DotfileMarkerModel marker = DotfileMarkerModel.fromMarkerFileContents(
+            Path.of(RESOLVED_REPO_PATH, "zshrc.dotfile"),
+            "name: .zshrc\nlocation: ~/.zshrc\nlinux:\n  shouldLink: true\n  location: ~/.zshrc-linux\n"
+        ).get(0);
+
+        Path result = dotfileService.getTargetPathForCurrentSystem(marker);
+
+        assertEquals(Path.of(System.getProperty("user.home"), ".zshrc-linux"), result);
+    }
+
+    @Test
+    public void testGetTargetPathForCurrentSystem_overrideWithShouldLinkFalse_returnsNull() {
+        DotfileMarkerModel marker = DotfileMarkerModel.fromMarkerFileContents(
+            Path.of(RESOLVED_REPO_PATH, "zshrc.dotfile"),
+            "name: .zshrc\nlocation: ~/.zshrc\nlinux:\n  shouldLink: false\n"
+        ).get(0);
+
+        Path result = dotfileService.getTargetPathForCurrentSystem(marker);
+
+        assertNull(result);
+    }
+
+    @Test
+    public void testGetTargetPathForCurrentSystem_overrideForDifferentPlatform_returnsDefaultLocation() {
+        DotfileMarkerModel marker = DotfileMarkerModel.fromMarkerFileContents(
+            Path.of(RESOLVED_REPO_PATH, "zshrc.dotfile"),
+            "name: .zshrc\nlocation: ~/.zshrc\ndarwin:\n  shouldLink: true\n  location: ~/.zshrc-darwin\n"
+        ).get(0);
+
+        Path result = dotfileService.getTargetPathForCurrentSystem(marker);
+
+        assertEquals(Path.of(System.getProperty("user.home"), ".zshrc"), result);
+    }
+
+    @Test
+    public void testGetTargetPathForCurrentSystem_darwinOs_overrideWithShouldLinkTrue_returnsOverrideLocation() {
+        DotfileService darwinService = new DotfileServiceImpl(GLOB_PATTERN, "Mac OS X", configService, fileService);
+        DotfileMarkerModel marker = DotfileMarkerModel.fromMarkerFileContents(
+            Path.of(RESOLVED_REPO_PATH, "zshrc.dotfile"),
+            "name: .zshrc\nlocation: ~/.zshrc\ndarwin:\n  shouldLink: true\n  location: ~/.zshrc-darwin\n"
+        ).get(0);
+
+        Path result = darwinService.getTargetPathForCurrentSystem(marker);
+
+        assertEquals(Path.of(System.getProperty("user.home"), ".zshrc-darwin"), result);
+    }
+
+    @Test
+    public void testGetTargetPathForCurrentSystem_darwinOs_overrideWithShouldLinkFalse_returnsNull() {
+        DotfileService darwinService = new DotfileServiceImpl(GLOB_PATTERN, "Mac OS X", configService, fileService);
+        DotfileMarkerModel marker = DotfileMarkerModel.fromMarkerFileContents(
+            Path.of(RESOLVED_REPO_PATH, "zshrc.dotfile"),
+            "name: .zshrc\nlocation: ~/.zshrc\ndarwin:\n  shouldLink: false\n"
+        ).get(0);
+
+        Path result = darwinService.getTargetPathForCurrentSystem(marker);
+
+        assertNull(result);
+    }
+
+    @Test
+    public void testGetTargetPathForCurrentSystem_win32Os_overrideWithShouldLinkTrue_returnsOverrideLocation() {
+        DotfileService win32Service = new DotfileServiceImpl(GLOB_PATTERN, "Windows 10", configService, fileService);
+        DotfileMarkerModel marker = DotfileMarkerModel.fromMarkerFileContents(
+            Path.of(RESOLVED_REPO_PATH, "zshrc.dotfile"),
+            "name: .zshrc\nlocation: /home/user/.zshrc\nwin32:\n  shouldLink: true\n  location: /c/Users/user/.zshrc\n"
+        ).get(0);
+
+        Path result = win32Service.getTargetPathForCurrentSystem(marker);
+
+        assertEquals(Path.of("/c/Users/user/.zshrc"), result);
+    }
+
+    @Test
+    public void testGetTargetPathForCurrentSystem_win32Os_overrideWithShouldLinkFalse_returnsNull() {
+        DotfileService win32Service = new DotfileServiceImpl(GLOB_PATTERN, "Windows 10", configService, fileService);
+        DotfileMarkerModel marker = DotfileMarkerModel.fromMarkerFileContents(
+            Path.of(RESOLVED_REPO_PATH, "zshrc.dotfile"),
+            "name: .zshrc\nlocation: /home/user/.zshrc\nwin32:\n  shouldLink: false\n"
+        ).get(0);
+
+        Path result = win32Service.getTargetPathForCurrentSystem(marker);
+
+        assertNull(result);
+    }
+
+    @Test
+    public void testConstructor_unknownOs_throwsUnsupportedOperationException() {
+        assertThrows(UnsupportedOperationException.class, () ->
+            new DotfileServiceImpl(GLOB_PATTERN, "Amiga OS 3.1", configService, fileService)
+        );
     }
 }

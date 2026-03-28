@@ -10,22 +10,36 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import app.jhg.spring_dotfile_manager.model.DotfileMarkerModel;
+import app.jhg.spring_dotfile_manager.model.DotfileMarkerModel.PlatformOverrideModel;
 import app.jhg.spring_dotfile_manager.util.FormattingUtils;
 
 @Service
 public class DotfileServiceImpl implements DotfileService {
     
     private final String dotfileGlobPattern;
+    private final String osName;
 
     private final ConfigService configService;
     private final FileService fileService;
 
     public DotfileServiceImpl(
         @Value("${spring-dotfile-manager.dotfile-glob-pattern}") String dotfileGlobPattern,
+        @Value("${os.name}") String osName,
         ConfigService configService,
         FileService fileService
     ) {
         this.dotfileGlobPattern = dotfileGlobPattern;
+
+        if (osName.contains("Linux")) {
+            this.osName = "linux";
+        } else if (osName.contains("Mac")) {
+            this.osName = "darwin";
+        } else if (osName.contains("Win")) {
+            this.osName = "win32";
+        } else {
+            throw new UnsupportedOperationException("Unsupported OS for dotfile linking: " + osName);
+        }
+        
         this.configService = configService;
         this.fileService = fileService;
     }
@@ -80,6 +94,37 @@ public class DotfileServiceImpl implements DotfileService {
             fileService.deleteFile(marker.location);
         } else {
             throw new FileAlreadyExistsException("Regular file/directory exists at " + marker.location + " and is not a symbolic link. Cannot unlink.");
+        }
+    }
+
+    @Override
+    public Path getTargetPathForCurrentSystem(DotfileMarkerModel marker) {
+        PlatformOverrideModel overrideModel;
+
+        // get and assign the platform override model for the current system
+        switch (osName) {
+            case "linux":
+                overrideModel = marker.linuxOverride;
+                break;
+            case "darwin":
+                overrideModel = marker.darwinOverride;
+                break;
+            case "win32":
+                overrideModel = marker.win32Override;
+                break;
+            default:
+                throw new UnsupportedOperationException("Unsupported OS for dotfile linking: " + osName);
+        }
+
+        if (overrideModel == null) {
+            return marker.location; // no override -> use default location
+        } else if (overrideModel.shouldLink) {
+            // if there is an override and we should link on this platform,
+            // use the override location if it exists, otherwise, link with the default location
+            return (overrideModel.location == null) ? marker.location : overrideModel.location;
+        } else {
+            // should not link -> null path
+            return null;
         }
     }
 }
