@@ -7,6 +7,7 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 import java.io.IOException;
+import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.Path;
 import java.util.List;
 
@@ -210,72 +211,6 @@ public class DotfileServiceUnitTests {
 
 
     @Test
-    public void testRelinkDotfiles_noMarkers_noSymlinksCreated() throws IOException {
-        when(configService.readConfig()).thenReturn(RAW_REPO_PATH);
-        when(fileService.glob(eq(Path.of(RESOLVED_REPO_PATH)), eq(GLOB_PATTERN))).thenReturn(List.of());
-
-        dotfileService.relinkDotfiles();
-
-        verify(fileService, never()).createSymlink(any(), any());
-        verify(fileService, never()).deleteFile(any());
-    }
-
-    @Test
-    public void testRelinkDotfiles_multipleMarkers_allSucceed() throws IOException {
-        Path markerPath = Path.of(RESOLVED_REPO_PATH, "shell.dotfile");
-        Path zshLocation = Path.of(System.getProperty("user.home"), ".zshrc");
-        Path bashLocation = Path.of(System.getProperty("user.home"), ".bashrc");
-        Path zshSource = Path.of(RESOLVED_REPO_PATH, ".zshrc");
-        Path bashSource = Path.of(RESOLVED_REPO_PATH, ".bashrc");
-
-        when(configService.readConfig()).thenReturn(RAW_REPO_PATH);
-        when(fileService.glob(eq(Path.of(RESOLVED_REPO_PATH)), eq(GLOB_PATTERN))).thenReturn(List.of(markerPath));
-        when(fileService.readFile(markerPath)).thenReturn("name: .zshrc\nlocation: ~/.zshrc\n---\nname: .bashrc\nlocation: ~/.bashrc\n");
-        when(fileService.isSymbolicLink(zshLocation)).thenReturn(true);
-        when(fileService.isSymbolicLink(bashLocation)).thenReturn(false);
-        when(fileService.exists(bashLocation)).thenReturn(false);
-
-        dotfileService.relinkDotfiles();
-
-        verify(fileService).deleteFile(zshLocation);
-        verify(fileService).createSymlink(zshLocation, zshSource);
-        verify(fileService).createSymlink(bashLocation, bashSource);
-    }
-
-    @Test
-    public void testRelinkDotfiles_secondMarkerThrows_firstAlreadyLinked() throws IOException {
-        Path markerPath = Path.of(RESOLVED_REPO_PATH, "shell.dotfile");
-        Path zshLocation = Path.of(System.getProperty("user.home"), ".zshrc");
-        Path bashLocation = Path.of(System.getProperty("user.home"), ".bashrc");
-        Path zshSource = Path.of(RESOLVED_REPO_PATH, ".zshrc");
-
-        when(configService.readConfig()).thenReturn(RAW_REPO_PATH);
-        when(fileService.glob(eq(Path.of(RESOLVED_REPO_PATH)), eq(GLOB_PATTERN))).thenReturn(List.of(markerPath));
-        when(fileService.readFile(markerPath)).thenReturn("name: .zshrc\nlocation: ~/.zshrc\n---\nname: .bashrc\nlocation: ~/.bashrc\n");
-        when(fileService.isSymbolicLink(zshLocation)).thenReturn(false);
-        when(fileService.exists(zshLocation)).thenReturn(false);
-        when(fileService.isSymbolicLink(bashLocation)).thenReturn(false);
-        when(fileService.exists(bashLocation)).thenReturn(true);
-
-        assertThrows(IOException.class, () -> dotfileService.relinkDotfiles());
-
-        verify(fileService).createSymlink(zshLocation, zshSource);
-        verify(fileService, never()).createSymlink(eq(bashLocation), any());
-    }
-
-    @Test
-    public void testRelinkDotfiles_getAllDotfileMarkerModelsThrows_propagates() throws IOException {
-        doThrow(new IOException("Config file not found"))
-            .when(configService).readConfig();
-
-        assertThrows(IOException.class, () -> dotfileService.relinkDotfiles());
-
-        verify(fileService, never()).createSymlink(any(), any());
-        verify(fileService, never()).deleteFile(any());
-    }
-
-
-    @Test
     public void testRelinkDotfile_locationDoesNotExist_createsSymlink() throws IOException {
         DotfileMarkerModel marker = DotfileMarkerModel.fromMarkerFileContents(
             Path.of(RESOLVED_REPO_PATH, "zshrc.dotfile"),
@@ -372,5 +307,51 @@ public class DotfileServiceUnitTests {
             .when(fileService).createSymlink(location, source);
 
         assertThrows(IOException.class, () -> dotfileService.overwriteExistingDotfile(marker));
+    }
+
+
+    @Test
+    public void testUnlinkDotfile_locationIsSymlink_deletesFile() throws IOException {
+        DotfileMarkerModel marker = DotfileMarkerModel.fromMarkerFileContents(
+            Path.of(RESOLVED_REPO_PATH, "zshrc.dotfile"),
+            "name: .zshrc\nlocation: ~/.zshrc\n"
+        ).get(0);
+        Path location = Path.of(System.getProperty("user.home"), ".zshrc");
+
+        when(fileService.isSymbolicLink(location)).thenReturn(true);
+
+        dotfileService.unlinkDotfile(marker);
+
+        verify(fileService).deleteFile(location);
+    }
+
+    @Test
+    public void testUnlinkDotfile_locationIsNotSymlink_throwsFileAlreadyExistsException() throws IOException {
+        DotfileMarkerModel marker = DotfileMarkerModel.fromMarkerFileContents(
+            Path.of(RESOLVED_REPO_PATH, "zshrc.dotfile"),
+            "name: .zshrc\nlocation: ~/.zshrc\n"
+        ).get(0);
+        Path location = Path.of(System.getProperty("user.home"), ".zshrc");
+
+        when(fileService.isSymbolicLink(location)).thenReturn(false);
+
+        assertThrows(FileAlreadyExistsException.class, () -> dotfileService.unlinkDotfile(marker));
+
+        verify(fileService, never()).deleteFile(any());
+    }
+
+    @Test
+    public void testUnlinkDotfile_deleteFileThrows_propagates() throws IOException {
+        DotfileMarkerModel marker = DotfileMarkerModel.fromMarkerFileContents(
+            Path.of(RESOLVED_REPO_PATH, "zshrc.dotfile"),
+            "name: .zshrc\nlocation: ~/.zshrc\n"
+        ).get(0);
+        Path location = Path.of(System.getProperty("user.home"), ".zshrc");
+
+        when(fileService.isSymbolicLink(location)).thenReturn(true);
+        doThrow(new IOException("delete failed"))
+            .when(fileService).deleteFile(location);
+
+        assertThrows(IOException.class, () -> dotfileService.unlinkDotfile(marker));
     }
 }

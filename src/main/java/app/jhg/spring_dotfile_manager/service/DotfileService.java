@@ -30,12 +30,6 @@ public interface DotfileService {
     public List<DotfileMarkerModel> getDotfileMarkerModelsByPath(Path path) throws IOException;
 
     /**
-     * relinks all dotfiles
-     * @throws IOException if there is a regular file or directory where a link is supposed to be made, or if there is any I/O error
-     */
-    public void relinkDotfiles() throws IOException;
-
-    /**
      * relinks an individual marker file
      * @param marker the dotfile marker representing the dotfile to be linked
      * @throws IOException if there is a regular file or directory where a link is supposed to be made, or if there is any I/O error
@@ -48,4 +42,11 @@ public interface DotfileService {
      * @throws IOException if there is any I/O error during the overwrite process
      */
     public void overwriteExistingDotfile(DotfileMarkerModel marker) throws IOException;
+
+    /**
+     * unlinks an individual dotfile based on the given marker
+     * @param marker the dotfile marker representing the dotfile to be unlinked
+     * @throws IOException if there is an I/O error during the unlinking process
+     */
+    public void unlinkDotfile(DotfileMarkerModel marker) throws IOException;
 }

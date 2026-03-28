@@ -54,14 +54,6 @@ public class DotfileServiceImpl implements DotfileService {
     }
 
     @Override
-    public void relinkDotfiles() throws IOException {
-        List<DotfileMarkerModel> markerModels = getAllDotfileMarkerModels();
-        for (DotfileMarkerModel markerModel : markerModels) {
-            relinkDotfile(markerModel);
-        }
-    }
-
-    @Override
     public void relinkDotfile(DotfileMarkerModel marker) throws IOException {
         if (fileService.isSymbolicLink(marker.location)) {
             // happy path: unlink and re-create the link
@@ -80,5 +72,14 @@ public class DotfileServiceImpl implements DotfileService {
     public void overwriteExistingDotfile(DotfileMarkerModel marker) throws IOException {
         fileService.forceDelete(marker.location);
         fileService.createSymlink(marker.location, marker.sourceLocation);
+    }
+
+    @Override
+    public void unlinkDotfile(DotfileMarkerModel marker) throws IOException {
+        if (fileService.isSymbolicLink(marker.location)) {
+            fileService.deleteFile(marker.location);
+        } else {
+            throw new FileAlreadyExistsException("Regular file/directory exists at " + marker.location + " and is not a symbolic link. Cannot unlink.");
+        }
     }
 }
