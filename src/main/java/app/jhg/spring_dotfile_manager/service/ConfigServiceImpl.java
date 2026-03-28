@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 
 import app.jhg.spring_dotfile_manager.model.SDFMConfigModel;
 import app.jhg.spring_dotfile_manager.util.FormattingUtils;
+import app.jhg.spring_dotfile_manager.config.DotfileRepoPathMixin;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -20,21 +21,25 @@ public class ConfigServiceImpl implements ConfigService {
     private final Path configFilePath;
 
     private final FileService fileService;
+    
+    private final DotfileRepoPathMixin dotfileRepoPathMixin;
 
     public ConfigServiceImpl(
         @Value("${spring-dotfile-manager.config.path.linux}") String linuxPath,
         @Value("${spring-dotfile-manager.config.path.darwin}") String darwinPath,
         @Value("${spring-dotfile-manager.config.path.win32}") String win32Path,
-        FileService fileService
+        FileService fileService,
+        DotfileRepoPathMixin dotfileRepoPathMixin
     ) {
-        String rawPath = switch (FormattingUtils.getResolvedOsName(System.getProperty("os.name"))) {
+        String rawConfigPath = switch (FormattingUtils.getResolvedOsName(System.getProperty("os.name"))) {
             case "linux"  -> linuxPath;
             case "darwin" -> darwinPath;
             case "win32"  -> win32Path;
             default -> throw new UnsupportedOperationException("Unsupported OS: " + System.getProperty("os.name"));
         };
-        this.configFilePath = Path.of(FormattingUtils.formatWithHomeDirectory(rawPath));
+        this.configFilePath = Path.of(FormattingUtils.formatWithHomeDirectory(rawConfigPath));
         this.fileService = fileService;
+        this.dotfileRepoPathMixin = dotfileRepoPathMixin;
     }
 
     @Override
@@ -46,6 +51,10 @@ public class ConfigServiceImpl implements ConfigService {
 
     @Override
     public String readConfig() throws IOException {
+        String manualPath = dotfileRepoPathMixin.getDotfileRepoPath();
+        if (manualPath != null && !manualPath.isBlank()) {
+            return manualPath;
+        }
         String configContent = fileService.readFile(configFilePath);
         SDFMConfigModel config = SDFMConfigModel.fromConfigFileContents(configContent);
         return config.dotfileRepoPath;
