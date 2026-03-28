@@ -35,7 +35,7 @@ public class UnlinkCommand implements Callable<Integer> {
                 try {
                     dotfileService.unlinkDotfile(marker);
                 } catch (Exception e) {
-                    log.error("Error occurred while unlinking dotfile: {}", marker.location, e);
+                    log.error("Error occurred while unlinking dotfile: {}", marker.location);
                 }
             }
         }

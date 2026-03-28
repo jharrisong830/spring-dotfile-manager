@@ -31,8 +31,4 @@ public class RootCommand {
 
     @Mixin
     private DotfileRepoPathMixin dotfileRepoPathMixin;
-
-    public RootCommand(DotfileRepoPathMixin dotfileRepoPathMixin) {
-        this.dotfileRepoPathMixin = dotfileRepoPathMixin;
-    }
 }

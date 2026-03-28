@@ -35,7 +35,6 @@ public class ConfigServiceUnitTests {
 
     @BeforeEach
     void setUp() {
-        when(dotfileRepoPathMixin.getDotfileRepoPath()).thenReturn(null);
         configService = new ConfigServiceImpl(CONFIG_PATH, CONFIG_PATH, CONFIG_PATH, fileService, dotfileRepoPathMixin);
     }
 
@@ -44,6 +43,80 @@ public class ConfigServiceUnitTests {
         ConfigService service = new ConfigServiceImpl(TILDE_CONFIG_PATH, TILDE_CONFIG_PATH, TILDE_CONFIG_PATH, fileService, dotfileRepoPathMixin);
         Path expectedPath = Path.of(System.getProperty("user.home"), "test-sdfm/config.yaml");
         assertEquals(expectedPath, ((ConfigServiceImpl) service).getConfigFilePath());
+    }
+
+    @Test
+    public void testConstructor_manualPathProvided_configFilePathUnchanged() {
+        ConfigService service = new ConfigServiceImpl(CONFIG_PATH, CONFIG_PATH, CONFIG_PATH, fileService, dotfileRepoPathMixin);
+        
+        // Config file path should always be CONFIG_PATH, regardless of manual dotfile repo path
+        Path expectedPath = Path.of(CONFIG_PATH);
+        assertEquals(expectedPath, ((ConfigServiceImpl) service).getConfigFilePath());
+    }
+
+    @Test
+    public void testReadConfig_manualPathProvided_returnsManualPath() throws IOException {
+        String manualPath = "/custom/dotfiles/path";
+        when(dotfileRepoPathMixin.getDotfileRepoPath()).thenReturn(manualPath);
+        
+        ConfigService service = new ConfigServiceImpl(CONFIG_PATH, CONFIG_PATH, CONFIG_PATH, fileService, dotfileRepoPathMixin);
+        
+        // Should return manual path without reading config file
+        String result = service.readConfig();
+        assertEquals(manualPath, result);
+        verify(fileService, never()).readFile(any());
+    }
+
+    @Test
+    public void testReadConfig_manualPathWithTilde_returnsPathAsIs() throws IOException {
+        String manualPath = "~/manual/dotfiles";
+        when(dotfileRepoPathMixin.getDotfileRepoPath()).thenReturn(manualPath);
+        
+        ConfigService service = new ConfigServiceImpl(CONFIG_PATH, CONFIG_PATH, CONFIG_PATH, fileService, dotfileRepoPathMixin);
+        
+        // Manual path should be returned as-is (tilde expansion happens in calling code if needed)
+        String result = service.readConfig();
+        assertEquals(manualPath, result);
+        verify(fileService, never()).readFile(any());
+    }
+
+    @Test
+    public void testReadConfig_manualPathIsBlank_readsFromConfigFile() throws IOException {
+        when(dotfileRepoPathMixin.getDotfileRepoPath()).thenReturn("   ");
+        String configContent = new SDFMConfigModel(REPO_PATH).getConfigFileContents();
+        when(fileService.readFile(any(Path.class))).thenReturn(configContent);
+        
+        ConfigService service = new ConfigServiceImpl(CONFIG_PATH, CONFIG_PATH, CONFIG_PATH, fileService, dotfileRepoPathMixin);
+        
+        String result = service.readConfig();
+        assertEquals(REPO_PATH, result);
+        verify(fileService).readFile(Path.of(CONFIG_PATH));
+    }
+
+    @Test
+    public void testReadConfig_manualPathIsEmpty_readsFromConfigFile() throws IOException {
+        when(dotfileRepoPathMixin.getDotfileRepoPath()).thenReturn("");
+        String configContent = new SDFMConfigModel(REPO_PATH).getConfigFileContents();
+        when(fileService.readFile(any(Path.class))).thenReturn(configContent);
+        
+        ConfigService service = new ConfigServiceImpl(CONFIG_PATH, CONFIG_PATH, CONFIG_PATH, fileService, dotfileRepoPathMixin);
+        
+        String result = service.readConfig();
+        assertEquals(REPO_PATH, result);
+        verify(fileService).readFile(Path.of(CONFIG_PATH));
+    }
+
+    @Test
+    public void testReadConfig_manualPathNull_readsFromConfigFile() throws IOException {
+        when(dotfileRepoPathMixin.getDotfileRepoPath()).thenReturn(null);
+        String configContent = new SDFMConfigModel(REPO_PATH).getConfigFileContents();
+        when(fileService.readFile(any(Path.class))).thenReturn(configContent);
+        
+        ConfigService service = new ConfigServiceImpl(CONFIG_PATH, CONFIG_PATH, CONFIG_PATH, fileService, dotfileRepoPathMixin);
+        
+        String result = service.readConfig();
+        assertEquals(REPO_PATH, result);
+        verify(fileService).readFile(Path.of(CONFIG_PATH));
     }
 
     @Test
@@ -81,6 +154,7 @@ public class ConfigServiceUnitTests {
 
     @Test
     public void testReadConfig_success() throws IOException {
+        when(dotfileRepoPathMixin.getDotfileRepoPath()).thenReturn(null);
         String configContent = new SDFMConfigModel(REPO_PATH).getConfigFileContents();
         when(fileService.readFile(any(Path.class))).thenReturn(configContent);
         assertEquals(REPO_PATH, configService.readConfig());
@@ -88,6 +162,7 @@ public class ConfigServiceUnitTests {
 
     @Test
     public void testReadConfig_ioError() throws IOException {
+        when(dotfileRepoPathMixin.getDotfileRepoPath()).thenReturn(null);
         doThrow(new IOException("File not found"))
             .when(fileService).readFile(any(Path.class));
         assertThrows(IOException.class, () -> configService.readConfig());
@@ -95,12 +170,14 @@ public class ConfigServiceUnitTests {
 
     @Test
     public void testReadConfig_invalidConfigFormat() throws IOException {
+        when(dotfileRepoPathMixin.getDotfileRepoPath()).thenReturn(null);
         when(fileService.readFile(any(Path.class))).thenReturn("invalid config content");
         assertThrows(IllegalArgumentException.class, () -> configService.readConfig());
     }
 
     @Test
     public void testReadConfig_missingKey() throws IOException {
+        when(dotfileRepoPathMixin.getDotfileRepoPath()).thenReturn(null);
         when(fileService.readFile(any(Path.class))).thenReturn("other-key: some-value");
         assertThrows(IllegalArgumentException.class, () -> configService.readConfig());
     }
@@ -140,6 +217,7 @@ public class ConfigServiceUnitTests {
 
     @Test
     public void testReadConfig_emptyPath_throwsIllegalArgumentException() throws IOException {
+        when(dotfileRepoPathMixin.getDotfileRepoPath()).thenReturn(null);
         when(fileService.readFile(any(Path.class))).thenReturn(new SDFMConfigModel("").getConfigFileContents());
 
         assertThrows(IllegalArgumentException.class, () -> configService.readConfig());
