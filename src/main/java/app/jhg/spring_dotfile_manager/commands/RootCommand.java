@@ -23,11 +23,8 @@ import picocli.CommandLine.Mixin;
     },
     mixinStandardHelpOptions = true
 )
-public class RootCommand implements Runnable {
+public class RootCommand {
 
     @Mixin
     private DebugMixin debugMixin;
-
-    @Override
-    public void run() {}
 }
