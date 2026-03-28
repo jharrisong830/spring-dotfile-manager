@@ -69,31 +69,49 @@ public class DotfileServiceImpl implements DotfileService {
 
     @Override
     public void relinkDotfile(DotfileMarkerModel marker) throws IOException {
-        if (fileService.isSymbolicLink(marker.location)) {
+        Path locationForSystem = getTargetPathForCurrentSystem(marker);
+        if (locationForSystem == null) {
+            // if the marker shouldn't be linked on this platform, do nothing
+            return;
+        }
+
+        if (fileService.isSymbolicLink(locationForSystem)) {
             // happy path: unlink and re-create the link
-            fileService.deleteFile(marker.location);
-            fileService.createSymlink(marker.location, marker.sourceLocation);
-        } else if (!fileService.exists(marker.location)) {
+            fileService.deleteFile(locationForSystem);
+            fileService.createSymlink(locationForSystem, marker.sourceLocation);
+        } else if (!fileService.exists(locationForSystem)) {
             // happy path 2: create the link if nothing exists
-            fileService.createSymlink(marker.location, marker.sourceLocation);
+            fileService.createSymlink(locationForSystem, marker.sourceLocation);
         } else {
             // throw an exception, catch in the caller, and then prompt the user if they want to overwrite it
-            throw new FileAlreadyExistsException("Regular file/directory exists at " + marker.location + " and is not a symbolic link. Please move or delete it before relinking.");
+            throw new FileAlreadyExistsException("Regular file/directory exists at " + locationForSystem + " and is not a symbolic link. Please move or delete it before relinking.");
         }
     }
 
     @Override
     public void overwriteExistingDotfile(DotfileMarkerModel marker) throws IOException {
-        fileService.forceDelete(marker.location);
-        fileService.createSymlink(marker.location, marker.sourceLocation);
+        Path locationForSystem = getTargetPathForCurrentSystem(marker);
+        if (locationForSystem == null) {
+            // if the marker shouldn't be linked on this platform, do nothing
+            return;
+        }
+        
+        fileService.forceDelete(locationForSystem);
+        fileService.createSymlink(locationForSystem, marker.sourceLocation);
     }
 
     @Override
     public void unlinkDotfile(DotfileMarkerModel marker) throws IOException {
-        if (fileService.isSymbolicLink(marker.location)) {
-            fileService.deleteFile(marker.location);
+        Path locationForSystem = getTargetPathForCurrentSystem(marker);
+        if (locationForSystem == null) {
+            // if the marker shouldn't be linked on this platform, do nothing
+            return;
+        }
+        
+        if (fileService.isSymbolicLink(locationForSystem)) {
+            fileService.deleteFile(locationForSystem);
         } else {
-            throw new FileAlreadyExistsException("Regular file/directory exists at " + marker.location + " and is not a symbolic link. Cannot unlink.");
+            throw new FileAlreadyExistsException("Regular file/directory exists at " + locationForSystem + " and is not a symbolic link. Cannot unlink.");
         }
     }
 
@@ -101,19 +119,12 @@ public class DotfileServiceImpl implements DotfileService {
     public Path getTargetPathForCurrentSystem(DotfileMarkerModel marker) {
         PlatformOverrideModel overrideModel;
 
-        // get and assign the platform override model for the current system
-        switch (osName) {
-            case "linux":
-                overrideModel = marker.linuxOverride;
-                break;
-            case "darwin":
-                overrideModel = marker.darwinOverride;
-                break;
-            case "win32":
-                overrideModel = marker.win32Override;
-                break;
-            default:
-                throw new UnsupportedOperationException("Unsupported OS for dotfile linking: " + osName);
+        if (osName.equals("darwin")) {
+            overrideModel = marker.darwinOverride;
+        } else if (osName.equals("win32")) {
+            overrideModel = marker.win32Override;
+        } else { // osName.equals("linux")
+            overrideModel = marker.linuxOverride;
         }
 
         if (overrideModel == null) {

@@ -357,6 +357,132 @@ public class DotfileServiceUnitTests {
 
 
     @Test
+    public void testRelinkDotfile_shouldLinkFalseOnCurrentPlatform_doesNothing() throws IOException {
+        DotfileMarkerModel marker = DotfileMarkerModel.fromMarkerFileContents(
+            Path.of(RESOLVED_REPO_PATH, "zshrc.dotfile"),
+            "name: .zshrc\nlocation: ~/.zshrc\nlinux:\n  shouldLink: false\n"
+        ).get(0);
+
+        dotfileService.relinkDotfile(marker);
+
+        verify(fileService, never()).isSymbolicLink(any());
+        verify(fileService, never()).exists(any());
+        verify(fileService, never()).deleteFile(any());
+        verify(fileService, never()).createSymlink(any(), any());
+    }
+
+    @Test
+    public void testRelinkDotfile_platformOverrideLocation_locationIsSymlink_usesOverrideLocation() throws IOException {
+        DotfileMarkerModel marker = DotfileMarkerModel.fromMarkerFileContents(
+            Path.of(RESOLVED_REPO_PATH, "zshrc.dotfile"),
+            "name: .zshrc\nlocation: ~/.zshrc\nlinux:\n  shouldLink: true\n  location: ~/.zshrc-linux\n"
+        ).get(0);
+        Path overrideLocation = Path.of(System.getProperty("user.home"), ".zshrc-linux");
+        Path source = Path.of(RESOLVED_REPO_PATH, ".zshrc");
+
+        when(fileService.isSymbolicLink(overrideLocation)).thenReturn(true);
+
+        dotfileService.relinkDotfile(marker);
+
+        verify(fileService).deleteFile(overrideLocation);
+        verify(fileService).createSymlink(overrideLocation, source);
+    }
+
+    @Test
+    public void testRelinkDotfile_platformOverrideLocation_locationDoesNotExist_createsSymlink() throws IOException {
+        DotfileMarkerModel marker = DotfileMarkerModel.fromMarkerFileContents(
+            Path.of(RESOLVED_REPO_PATH, "zshrc.dotfile"),
+            "name: .zshrc\nlocation: ~/.zshrc\nlinux:\n  shouldLink: true\n  location: ~/.zshrc-linux\n"
+        ).get(0);
+        Path overrideLocation = Path.of(System.getProperty("user.home"), ".zshrc-linux");
+        Path source = Path.of(RESOLVED_REPO_PATH, ".zshrc");
+
+        when(fileService.isSymbolicLink(overrideLocation)).thenReturn(false);
+        when(fileService.exists(overrideLocation)).thenReturn(false);
+
+        dotfileService.relinkDotfile(marker);
+
+        verify(fileService, never()).deleteFile(any());
+        verify(fileService).createSymlink(overrideLocation, source);
+    }
+
+    @Test
+    public void testRelinkDotfile_platformOverrideLocation_locationIsRegularFile_throwsFileAlreadyExistsException() throws IOException {
+        DotfileMarkerModel marker = DotfileMarkerModel.fromMarkerFileContents(
+            Path.of(RESOLVED_REPO_PATH, "zshrc.dotfile"),
+            "name: .zshrc\nlocation: ~/.zshrc\nlinux:\n  shouldLink: true\n  location: ~/.zshrc-linux\n"
+        ).get(0);
+        Path overrideLocation = Path.of(System.getProperty("user.home"), ".zshrc-linux");
+
+        when(fileService.isSymbolicLink(overrideLocation)).thenReturn(false);
+        when(fileService.exists(overrideLocation)).thenReturn(true);
+
+        assertThrows(FileAlreadyExistsException.class, () -> dotfileService.relinkDotfile(marker));
+
+        verify(fileService, never()).deleteFile(any());
+        verify(fileService, never()).createSymlink(any(), any());
+    }
+
+
+    @Test
+    public void testOverwriteExistingDotfile_shouldLinkFalseOnCurrentPlatform_doesNothing() throws IOException {
+        DotfileMarkerModel marker = DotfileMarkerModel.fromMarkerFileContents(
+            Path.of(RESOLVED_REPO_PATH, "zshrc.dotfile"),
+            "name: .zshrc\nlocation: ~/.zshrc\nlinux:\n  shouldLink: false\n"
+        ).get(0);
+
+        dotfileService.overwriteExistingDotfile(marker);
+
+        verify(fileService, never()).forceDelete(any());
+        verify(fileService, never()).createSymlink(any(), any());
+    }
+
+    @Test
+    public void testOverwriteExistingDotfile_platformOverrideLocation_usesOverrideLocation() throws IOException {
+        DotfileMarkerModel marker = DotfileMarkerModel.fromMarkerFileContents(
+            Path.of(RESOLVED_REPO_PATH, "zshrc.dotfile"),
+            "name: .zshrc\nlocation: ~/.zshrc\nlinux:\n  shouldLink: true\n  location: ~/.zshrc-linux\n"
+        ).get(0);
+        Path overrideLocation = Path.of(System.getProperty("user.home"), ".zshrc-linux");
+        Path source = Path.of(RESOLVED_REPO_PATH, ".zshrc");
+
+        dotfileService.overwriteExistingDotfile(marker);
+
+        verify(fileService).forceDelete(overrideLocation);
+        verify(fileService).createSymlink(overrideLocation, source);
+    }
+
+
+    @Test
+    public void testUnlinkDotfile_shouldLinkFalseOnCurrentPlatform_doesNothing() throws IOException {
+        DotfileMarkerModel marker = DotfileMarkerModel.fromMarkerFileContents(
+            Path.of(RESOLVED_REPO_PATH, "zshrc.dotfile"),
+            "name: .zshrc\nlocation: ~/.zshrc\nlinux:\n  shouldLink: false\n"
+        ).get(0);
+
+        dotfileService.unlinkDotfile(marker);
+
+        verify(fileService, never()).isSymbolicLink(any());
+        verify(fileService, never()).deleteFile(any());
+    }
+
+    @Test
+    public void testUnlinkDotfile_platformOverrideLocation_locationIsSymlink_usesOverrideLocation() throws IOException {
+        DotfileMarkerModel marker = DotfileMarkerModel.fromMarkerFileContents(
+            Path.of(RESOLVED_REPO_PATH, "zshrc.dotfile"),
+            "name: .zshrc\nlocation: ~/.zshrc\nlinux:\n  shouldLink: true\n  location: ~/.zshrc-linux\n"
+        ).get(0);
+        Path overrideLocation = Path.of(System.getProperty("user.home"), ".zshrc-linux");
+
+        when(fileService.isSymbolicLink(overrideLocation)).thenReturn(true);
+
+        dotfileService.unlinkDotfile(marker);
+
+        verify(fileService).deleteFile(overrideLocation);
+    }
+
+
+    @Test
     public void testGetTargetPathForCurrentSystem_noOverride_returnsDefaultLocation() {
         DotfileMarkerModel marker = DotfileMarkerModel.fromMarkerFileContents(
             Path.of(RESOLVED_REPO_PATH, "zshrc.dotfile"),
