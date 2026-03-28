@@ -94,6 +94,15 @@ public class DotfileMarkerModel {
             + "}";
     }
 
+    public String prettyPrint(Path currentPlatformPath) {
+        StringBuilder sb = new StringBuilder();
+
+        sb.append(name).append(" ( @ ").append(sourceLocation).append(" )\n");
+        sb.append(" --> ").append(currentPlatformPath).append("\n");
+
+        return sb.toString();
+    }
+
 
     public static List<DotfileMarkerModel> fromMarkerFileContents(Path markerFilePath, String markerFileContents) {
         Yaml yaml = new Yaml();

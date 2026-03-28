@@ -1,5 +1,6 @@
 package app.jhg.spring_dotfile_manager.commands;
 
+import java.nio.file.Path;
 import java.util.List;
 import java.util.concurrent.Callable;
 
@@ -52,7 +53,12 @@ public class ListCommand implements Callable<Integer> {
                 log.info("(Showing all dotfiles regardless of platform)");
             }
             for (DotfileMarkerModel marker : markers) {
-                log.info("- {}", marker);
+                if (includeAll) {
+                    log.info("- {}", marker);
+                } else {
+                    Path currentPlatformPath = dotfileService.getTargetPathForCurrentSystem(marker);
+                    log.info(marker.prettyPrint(currentPlatformPath));
+                }
             }
         }
 

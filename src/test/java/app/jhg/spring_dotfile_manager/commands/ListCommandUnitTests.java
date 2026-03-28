@@ -56,8 +56,10 @@ public class ListCommandUnitTests {
         int result = command.call();
 
         assertEquals(0, result);
-        verify(dotfileService).getTargetPathForCurrentSystem(markers.get(0));
-        verify(dotfileService).getTargetPathForCurrentSystem(markers.get(1));
+        
+        // at least once to decide if it should be included, then used for pretty print if included
+        verify(dotfileService, atLeastOnce()).getTargetPathForCurrentSystem(markers.get(0));
+        verify(dotfileService, atLeastOnce()).getTargetPathForCurrentSystem(markers.get(1));
     }
 
     @Test
@@ -73,8 +75,10 @@ public class ListCommandUnitTests {
         int result = command.call();
 
         assertEquals(0, result);
-        verify(dotfileService).getTargetPathForCurrentSystem(markers.get(0));
-        verify(dotfileService).getTargetPathForCurrentSystem(markers.get(1));
+
+        // at least once to decide if it should be included, then used for pretty print if included
+        verify(dotfileService, atLeastOnce()).getTargetPathForCurrentSystem(markers.get(0));
+        verify(dotfileService, atLeastOnce()).getTargetPathForCurrentSystem(markers.get(1));
     }
 
     @Test
