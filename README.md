@@ -3,8 +3,8 @@
 A utility to manage mapping dotfiles from your repository to your system.
 
 ## Prerequisites:
-- OpenJDK 21
-- Spring Boot 4
+- OpenJDK 25
+- GraalVM Community Edition 25
 
 ## Installing & Running
 
@@ -13,6 +13,9 @@ Start by cloning this repository.
 You can run commands from the repository itself, or build an executable for your own use.
 
 ```sh
+# install a native binary in `target/`
+./mvnw clean -Pnative native:compile
+
 # builds an executable JAR in `target/`
 ./mvnw install
 java -jar ./target/spring-dotfile-manager-0.0.1-SNAPSHOT.jar ...
