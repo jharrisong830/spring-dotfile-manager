@@ -13,9 +13,11 @@ spring-dotfile-manager:
       win32: "{HOME}/AppData/Local/spring-dotfile-manager/config.yaml"
     default-repo-path: "{HOME}/dotfiles"
   dotfile-glob-pattern: "**/.dotfiles"
+  version: @project.version@
 
 logging:
   pattern:
     console: "%msg%n"
   level:
-    org.springframework: warn
+    org:
+      springframework: warn

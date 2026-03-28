@@ -3,6 +3,7 @@ package app.jhg.spring_dotfile_manager.commands;
 import org.springframework.stereotype.Component;
 
 import app.jhg.spring_dotfile_manager.config.DebugMixin;
+import app.jhg.spring_dotfile_manager.config.VersionProviderConfiguration;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.HelpCommand;
 import picocli.CommandLine.Mixin;
@@ -10,6 +11,7 @@ import picocli.CommandLine.Mixin;
 @Component
 @Command(
     name = "sdfm",
+    versionProvider = VersionProviderConfiguration.class,
     subcommands = {
         InitCommand.class,
         GetConfigCommand.class,

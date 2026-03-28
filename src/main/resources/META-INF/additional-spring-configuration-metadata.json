@@ -23,5 +23,10 @@
     "name": "spring-dotfile-manager.dotfile-glob-pattern",
     "type": "java.lang.String",
     "description": "A description for 'spring-dotfile-manager.dotfile-glob-pattern'"
+  },
+  {
+    "name": "spring-dotfile-manager.version",
+    "type": "java.lang.String",
+    "description": "A description for 'spring-dotfile-manager.version'"
   }
 ]}
