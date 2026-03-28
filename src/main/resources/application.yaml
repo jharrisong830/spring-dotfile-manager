@@ -3,6 +3,7 @@ spring:
     name: spring-dotfile-manager
   main:
     banner-mode: "off"
+    log-startup-info: false
 
 spring-dotfile-manager:
   config:
@@ -16,3 +17,5 @@ spring-dotfile-manager:
 logging:
   pattern:
     console: "%msg%n"
+  level:
+    org.springframework: warn
