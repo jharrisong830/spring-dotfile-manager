@@ -1,8 +1,18 @@
 {"properties": [
   {
-    "name": "spring-dotfile-manager.config.path",
+    "name": "spring-dotfile-manager.config.path.linux",
     "type": "java.lang.String",
-    "description": "A description for 'spring-dotfile-manager.config.path'"
+    "description": "A description for 'spring-dotfile-manager.config.path.linux'"
+  },
+  {
+    "name": "spring-dotfile-manager.config.path.darwin",
+    "type": "java.lang.String",
+    "description": "A description for 'spring-dotfile-manager.config.path.darwin'"
+  },
+  {
+    "name": "spring-dotfile-manager.config.path.win32",
+    "type": "java.lang.String",
+    "description": "A description for 'spring-dotfile-manager.config.path.win32'"
   },
   {
     "name": "spring-dotfile-manager.config.default-repo-path",

@@ -31,12 +31,12 @@ public class ConfigServiceUnitTests {
 
     @BeforeEach
     void setUp() {
-        configService = new ConfigServiceImpl(CONFIG_PATH, fileService);
+        configService = new ConfigServiceImpl(CONFIG_PATH, CONFIG_PATH, CONFIG_PATH, fileService);
     }
 
     @Test
     public void testConstructor_expandsTildeInConfigPath() {
-        ConfigService service = new ConfigServiceImpl(TILDE_CONFIG_PATH, fileService);
+        ConfigService service = new ConfigServiceImpl(TILDE_CONFIG_PATH, TILDE_CONFIG_PATH, TILDE_CONFIG_PATH, fileService);
         Path expectedPath = Path.of(System.getProperty("user.home"), "test-sdfm/config.yaml");
         assertEquals(expectedPath, ((ConfigServiceImpl) service).getConfigFilePath());
     }

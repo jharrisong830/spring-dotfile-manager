@@ -29,17 +29,7 @@ public class DotfileServiceImpl implements DotfileService {
         FileService fileService
     ) {
         this.dotfileGlobPattern = dotfileGlobPattern;
-
-        if (osName.contains("Linux")) {
-            this.osName = "linux";
-        } else if (osName.contains("Mac")) {
-            this.osName = "darwin";
-        } else if (osName.contains("Win")) {
-            this.osName = "win32";
-        } else {
-            throw new UnsupportedOperationException("Unsupported OS for dotfile linking: " + osName);
-        }
-        
+        this.osName = FormattingUtils.getResolvedOsName(osName);
         this.configService = configService;
         this.fileService = fileService;
     }

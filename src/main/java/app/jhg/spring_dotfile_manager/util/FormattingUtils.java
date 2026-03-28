@@ -37,4 +37,21 @@ public final class FormattingUtils {
     public static String formatWithName(String original, String filename) {
         return NAME_REGEX.matcher(original).replaceAll(Matcher.quoteReplacement(filename));
     }
+
+    /**
+     * Determines the OS name in a standardized format for dotfile linking purposes.
+     * @param osName the original OS name
+     * @return the resolved OS name in a standardized format
+     */
+    public static String getResolvedOsName(String osName) {
+        if (osName.contains("Linux")) {
+            return "linux";
+        } else if (osName.contains("Mac")) {
+            return "darwin";
+        } else if (osName.contains("Win")) {
+            return "win32";
+        } else {
+            throw new UnsupportedOperationException("Unsupported OS for dotfile linking: " + osName);
+        }
+    }
 }

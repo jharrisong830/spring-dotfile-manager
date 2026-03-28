@@ -6,7 +6,10 @@ spring:
 
 spring-dotfile-manager:
   config:
-    path: "{HOME}/.config/spring-dotfile-manager/config.yaml"
+    path: 
+      linux: "{HOME}/.config/spring-dotfile-manager/config.yaml"
+      darwin: "{HOME}/.config/spring-dotfile-manager/config.yaml"
+      win32: "{HOME}/AppData/Local/spring-dotfile-manager/config.yaml"
     default-repo-path: "{HOME}/dotfiles"
   dotfile-glob-pattern: "**/.dotfiles"
 

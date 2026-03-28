@@ -1,6 +1,7 @@
 package app.jhg.spring_dotfile_manager.util;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import org.junit.jupiter.api.Test;
 
@@ -91,5 +92,46 @@ public class FormattingUtilsUnitTests {
     @Test
     public void testFormatWithFilename_nameContainsRegexSpecialCharacters() {
         assertEquals("/home/user/.zsh$rc", FormattingUtils.formatWithName("/home/user/{NAME}", ".zsh$rc"));
+    }
+
+
+    @Test
+    public void testGetResolvedOsName_linux() {
+        assertEquals("linux", FormattingUtils.getResolvedOsName("Linux"));
+    }
+
+    @Test
+    public void testGetResolvedOsName_linux_fullName() {
+        assertEquals("linux", FormattingUtils.getResolvedOsName("Linux 5.15.0-generic"));
+    }
+
+    @Test
+    public void testGetResolvedOsName_darwin() {
+        assertEquals("darwin", FormattingUtils.getResolvedOsName("Mac OS X"));
+    }
+
+    @Test
+    public void testGetResolvedOsName_win32() {
+        assertEquals("win32", FormattingUtils.getResolvedOsName("Windows 10"));
+    }
+
+    @Test
+    public void testGetResolvedOsName_win32_nt() {
+        assertEquals("win32", FormattingUtils.getResolvedOsName("Windows NT 10.0"));
+    }
+
+    @Test
+    public void testGetResolvedOsName_unsupported() {
+        assertThrows(UnsupportedOperationException.class, () -> FormattingUtils.getResolvedOsName("FreeBSD"));
+    }
+
+    @Test
+    public void testGetResolvedOsName_unsupported_messageContainsOsName() {
+        String osName = "FreeBSD";
+        UnsupportedOperationException ex = assertThrows(
+            UnsupportedOperationException.class,
+            () -> FormattingUtils.getResolvedOsName(osName)
+        );
+        assertEquals(true, ex.getMessage().contains(osName));
     }
 }
