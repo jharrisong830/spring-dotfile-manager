@@ -10,7 +10,7 @@
 	</parent>
 	<groupId>app.jhg</groupId>
 	<artifactId>spring-dotfile-manager</artifactId>
-	<version>1.1.0</version>
+	<version>1.2.0</version>
 	<name>spring-dotfile-manager</name>
 	<description>Dotfile management CLI</description>
 	<url/>
