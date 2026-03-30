@@ -38,6 +38,7 @@ public class ListCommand implements Callable<Integer> {
         }
 
         if (!includeAll) {
+            log.debug("Filtering to dotfiles relevant for the current platform...");
             markers = markers.stream()
                     .filter(m -> dotfileService.getTargetPathForCurrentSystem(m) != null)
                     .toList();
