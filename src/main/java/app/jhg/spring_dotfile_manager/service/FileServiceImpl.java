@@ -12,7 +12,10 @@ import java.util.stream.Stream;
 
 import org.springframework.stereotype.Service;
 
+import lombok.extern.slf4j.Slf4j;
+
 @Service
+@Slf4j
 public class FileServiceImpl implements FileService {
 
     @Override
@@ -32,47 +35,60 @@ public class FileServiceImpl implements FileService {
 
     @Override
     public void createDirectories(Path path) throws IOException {
+        log.debug("Creating directories along path: {}", path);
         Files.createDirectories(path);
     }
 
     @Override
     public void createSymlink(Path linkPath, Path source) throws IOException {
+        log.debug("Creating symlink: {} -> {}", source, linkPath);
         Files.createSymbolicLink(linkPath, source);
     }
 
     @Override
     public void writeFile(Path path, String content) throws IOException {
+        log.debug("Writing NEW file: {}", path);
         Files.writeString(path, content, StandardOpenOption.CREATE_NEW);
     }
 
     @Override
     public void overwriteFile(Path path, String content) throws IOException {
+        log.debug("OVERWRITING file: {}", path);
         Files.writeString(path, content);
     }
 
     @Override
     public String readFile(Path path) throws IOException {
+        log.debug("Reading file: {}", path);
         return Files.readString(path);
     }
 
     @Override
     public void deleteFile(Path path) throws IOException {
+        log.debug("Deleting file/directory: {}", path);
         Files.delete(path);
     }
 
     @Override
     public void forceDelete(Path path) throws IOException {
+        log.debug("FORCE DELETE: {}", path);
+        
         if (isDirectory(path)) {
             // delete directory contents along with the directory itself
+            log.debug("Force deleting directory: {}", path);
             try (Stream<Path> stream = Files.walk(path)) {
                 List<Path> entries = stream.sorted(Comparator.reverseOrder()).toList();
                 for (Path p : entries) {
+                    log.debug("Deleting file/directory: {}", p);
                     deleteFile(p);
                 }
             }
         } else {
+            log.debug("Deleting file: {}", path);
             deleteFile(path);
         }
+
+        log.debug("Finished force deleting: {}", path);
     }
 
     @Override
