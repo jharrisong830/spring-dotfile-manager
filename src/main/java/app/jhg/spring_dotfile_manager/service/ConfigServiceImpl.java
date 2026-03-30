@@ -53,10 +53,13 @@ public class ConfigServiceImpl implements ConfigService {
     public String readConfig() throws IOException {
         String manualPath = dotfileRepoPathMixin.getDotfileRepoPath();
         if (manualPath != null && !manualPath.isBlank()) {
+            log.debug("Using manually overridden dotfile repository path: '{}'", manualPath);
             return manualPath;
         }
+
         String configContent = fileService.readFile(configFilePath);
         SDFMConfigModel config = SDFMConfigModel.fromConfigFileContents(configContent);
+        log.debug("Using dotfile repository path from config file: '{}'", config.dotfileRepoPath);
         return config.dotfileRepoPath;
     }
 
@@ -66,6 +69,7 @@ public class ConfigServiceImpl implements ConfigService {
             throw new FileNotFoundException("Configuration file does not exist at path: " + configFilePath);
         }
         SDFMConfigModel config = new SDFMConfigModel(newDotfileRepoPath);
+        log.debug("Overwriting exisitng config file");
         fileService.overwriteFile(configFilePath, config.getConfigFileContents());
     }
 
