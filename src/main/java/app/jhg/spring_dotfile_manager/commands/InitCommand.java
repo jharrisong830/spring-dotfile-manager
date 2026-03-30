@@ -53,12 +53,15 @@ public class InitCommand implements Callable<Integer> {
             String customPath = line != null ? line.trim() : "";
 
             if (!customPath.isEmpty()) {
+                log.debug("Using custom dotfile repository path");
                 dotfileRepoPath = customPath;
             } else {
+                log.debug("Using DEFAULT path");
                 dotfileRepoPath = defaultDotfileRepoPath;
             }
         }
 
+        log.debug("Setting dotfile repository path to: {}", dotfileRepoPath);
         configService.initializeConfig(dotfileRepoPath);
         configService.printConfig();
         return 0;

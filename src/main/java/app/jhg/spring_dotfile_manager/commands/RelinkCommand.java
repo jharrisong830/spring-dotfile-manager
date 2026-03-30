@@ -39,9 +39,10 @@ public class RelinkCommand implements Callable<Integer> {
         } else {
             for (DotfileMarkerModel marker : markers) {
                 try {
+                    log.debug("Initial attempt to relink");
                     dotfileService.relinkDotfile(marker);
                 } catch (FileAlreadyExistsException e) {
-                    // a file or directory already exists here, prompt before overwriting
+                    log.debug("FileAlreadyExistsException caught during relinking attempt");
                     log.info(e.getMessage());
                     log.info("Do you want to overwrite it with a symlink to {}? (only 'yes' will be accepted)", marker.sourceLocation);
 
@@ -49,6 +50,7 @@ public class RelinkCommand implements Callable<Integer> {
                     String response = line != null ? line.trim() : "";
 
                     if (response.equalsIgnoreCase("yes")) {
+                        log.debug("User confirmed overwrite");
                         try {
                             dotfileService.overwriteExistingDotfile(marker);
                             log.info("Overwrote existing file/directory with symlink to {}", marker.sourceLocation);

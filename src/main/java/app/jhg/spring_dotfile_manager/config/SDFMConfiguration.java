@@ -29,14 +29,19 @@ public class SDFMConfiguration {
         return (ex, commandLine, parseResult) -> {
             if (ex instanceof FileAlreadyExistsException) {
                 log.error("A file operation couldn't be completed because the specified file already exists: {}", ex.getMessage());
+                log.debug("{}", ex);
             } else if (ex instanceof NoSuchFileException || ex instanceof FileNotFoundException) {
                 log.error("A file operation couldn't be completed because the specified file was not found: {}", ex.getMessage());
+                log.debug("{}", ex);
             } else if (ex instanceof IOException) {
                 log.error("An I/O error occurred during a file operation: {}", ex.getMessage());
+                log.debug("{}", ex);
             } else if (ex instanceof IllegalArgumentException) {
                 log.error("Invalid argument: {}", ex.getMessage());
+                log.debug("{}", ex);
             } else {
                 log.error("Unknown exception: {}", ex.getMessage());
+                log.debug("{}", ex);
             }
 
             return 1;
