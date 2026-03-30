@@ -246,6 +246,24 @@ public class DotfileServiceUnitTests {
     }
 
     @Test
+    public void testRelinkDotfile_createDirectoryTree() throws IOException {
+        DotfileMarkerModel marker = DotfileMarkerModel.fromMarkerFileContents(
+            Path.of(RESOLVED_REPO_PATH, "zshrc.dotfile"),
+            "name: .zshrc\nlocation: ~/nonExistentDir/.zshrc\n"
+        ).get(0);
+        Path location = Path.of(System.getProperty("user.home"), "nonExistentDir", ".zshrc");
+        Path source = Path.of(RESOLVED_REPO_PATH, ".zshrc");
+
+        when(fileService.isSymbolicLink(location)).thenReturn(false);
+        when(fileService.exists(location)).thenReturn(false);
+
+        dotfileService.relinkDotfile(marker);
+
+        verify(fileService).createDirectories(location.getParent());
+        verify(fileService).createSymlink(location, source);
+    }
+
+    @Test
     public void testRelinkDotfile_locationIsRegularFile_throwsIOException() throws IOException {
         DotfileMarkerModel marker = DotfileMarkerModel.fromMarkerFileContents(
             Path.of(RESOLVED_REPO_PATH, "zshrc.dotfile"),

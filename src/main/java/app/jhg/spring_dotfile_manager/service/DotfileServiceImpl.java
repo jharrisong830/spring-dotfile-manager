@@ -79,6 +79,7 @@ public class DotfileServiceImpl implements DotfileService {
         } else if (!fileService.exists(locationForSystem)) {
             // happy path 2: create the link if nothing exists
             log.debug("No file at {}, creating symlink for {}", locationForSystem, marker.sourceLocation);
+            fileService.createDirectories(locationForSystem.getParent());
             fileService.createSymlink(locationForSystem, marker.sourceLocation);
         } else {
             // throw an exception, catch in the caller, and then prompt the user if they want to overwrite it
