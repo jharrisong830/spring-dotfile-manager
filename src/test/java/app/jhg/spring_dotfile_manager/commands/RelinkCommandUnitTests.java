@@ -169,7 +169,7 @@ public class RelinkCommandUnitTests {
 
         int result = command.call();
 
-        assertEquals(0, result);
+        assertEquals(1, result); // does not propogate, but returns non-zero exit code
     }
 
     @Test
@@ -189,7 +189,7 @@ public class RelinkCommandUnitTests {
 
         int result = command.call();
 
-        assertEquals(0, result);
+        assertEquals(1, result); // does not propogate, but returns non-zero exit code
         verify(dotfileService).overwriteExistingDotfile(markers.get(0));
         verify(dotfileService).overwriteExistingDotfile(markers.get(1));
     }

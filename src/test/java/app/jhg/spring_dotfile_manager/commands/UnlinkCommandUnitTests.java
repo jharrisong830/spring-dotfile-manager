@@ -91,7 +91,7 @@ public class UnlinkCommandUnitTests {
 
         int result = command.call();
 
-        assertEquals(0, result);
+        assertEquals(1, result); // does not propogate, but returns non-zero exit code
     }
 
     @Test
@@ -106,7 +106,7 @@ public class UnlinkCommandUnitTests {
 
         int result = command.call();
 
-        assertEquals(0, result);
+        assertEquals(1, result); // does not propogate, but returns non-zero exit code
         verify(dotfileService).unlinkDotfile(markers.get(0));
         verify(dotfileService).unlinkDotfile(markers.get(1));
     }

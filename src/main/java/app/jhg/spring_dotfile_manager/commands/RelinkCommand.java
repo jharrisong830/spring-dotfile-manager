@@ -33,6 +33,7 @@ public class RelinkCommand implements Callable<Integer> {
     @Override
     public Integer call() throws Exception {
         List<DotfileMarkerModel> markers = dotfileService.getAllDotfileMarkerModels();
+        int exitCode = 0;
         
         if (markers.isEmpty()) {
             log.info("No dotfiles found to relink in the configured repository.");
@@ -56,6 +57,7 @@ public class RelinkCommand implements Callable<Integer> {
                             log.info("Overwrote existing file/directory with symlink to {}", marker.sourceLocation);
                         } catch (IOException overwriteException) {
                             log.error("Failed to overwrite {}: {}", marker.location, overwriteException.getMessage());
+                            exitCode = 1;
                         }
                     } else {
                         log.info("Skipped relinking for {}", marker.location);
@@ -64,6 +66,6 @@ public class RelinkCommand implements Callable<Integer> {
             }
         }
 
-        return 0;
+        return exitCode;
     }
 }
