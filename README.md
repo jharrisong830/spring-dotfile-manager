@@ -40,7 +40,7 @@ A typical config file will look as follows. You can use `{HOME}` within this pat
 
 ```yaml
 # {HOME} -> /home/user
-dotfile_repo_path: "{HOME}/dotfiles"
+dotfile-repo-path: "{HOME}/dotfiles"
 ```
 
 If this config file doesn't exist, you can specify the dotfile repository location as a CLI option. This will take precedence over the location specified in the config file, if it exists.

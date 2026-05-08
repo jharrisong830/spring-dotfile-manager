@@ -28,6 +28,8 @@ public class UnlinkCommand implements Callable<Integer> {
     @Override 
     public Integer call() throws Exception {
         List<DotfileMarkerModel> markers = dotfileService.getAllDotfileMarkerModels();
+        int exitCode = 0;
+
         if (markers.isEmpty()) {
             log.info("No dotfiles found to unlink in the configured repository.");
         } else {
@@ -36,10 +38,11 @@ public class UnlinkCommand implements Callable<Integer> {
                     dotfileService.unlinkDotfile(marker);
                 } catch (Exception e) {
                     log.error("Error occurred while unlinking dotfile: {}", marker.location);
+                    exitCode = 1;
                 }
             }
         }
 
-        return 0;
+        return exitCode;
     }
 }
