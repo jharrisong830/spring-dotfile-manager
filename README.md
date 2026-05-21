@@ -3,19 +3,15 @@
 A utility to manage mapping dotfiles from your repository to your system.
 
 ## Prerequisites:
-- OpenJDK 25
-- GraalVM Community Edition 25
+- OpenJDK 26
 
 ## Installing & Running
 
 Start by cloning this repository. 
 
-You can run commands from the repository itself, or build an executable for your own use.
+You can run commands from the repository itself, or build an executable JAR for your own use.
 
 ```sh
-# install a native binary in `target/`
-./mvnw clean -Pnative native:compile
-
 # builds an executable JAR in `target/`
 ./mvnw install
 java -jar ./target/spring-dotfile-manager-0.0.1-SNAPSHOT.jar ...
@@ -211,13 +207,3 @@ win32:
 darwin:
     shouldLink: false
 ```
-
-
-## Roadmap
-
-- Add more detailed CLI help/usage messages
-- Make error handling more consistent, rather than just allowing `throw`s
-  - Could propagate up to `index.ts`, and handle from there, so long as error details are enough 
-- Get confirmation instead of errors for overwriting regular files
-- Implement more formal logging (outside of `console.log` and `console.error`) and exiting
-- Use GitHub actions to build executables for commits, and utilize GitHub releases 
