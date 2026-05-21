@@ -12,8 +12,11 @@ Start by cloning this repository.
 You can run commands from the repository itself, or build an executable JAR for your own use.
 
 ```sh
+# builds an executable JAR and bash wrapper in ~/.local/bin
+./bin/install.sh
+
 # builds an executable JAR in `target/`
-./mvnw install
+./mvnw clean package
 java -jar ./target/spring-dotfile-manager-0.0.1-SNAPSHOT.jar ...
 
 # use the Maven Spring Boot plugin
