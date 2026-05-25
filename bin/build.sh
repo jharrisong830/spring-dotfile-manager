@@ -4,15 +4,9 @@ REPO_ROOT=$(git rev-parse --show-toplevel)
 CWD=$(pwd)
 cd "$REPO_ROOT" || exit 1
 
-if [[ $JAVA_HOME == "" ]]; then
-  echo "JAVA_HOME is not set. Please set JAVA_HOME to the path of your GraalVM Community installation."
-  exit 1
-fi
+POM_VERSION=$(./mvnw help:evaluate -Dexpression=project.version -q -DforceStdout)
+echo "BUILD spring-dotfile-manager v$POM_VERSION"
 
-NATIVE_IMAGE_BIN="$JAVA_HOME/bin/native-image"
-
-./mvnw clean -Pnative native:compile || exit 1
-
-echo "Native image built to ${REPO_ROOT}/target/spring-dotfile-manager"
+./mvnw clean package
 
 cd "$CWD" || exit 1
