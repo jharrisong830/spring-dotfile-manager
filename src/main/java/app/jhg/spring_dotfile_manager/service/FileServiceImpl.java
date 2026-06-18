@@ -96,7 +96,7 @@ public class FileServiceImpl implements FileService {
         if (!Files.exists(baseDirectory)) {
             throw new IOException("Base directory does not exist: " + baseDirectory);
         }
-        if (!Files.isDirectory(baseDirectory)) {
+        if (!isDirectory(baseDirectory)) {
             throw new IOException("Base directory is not a directory: " + baseDirectory);
         }
 
