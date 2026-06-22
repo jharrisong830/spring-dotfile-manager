@@ -96,4 +96,11 @@ public class SDFMConfigurationUnitTests {
         assertNotNull(result);
         assertInstanceOf(DebugMixin.class, result);
     }
+
+    @Test
+    public void testFactory_beanConstructionFails_propagates() throws Exception {
+        when(ctx.getBean(DebugMixin.class)).thenThrow(new RuntimeException("bean construction failed"));
+
+        assertThrows(RuntimeException.class, () -> new SDFMConfiguration().commandLine(rootCommand, ctx, handler));
+    }
 }

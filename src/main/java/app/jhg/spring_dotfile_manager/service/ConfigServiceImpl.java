@@ -33,10 +33,9 @@ public class ConfigServiceImpl implements ConfigService {
         DotfileRepoPathMixin dotfileRepoPathMixin
     ) {
         String rawConfigPath = switch (FormattingUtils.getResolvedOsName(osName)) {
-            case "linux"  -> linuxPath;
-            case "darwin" -> darwinPath;
-            case "win32"  -> win32Path;
-            default -> throw new UnsupportedOperationException("Unsupported OS: " + osName);
+            case LINUX  -> linuxPath;
+            case DARWIN -> darwinPath;
+            case WIN32  -> win32Path;
         };
         this.configFilePath = Path.of(FormattingUtils.formatWithHomeDirectory(rawConfigPath));
         this.fileService = fileService;
@@ -58,17 +57,19 @@ public class ConfigServiceImpl implements ConfigService {
             return manualPath;
         }
 
-        String configContent = fileService.readFile(configFilePath);
-        SDFMConfigModel config = SDFMConfigModel.fromConfigFileContents(configContent);
+        SDFMConfigModel config = loadConfig();
         log.debug("Using dotfile repository path from config file: '{}'", config.dotfileRepoPath);
         return config.dotfileRepoPath;
     }
 
     @Override
     public boolean readAllowPostInstallScripts() throws IOException {
+        return loadConfig().allowPostInstallScripts;
+    }
+
+    private SDFMConfigModel loadConfig() throws IOException {
         String configContent = fileService.readFile(configFilePath);
-        SDFMConfigModel config = SDFMConfigModel.fromConfigFileContents(configContent);
-        return config.allowPostInstallScripts;
+        return SDFMConfigModel.fromConfigFileContents(configContent);
     }
 
     @Override
@@ -77,7 +78,7 @@ public class ConfigServiceImpl implements ConfigService {
             throw new FileNotFoundException("Configuration file does not exist at path: " + configFilePath);
         }
         SDFMConfigModel config = new SDFMConfigModel(newDotfileRepoPath, newAllowPostInstallScripts);
-        log.debug("Overwriting exisitng config file");
+        log.debug("Overwriting existing config file");
         fileService.overwriteFile(configFilePath, config.getConfigFileContents());
     }
 

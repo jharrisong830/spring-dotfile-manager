@@ -8,6 +8,7 @@ import static org.mockito.Mockito.*;
 
 import java.io.IOException;
 import java.nio.file.FileAlreadyExistsException;
+import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.util.List;
 
@@ -290,10 +291,28 @@ public class DotfileServiceUnitTests {
         Path location = Path.of(System.getProperty("user.home"), ".zshrc");
         Path source = Path.of(RESOLVED_REPO_PATH, ".zshrc");
 
+        when(fileService.exists(source)).thenReturn(true);
+
         dotfileService.overwriteExistingDotfile(marker);
 
         verify(fileService).forceDelete(location);
         verify(fileService).createSymlink(location, source);
+    }
+
+    @Test
+    public void testOverwriteExistingDotfile_sourceDoesNotExist_throwsNoSuchFileException() throws IOException {
+        DotfileMarkerModel marker = DotfileMarkerModel.fromMarkerFileContents(
+            Path.of(RESOLVED_REPO_PATH, "zshrc.dotfile"),
+            "name: .zshrc\nlocation: ~/.zshrc\n"
+        ).get(0);
+        Path source = Path.of(RESOLVED_REPO_PATH, ".zshrc");
+
+        when(fileService.exists(source)).thenReturn(false);
+
+        assertThrows(NoSuchFileException.class, () -> dotfileService.overwriteExistingDotfile(marker));
+
+        verify(fileService, never()).forceDelete(any());
+        verify(fileService, never()).createSymlink(any(), any());
     }
 
     @Test
@@ -303,7 +322,9 @@ public class DotfileServiceUnitTests {
             "name: .zshrc\nlocation: ~/.zshrc\n"
         ).get(0);
         Path location = Path.of(System.getProperty("user.home"), ".zshrc");
+        Path source = Path.of(RESOLVED_REPO_PATH, ".zshrc");
 
+        when(fileService.exists(source)).thenReturn(true);
         doThrow(new IOException("delete failed"))
             .when(fileService).forceDelete(location);
 
@@ -321,6 +342,7 @@ public class DotfileServiceUnitTests {
         Path location = Path.of(System.getProperty("user.home"), ".zshrc");
         Path source = Path.of(RESOLVED_REPO_PATH, ".zshrc");
 
+        when(fileService.exists(source)).thenReturn(true);
         doThrow(new IOException("symlink failed"))
             .when(fileService).createSymlink(location, source);
 
@@ -463,6 +485,8 @@ public class DotfileServiceUnitTests {
         ).get(0);
         Path overrideLocation = Path.of(System.getProperty("user.home"), ".zshrc-linux");
         Path source = Path.of(RESOLVED_REPO_PATH, ".zshrc");
+
+        when(fileService.exists(source)).thenReturn(true);
 
         dotfileService.overwriteExistingDotfile(marker);
 

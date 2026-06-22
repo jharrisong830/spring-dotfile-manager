@@ -39,7 +39,7 @@ public class PostInstallServiceImpl implements PostInstallService {
     }
 
     @Override
-    public List<PostInstallScriptResult> runPostInstallScripts() throws IOException {
+    public List<Path> findPostInstallScripts() throws IOException {
         if (!configService.readAllowPostInstallScripts()) {
             // return an empty list immediately if post-install scripts are not allowed
             log.debug("Post-install scripts disabled");
@@ -50,6 +50,12 @@ public class PostInstallServiceImpl implements PostInstallService {
         Path dotfileRepoPath = Path.of(FormattingUtils.formatWithHomeDirectory(configService.readDotfileRepoPath()));
         List<Path> allPostInstallScripts = new ArrayList<>(fileService.glob(dotfileRepoPath, postInstallGlobPattern));
         allPostInstallScripts.sort(Comparator.naturalOrder());
+        return allPostInstallScripts;
+    }
+
+    @Override
+    public List<PostInstallScriptResult> runPostInstallScripts() throws IOException {
+        List<Path> allPostInstallScripts = findPostInstallScripts();
 
         List<PostInstallScriptResult> results = new ArrayList<>();
         for (Path scriptPath : allPostInstallScripts) {
@@ -58,10 +64,10 @@ public class PostInstallServiceImpl implements PostInstallService {
             try {
                 SubprocessResult res = subprocessService.executeCommand(scriptPath.getParent(), cmd);
                 results.add(new PostInstallScriptResult(res.exitCode() == 0, res.output(), scriptPath));
-            } catch (IOException | InterruptedException | ExecutionException | TimeoutException e) {
-                if (e instanceof InterruptedException) {
-                    Thread.currentThread().interrupt();
-                }
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                results.add(new PostInstallScriptResult(false, "Failed to run post-install script: " + e.getMessage(), scriptPath));
+            } catch (IOException | ExecutionException | TimeoutException e) {
                 results.add(new PostInstallScriptResult(false, "Failed to run post-install script: " + e.getMessage(), scriptPath));
             }
             log.debug("Finished execution for {}", scriptPath);

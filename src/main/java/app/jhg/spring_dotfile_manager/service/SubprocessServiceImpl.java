@@ -63,13 +63,15 @@ public class SubprocessServiceImpl implements SubprocessService {
             } catch (InterruptedException e) {
                 // destroy and rethrow to prevent orphaned processes
                 p.destroyForcibly();
+                outputFuture.cancel(true);
                 throw e;
             }
-            
+
             if (!finished) {
                 log.debug("Killing process after timeout: {}ms", subprocessTimeout);
                 p.destroyForcibly();
                 p.waitFor();
+                outputFuture.cancel(true);
                 throw new TimeoutException("Process timed out and forcibly killed after " + subprocessTimeout + "ms");
             }
 

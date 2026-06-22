@@ -97,27 +97,27 @@ public class FormattingUtilsUnitTests {
 
     @Test
     public void testGetResolvedOsName_linux() {
-        assertEquals("linux", FormattingUtils.getResolvedOsName("Linux"));
+        assertEquals(Os.LINUX, FormattingUtils.getResolvedOsName("Linux"));
     }
 
     @Test
     public void testGetResolvedOsName_linux_fullName() {
-        assertEquals("linux", FormattingUtils.getResolvedOsName("Linux 5.15.0-generic"));
+        assertEquals(Os.LINUX, FormattingUtils.getResolvedOsName("Linux 5.15.0-generic"));
     }
 
     @Test
     public void testGetResolvedOsName_darwin() {
-        assertEquals("darwin", FormattingUtils.getResolvedOsName("Mac OS X"));
+        assertEquals(Os.DARWIN, FormattingUtils.getResolvedOsName("Mac OS X"));
     }
 
     @Test
     public void testGetResolvedOsName_win32() {
-        assertEquals("win32", FormattingUtils.getResolvedOsName("Windows 10"));
+        assertEquals(Os.WIN32, FormattingUtils.getResolvedOsName("Windows 10"));
     }
 
     @Test
     public void testGetResolvedOsName_win32_nt() {
-        assertEquals("win32", FormattingUtils.getResolvedOsName("Windows NT 10.0"));
+        assertEquals(Os.WIN32, FormattingUtils.getResolvedOsName("Windows NT 10.0"));
     }
 
     @Test

@@ -171,6 +171,47 @@ public class PostInstallServiceUnitTests {
     }
 
     @Test
+    public void testFindPostInstallScripts_postInstallDisabled_returnsEmptyList() throws Exception {
+        when(configService.readAllowPostInstallScripts()).thenReturn(false);
+
+        List<Path> results = postInstallService.findPostInstallScripts();
+
+        assertEquals(List.of(), results);
+        verifyNoInteractions(fileService);
+        verifyNoInteractions(subprocessService);
+    }
+
+    @Test
+    public void testFindPostInstallScripts_sortsScripts() throws Exception {
+        Path scriptB = Path.of(REPO_PATH, "post-install/02.sh");
+        Path scriptA = Path.of(REPO_PATH, "post-install/01.sh");
+        Path scriptC = Path.of(REPO_PATH, "post-install/folder/01.sh");
+
+        List<Path> scriptPaths = List.of(scriptC, scriptB, scriptA);
+
+        when(configService.readAllowPostInstallScripts()).thenReturn(true);
+        when(configService.readDotfileRepoPath()).thenReturn(REPO_PATH);
+        when(fileService.glob(eq(Path.of(REPO_PATH)), eq(GLOB_PATTERN))).thenReturn(scriptPaths);
+
+        List<Path> results = postInstallService.findPostInstallScripts();
+
+        assertEquals(List.of(scriptA, scriptB, scriptC), results);
+        verifyNoInteractions(subprocessService);
+    }
+
+    @Test
+    public void testFindPostInstallScripts_globThrowsIOException_propagates() throws Exception {
+        when(configService.readAllowPostInstallScripts()).thenReturn(true);
+        when(configService.readDotfileRepoPath()).thenReturn(REPO_PATH);
+        doThrow(new IOException("base directory does not exist"))
+            .when(fileService).glob(eq(Path.of(REPO_PATH)), eq(GLOB_PATTERN));
+
+        assertThrows(IOException.class, postInstallService::findPostInstallScripts);
+
+        verifyNoInteractions(subprocessService);
+    }
+
+    @Test
     public void testRunPostInstallScripts_resolvesHomeDirectoryPlaceholder() throws Exception {
         Path scriptPath = Path.of(REPO_PATH, "post-install/01.sh");
 

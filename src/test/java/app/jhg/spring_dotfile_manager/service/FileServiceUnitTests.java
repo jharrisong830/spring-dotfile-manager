@@ -318,6 +318,22 @@ public class FileServiceUnitTests {
     }
 
     @Test
+    public void testForceDelete_symbolicLinkToDirectory() throws IOException {
+        Path targetDir = tempDir.resolve("targetDir");
+        Files.createDirectory(targetDir);
+        Path childFile = targetDir.resolve("child.txt");
+        Files.createFile(childFile);
+        Path link = tempDir.resolve("linkToDir");
+        Files.createSymbolicLink(link, targetDir);
+
+        fileService.forceDelete(link);
+
+        assertFalse(Files.exists(link));
+        assertTrue(Files.exists(targetDir));
+        assertTrue(Files.exists(childFile));
+    }
+
+    @Test
     public void testForceDelete_emptyDirectory() throws IOException {
         Path dirPath = tempDir.resolve("emptyDir");
         Files.createDirectory(dirPath);
@@ -416,6 +432,17 @@ public class FileServiceUnitTests {
         List<Path> result = fileService.glob(tempDir, "**/*.yaml");
 
         assertTrue(result.isEmpty());
+    }
+
+    @Test
+    public void testGlob_excludesDirectoriesMatchingPattern() throws IOException {
+        Files.createDirectory(tempDir.resolve("dir.yaml"));
+        Files.createFile(tempDir.resolve("file.yaml"));
+
+        List<Path> result = fileService.glob(tempDir, "*.yaml");
+
+        assertEquals(1, result.size());
+        assertTrue(result.contains(tempDir.resolve("file.yaml")));
     }
 
     @Test

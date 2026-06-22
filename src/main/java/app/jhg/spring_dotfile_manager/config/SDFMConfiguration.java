@@ -9,6 +9,7 @@ import java.nio.file.NoSuchFileException;
 
 import app.jhg.spring_dotfile_manager.commands.RootCommand;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.NoSuchBeanDefinitionException;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -59,7 +60,7 @@ public class SDFMConfiguration {
             public <K> K create(Class<K> cls) throws Exception {
                 try {
                     return ctx.getBean(cls);
-                } catch (Exception e) {
+                } catch (NoSuchBeanDefinitionException e) {
                     return CommandLine.defaultFactory().create(cls);
                 }
             }

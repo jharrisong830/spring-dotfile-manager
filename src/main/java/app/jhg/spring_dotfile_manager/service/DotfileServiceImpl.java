@@ -2,6 +2,7 @@ package app.jhg.spring_dotfile_manager.service;
 
 import java.io.IOException;
 import java.nio.file.FileAlreadyExistsException;
+import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
@@ -12,14 +13,15 @@ import org.springframework.stereotype.Service;
 import app.jhg.spring_dotfile_manager.model.DotfileMarkerModel;
 import app.jhg.spring_dotfile_manager.model.DotfileMarkerModel.PlatformOverrideModel;
 import app.jhg.spring_dotfile_manager.util.FormattingUtils;
+import app.jhg.spring_dotfile_manager.util.Os;
 import lombok.extern.slf4j.Slf4j;
 
 @Service
 @Slf4j
 public class DotfileServiceImpl implements DotfileService {
-    
+
     private final String dotfileGlobPattern;
-    private final String osName;
+    private final Os osName;
 
     private final ConfigService configService;
     private final FileService fileService;
@@ -96,6 +98,14 @@ public class DotfileServiceImpl implements DotfileService {
             return;
         }
         
+        if (!fileService.exists(marker.sourceLocation)) {
+            throw new NoSuchFileException(
+                marker.sourceLocation.toString(),
+                null,
+                "Source does not exist; refusing to overwrite " + locationForSystem
+            );
+        }
+
         log.debug("Force deleting existing file at {} and relinking to {}", locationForSystem, marker.sourceLocation);
         fileService.forceDelete(locationForSystem);
         fileService.createSymlink(locationForSystem, marker.sourceLocation);
@@ -128,18 +138,20 @@ public class DotfileServiceImpl implements DotfileService {
 
     @Override
     public Path getTargetPathForCurrentSystem(DotfileMarkerModel marker) {
-        PlatformOverrideModel overrideModel;
-
-        if (osName.equals("darwin")) {
-            log.debug("Using Darwin for {}", marker.sourceLocation);
-            overrideModel = marker.darwinOverride;
-        } else if (osName.equals("win32")) {
-            log.debug("Using Windows for {}", marker.sourceLocation);
-            overrideModel = marker.win32Override;
-        } else { // osName.equals("linux")
-            log.debug("Using Linux for {}", marker.sourceLocation);
-            overrideModel = marker.linuxOverride;
-        }
+        PlatformOverrideModel overrideModel = switch (osName) {
+            case DARWIN -> {
+                log.debug("Using Darwin for {}", marker.sourceLocation);
+                yield marker.darwinOverride;
+            }
+            case WIN32 -> {
+                log.debug("Using Windows for {}", marker.sourceLocation);
+                yield marker.win32Override;
+            }
+            case LINUX -> {
+                log.debug("Using Linux for {}", marker.sourceLocation);
+                yield marker.linuxOverride;
+            }
+        };
 
         if (overrideModel == null) {
             log.debug("No override provided for {}, using default location", marker.sourceLocation);

@@ -15,6 +15,7 @@ public interface SubprocessService {
      * @param cwd current working directory to operate in
      * @param args command as a list of strings
      * @return the result of the subprocess execution, including exit code and captured output
+     * @throws IllegalArgumentException if args is empty
      */
     public SubprocessResult executeCommand(Path cwd, List<String> args) throws IOException, InterruptedException, ExecutionException, TimeoutException;
 }
