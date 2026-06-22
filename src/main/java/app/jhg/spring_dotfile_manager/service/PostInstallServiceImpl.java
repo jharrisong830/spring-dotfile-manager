@@ -42,6 +42,7 @@ public class PostInstallServiceImpl implements PostInstallService {
     public List<PostInstallScriptResult> runPostInstallScripts() throws IOException {
         if (!configService.readAllowPostInstallScripts()) {
             // return an empty list immediately if post-install scripts are not allowed
+            log.debug("Post-install scripts disabled");
             return List.of();
         }
 
@@ -52,6 +53,7 @@ public class PostInstallServiceImpl implements PostInstallService {
 
         List<PostInstallScriptResult> results = new ArrayList<>();
         for (Path scriptPath : allPostInstallScripts) {
+            log.debug("Starting execution for {}", scriptPath);
             List<String> cmd = List.of("bash", scriptPath.toString());
             try {
                 SubprocessResult res = subprocessService.executeCommand(scriptPath.getParent(), cmd);
@@ -62,6 +64,7 @@ public class PostInstallServiceImpl implements PostInstallService {
                 }
                 results.add(new PostInstallScriptResult(false, "Failed to run post-install script: " + e.getMessage(), scriptPath));
             }
+            log.debug("Finished execution for {}", scriptPath);
         }
 
         return results;

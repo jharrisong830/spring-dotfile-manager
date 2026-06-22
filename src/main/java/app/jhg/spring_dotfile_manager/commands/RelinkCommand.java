@@ -9,7 +9,9 @@ import java.util.concurrent.Callable;
 import org.springframework.stereotype.Component;
 
 import app.jhg.spring_dotfile_manager.model.DotfileMarkerModel;
+import app.jhg.spring_dotfile_manager.model.PostInstallScriptResult;
 import app.jhg.spring_dotfile_manager.service.DotfileService;
+import app.jhg.spring_dotfile_manager.service.PostInstallService;
 import lombok.extern.slf4j.Slf4j;
 import picocli.CommandLine.Command;
 
@@ -23,10 +25,12 @@ import picocli.CommandLine.Command;
 public class RelinkCommand implements Callable<Integer> {
     
     private final DotfileService dotfileService;
+    private final PostInstallService postInstallService;
     private final BufferedReader stdinReader;
 
-    public RelinkCommand(DotfileService dotfileService, BufferedReader stdinReader) {
+    public RelinkCommand(DotfileService dotfileService, PostInstallService postInstallService, BufferedReader stdinReader) {
         this.dotfileService = dotfileService;
+        this.postInstallService = postInstallService;
         this.stdinReader = stdinReader;
     }
 
@@ -64,6 +68,24 @@ public class RelinkCommand implements Callable<Integer> {
                     }
                 }
             }
+        }
+
+        try {
+            log.debug("Starting post-install scripts...");
+            List<PostInstallScriptResult> postInstallScriptResults = postInstallService.runPostInstallScripts();
+
+            for (PostInstallScriptResult result : postInstallScriptResults) {
+                if (result.success()) {
+                    log.info("Ran post-install script {}", result.script());
+                    log.debug(result.message());
+                } else {
+                    log.error("Post-install script {} failed: {}", result.script(), result.message());
+                    exitCode = 1;
+                }
+            }
+        } catch (IOException e) {
+            log.error("File I/O error while executing post-install scripts: {}", e.getMessage());
+            exitCode = 1;
         }
 
         return exitCode;

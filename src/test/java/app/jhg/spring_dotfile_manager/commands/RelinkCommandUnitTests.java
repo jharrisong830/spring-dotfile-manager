@@ -17,7 +17,9 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import app.jhg.spring_dotfile_manager.model.DotfileMarkerModel;
+import app.jhg.spring_dotfile_manager.model.PostInstallScriptResult;
 import app.jhg.spring_dotfile_manager.service.DotfileService;
+import app.jhg.spring_dotfile_manager.service.PostInstallService;
 
 @ExtendWith(MockitoExtension.class)
 public class RelinkCommandUnitTests {
@@ -26,18 +28,22 @@ public class RelinkCommandUnitTests {
     private DotfileService dotfileService;
 
     @Mock
+    private PostInstallService postInstallService;
+
+    @Mock
     private BufferedReader stdinReader;
 
     private RelinkCommand command;
 
     @BeforeEach
     void setUp() {
-        command = new RelinkCommand(dotfileService, stdinReader);
+        command = new RelinkCommand(dotfileService, postInstallService, stdinReader);
     }
 
     @Test
     public void testCall_noMarkersFound_skipsRelink() throws Exception {
         when(dotfileService.getAllDotfileMarkerModels()).thenReturn(List.of());
+        when(postInstallService.runPostInstallScripts()).thenReturn(List.of());
 
         int result = command.call();
 
@@ -53,6 +59,7 @@ public class RelinkCommandUnitTests {
             "name: .zshrc\nlocation: /home/user/.zshrc\n---\nname: .bashrc\nlocation: /home/user/.bashrc\n"
         );
         when(dotfileService.getAllDotfileMarkerModels()).thenReturn(markers);
+        when(postInstallService.runPostInstallScripts()).thenReturn(List.of());
 
         int result = command.call();
 
@@ -96,6 +103,7 @@ public class RelinkCommandUnitTests {
         doThrow(new FileAlreadyExistsException("/home/user/.zshrc"))
             .when(dotfileService).relinkDotfile(any());
         when(stdinReader.readLine()).thenReturn("yes");
+        when(postInstallService.runPostInstallScripts()).thenReturn(List.of());
 
         int result = command.call();
 
@@ -113,6 +121,7 @@ public class RelinkCommandUnitTests {
         doThrow(new FileAlreadyExistsException("/home/user/.zshrc"))
             .when(dotfileService).relinkDotfile(any());
         when(stdinReader.readLine()).thenReturn("YES");
+        when(postInstallService.runPostInstallScripts()).thenReturn(List.of());
 
         int result = command.call();
 
@@ -130,6 +139,7 @@ public class RelinkCommandUnitTests {
         doThrow(new FileAlreadyExistsException("/home/user/.zshrc"))
             .when(dotfileService).relinkDotfile(any());
         when(stdinReader.readLine()).thenReturn("no");
+        when(postInstallService.runPostInstallScripts()).thenReturn(List.of());
 
         int result = command.call();
 
@@ -147,6 +157,7 @@ public class RelinkCommandUnitTests {
         doThrow(new FileAlreadyExistsException("/home/user/.zshrc"))
             .when(dotfileService).relinkDotfile(any());
         when(stdinReader.readLine()).thenReturn(null);
+        when(postInstallService.runPostInstallScripts()).thenReturn(List.of());
 
         int result = command.call();
 
@@ -166,6 +177,7 @@ public class RelinkCommandUnitTests {
         when(stdinReader.readLine()).thenReturn("yes");
         doThrow(new IOException("permission denied"))
             .when(dotfileService).overwriteExistingDotfile(any());
+        when(postInstallService.runPostInstallScripts()).thenReturn(List.of());
 
         int result = command.call();
 
@@ -186,11 +198,49 @@ public class RelinkCommandUnitTests {
         when(stdinReader.readLine()).thenReturn("yes");
         doThrow(new IOException("permission denied"))
             .when(dotfileService).overwriteExistingDotfile(markers.get(0));
+        when(postInstallService.runPostInstallScripts()).thenReturn(List.of());
 
         int result = command.call();
 
         assertEquals(1, result); // does not propogate, but returns non-zero exit code
         verify(dotfileService).overwriteExistingDotfile(markers.get(0));
         verify(dotfileService).overwriteExistingDotfile(markers.get(1));
+    }
+
+    @Test
+    public void testCall_postInstallScripts_allSucceed_returnsZero() throws Exception {
+        when(dotfileService.getAllDotfileMarkerModels()).thenReturn(List.of());
+        when(postInstallService.runPostInstallScripts()).thenReturn(List.of(
+            new PostInstallScriptResult(true, "done", Path.of("/repo/post-install/01.sh")),
+            new PostInstallScriptResult(true, "done", Path.of("/repo/post-install/02.sh"))
+        ));
+
+        int result = command.call();
+
+        assertEquals(0, result);
+    }
+
+    @Test
+    public void testCall_postInstallScripts_oneFails_returnsOne() throws Exception {
+        when(dotfileService.getAllDotfileMarkerModels()).thenReturn(List.of());
+        when(postInstallService.runPostInstallScripts()).thenReturn(List.of(
+            new PostInstallScriptResult(false, "command error", Path.of("/repo/post-install/01.sh")),
+            new PostInstallScriptResult(true, "done", Path.of("/repo/post-install/02.sh"))
+        ));
+
+        int result = command.call();
+
+        assertEquals(1, result);
+    }
+
+    @Test
+    public void testCall_postInstallScripts_ioException_returnsOne_doesNotPropagate() throws Exception {
+        when(dotfileService.getAllDotfileMarkerModels()).thenReturn(List.of());
+        doThrow(new IOException("could not read config"))
+            .when(postInstallService).runPostInstallScripts();
+
+        int result = command.call();
+
+        assertEquals(1, result);
     }
 }
