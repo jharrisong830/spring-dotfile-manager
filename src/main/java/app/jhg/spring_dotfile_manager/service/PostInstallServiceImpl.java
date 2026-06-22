@@ -3,6 +3,7 @@ package app.jhg.spring_dotfile_manager.service;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
@@ -46,7 +47,8 @@ public class PostInstallServiceImpl implements PostInstallService {
 
         log.debug("Finding {} in {}", postInstallGlobPattern, configService.readDotfileRepoPath());
         Path dotfileRepoPath = Path.of(FormattingUtils.formatWithHomeDirectory(configService.readDotfileRepoPath()));
-        List<Path> allPostInstallScripts = fileService.glob(dotfileRepoPath, postInstallGlobPattern);
+        List<Path> allPostInstallScripts = new ArrayList<>(fileService.glob(dotfileRepoPath, postInstallGlobPattern));
+        allPostInstallScripts.sort(Comparator.naturalOrder());
 
         List<PostInstallScriptResult> results = new ArrayList<>();
         for (Path scriptPath : allPostInstallScripts) {
