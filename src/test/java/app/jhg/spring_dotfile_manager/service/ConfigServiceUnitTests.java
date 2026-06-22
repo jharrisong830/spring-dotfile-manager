@@ -33,22 +33,41 @@ public class ConfigServiceUnitTests {
     private static final String TILDE_CONFIG_PATH = "~/test-sdfm/config.yaml";
     private static final String REPO_PATH = "~/dotfiles";
     private static final boolean ALLOW_POST_INSTALL_SCRIPTS = false;
+    private static final String LINUX_OS_NAME = "Linux";
 
     @BeforeEach
     void setUp() {
-        configService = new ConfigServiceImpl(CONFIG_PATH, CONFIG_PATH, CONFIG_PATH, fileService, dotfileRepoPathMixin);
+        configService = new ConfigServiceImpl(CONFIG_PATH, CONFIG_PATH, CONFIG_PATH, LINUX_OS_NAME, fileService, dotfileRepoPathMixin);
     }
 
     @Test
     public void testConstructor_expandsTildeInConfigPath() {
-        ConfigService service = new ConfigServiceImpl(TILDE_CONFIG_PATH, TILDE_CONFIG_PATH, TILDE_CONFIG_PATH, fileService, dotfileRepoPathMixin);
+        ConfigService service = new ConfigServiceImpl(TILDE_CONFIG_PATH, TILDE_CONFIG_PATH, TILDE_CONFIG_PATH, LINUX_OS_NAME, fileService, dotfileRepoPathMixin);
         Path expectedPath = Path.of(System.getProperty("user.home"), "test-sdfm/config.yaml");
         assertEquals(expectedPath, ((ConfigServiceImpl) service).getConfigFilePath());
     }
 
     @Test
+    public void testConstructor_linuxOs_selectsLinuxPath() {
+        ConfigService service = new ConfigServiceImpl("/linux/config.yaml", "/darwin/config.yaml", "/win32/config.yaml", "Linux", fileService, dotfileRepoPathMixin);
+        assertEquals(Path.of("/linux/config.yaml"), ((ConfigServiceImpl) service).getConfigFilePath());
+    }
+
+    @Test
+    public void testConstructor_darwinOs_selectsDarwinPath() {
+        ConfigService service = new ConfigServiceImpl("/linux/config.yaml", "/darwin/config.yaml", "/win32/config.yaml", "Mac OS X", fileService, dotfileRepoPathMixin);
+        assertEquals(Path.of("/darwin/config.yaml"), ((ConfigServiceImpl) service).getConfigFilePath());
+    }
+
+    @Test
+    public void testConstructor_win32Os_selectsWin32Path() {
+        ConfigService service = new ConfigServiceImpl("/linux/config.yaml", "/darwin/config.yaml", "/win32/config.yaml", "Windows 10", fileService, dotfileRepoPathMixin);
+        assertEquals(Path.of("/win32/config.yaml"), ((ConfigServiceImpl) service).getConfigFilePath());
+    }
+
+    @Test
     public void testConstructor_manualPathProvided_configFilePathUnchanged() {
-        ConfigService service = new ConfigServiceImpl(CONFIG_PATH, CONFIG_PATH, CONFIG_PATH, fileService, dotfileRepoPathMixin);
+        ConfigService service = new ConfigServiceImpl(CONFIG_PATH, CONFIG_PATH, CONFIG_PATH, LINUX_OS_NAME, fileService, dotfileRepoPathMixin);
         
         // Config file path should always be CONFIG_PATH, regardless of manual dotfile repo path
         Path expectedPath = Path.of(CONFIG_PATH);
@@ -60,7 +79,7 @@ public class ConfigServiceUnitTests {
         String manualPath = "/custom/dotfiles/path";
         when(dotfileRepoPathMixin.getDotfileRepoPath()).thenReturn(manualPath);
         
-        ConfigService service = new ConfigServiceImpl(CONFIG_PATH, CONFIG_PATH, CONFIG_PATH, fileService, dotfileRepoPathMixin);
+        ConfigService service = new ConfigServiceImpl(CONFIG_PATH, CONFIG_PATH, CONFIG_PATH, LINUX_OS_NAME, fileService, dotfileRepoPathMixin);
         
         // Should return manual path without reading config file
         String result = service.readDotfileRepoPath();
@@ -73,7 +92,7 @@ public class ConfigServiceUnitTests {
         String manualPath = "~/manual/dotfiles";
         when(dotfileRepoPathMixin.getDotfileRepoPath()).thenReturn(manualPath);
         
-        ConfigService service = new ConfigServiceImpl(CONFIG_PATH, CONFIG_PATH, CONFIG_PATH, fileService, dotfileRepoPathMixin);
+        ConfigService service = new ConfigServiceImpl(CONFIG_PATH, CONFIG_PATH, CONFIG_PATH, LINUX_OS_NAME, fileService, dotfileRepoPathMixin);
         
         // Manual path should be returned as-is (tilde expansion happens in calling code if needed)
         String result = service.readDotfileRepoPath();
@@ -87,7 +106,7 @@ public class ConfigServiceUnitTests {
         String configContent = new SDFMConfigModel(REPO_PATH, ALLOW_POST_INSTALL_SCRIPTS).getConfigFileContents();
         when(fileService.readFile(any(Path.class))).thenReturn(configContent);
         
-        ConfigService service = new ConfigServiceImpl(CONFIG_PATH, CONFIG_PATH, CONFIG_PATH, fileService, dotfileRepoPathMixin);
+        ConfigService service = new ConfigServiceImpl(CONFIG_PATH, CONFIG_PATH, CONFIG_PATH, LINUX_OS_NAME, fileService, dotfileRepoPathMixin);
         
         String result = service.readDotfileRepoPath();
         assertEquals(REPO_PATH, result);
@@ -100,7 +119,7 @@ public class ConfigServiceUnitTests {
         String configContent = new SDFMConfigModel(REPO_PATH, ALLOW_POST_INSTALL_SCRIPTS).getConfigFileContents();
         when(fileService.readFile(any(Path.class))).thenReturn(configContent);
         
-        ConfigService service = new ConfigServiceImpl(CONFIG_PATH, CONFIG_PATH, CONFIG_PATH, fileService, dotfileRepoPathMixin);
+        ConfigService service = new ConfigServiceImpl(CONFIG_PATH, CONFIG_PATH, CONFIG_PATH, LINUX_OS_NAME, fileService, dotfileRepoPathMixin);
         
         String result = service.readDotfileRepoPath();
         assertEquals(REPO_PATH, result);
@@ -113,7 +132,7 @@ public class ConfigServiceUnitTests {
         String configContent = new SDFMConfigModel(REPO_PATH, ALLOW_POST_INSTALL_SCRIPTS).getConfigFileContents();
         when(fileService.readFile(any(Path.class))).thenReturn(configContent);
         
-        ConfigService service = new ConfigServiceImpl(CONFIG_PATH, CONFIG_PATH, CONFIG_PATH, fileService, dotfileRepoPathMixin);
+        ConfigService service = new ConfigServiceImpl(CONFIG_PATH, CONFIG_PATH, CONFIG_PATH, LINUX_OS_NAME, fileService, dotfileRepoPathMixin);
         
         String result = service.readDotfileRepoPath();
         assertEquals(REPO_PATH, result);

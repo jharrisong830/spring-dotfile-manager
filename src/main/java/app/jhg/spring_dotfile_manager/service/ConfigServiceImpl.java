@@ -28,14 +28,15 @@ public class ConfigServiceImpl implements ConfigService {
         @Value("${spring-dotfile-manager.config.path.linux}") String linuxPath,
         @Value("${spring-dotfile-manager.config.path.darwin}") String darwinPath,
         @Value("${spring-dotfile-manager.config.path.win32}") String win32Path,
+        @Value("${os.name}") String osName,
         FileService fileService,
         DotfileRepoPathMixin dotfileRepoPathMixin
     ) {
-        String rawConfigPath = switch (FormattingUtils.getResolvedOsName(System.getProperty("os.name"))) {
+        String rawConfigPath = switch (FormattingUtils.getResolvedOsName(osName)) {
             case "linux"  -> linuxPath;
             case "darwin" -> darwinPath;
             case "win32"  -> win32Path;
-            default -> throw new UnsupportedOperationException("Unsupported OS: " + System.getProperty("os.name"));
+            default -> throw new UnsupportedOperationException("Unsupported OS: " + osName);
         };
         this.configFilePath = Path.of(FormattingUtils.formatWithHomeDirectory(rawConfigPath));
         this.fileService = fileService;
