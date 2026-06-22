@@ -38,5 +38,10 @@
     "name": "spring-dotfile-manager.subprocess.timeout",
     "type": "java.lang.Long",
     "description": "A description for 'spring-dotfile-manager.subprocess.timeout'"
+  },
+  {
+    "name": "spring-dotfile-manager.post-install-glob-pattern",
+    "type": "java.lang.String",
+    "description": "A description for 'spring-dotfile-manager.post-install-glob-pattern'"
   }
 ]}
