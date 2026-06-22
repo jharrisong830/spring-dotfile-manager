@@ -43,14 +43,14 @@ public class ConfigServiceImpl implements ConfigService {
     }
 
     @Override
-    public void initializeConfig(String dotfileRepoPath) throws IOException {
+    public void initializeConfig(String dotfileRepoPath, boolean allowPostInstallScripts) throws IOException {
         fileService.createDirectories(configFilePath.getParent());
-        SDFMConfigModel config = new SDFMConfigModel(dotfileRepoPath);
+        SDFMConfigModel config = new SDFMConfigModel(dotfileRepoPath, allowPostInstallScripts);
         fileService.writeFile(configFilePath, config.getConfigFileContents());
     }
 
     @Override
-    public String readConfig() throws IOException {
+    public String readDotfileRepoPath() throws IOException {
         String manualPath = dotfileRepoPathMixin.getDotfileRepoPath();
         if (manualPath != null && !manualPath.isBlank()) {
             log.debug("Using manually overridden dotfile repository path: '{}'", manualPath);
@@ -64,11 +64,18 @@ public class ConfigServiceImpl implements ConfigService {
     }
 
     @Override
-    public void updateConfig(String newDotfileRepoPath) throws IOException {
+    public boolean readAllowPostInstallScripts() throws IOException {
+        String configContent = fileService.readFile(configFilePath);
+        SDFMConfigModel config = SDFMConfigModel.fromConfigFileContents(configContent);
+        return config.allowPostInstallScripts;
+    }
+
+    @Override
+    public void updateConfig(String newDotfileRepoPath, boolean newAllowPostInstallScripts) throws IOException {
         if (!fileService.exists(configFilePath)) {
             throw new FileNotFoundException("Configuration file does not exist at path: " + configFilePath);
         }
-        SDFMConfigModel config = new SDFMConfigModel(newDotfileRepoPath);
+        SDFMConfigModel config = new SDFMConfigModel(newDotfileRepoPath, newAllowPostInstallScripts);
         log.debug("Overwriting exisitng config file");
         fileService.overwriteFile(configFilePath, config.getConfigFileContents());
     }
@@ -76,6 +83,7 @@ public class ConfigServiceImpl implements ConfigService {
     @Override
     public void printConfig() throws IOException {
         log.info("Configuration at: {}", getConfigFilePath());
-        log.info("Using dotfile repository path: '{}'", FormattingUtils.formatWithHomeDirectory(readConfig()));
+        log.info("Using dotfile repository path: '{}'", FormattingUtils.formatWithHomeDirectory(readDotfileRepoPath()));
+        log.info("Allow post-install scripts? {}", readAllowPostInstallScripts());
     }
 }

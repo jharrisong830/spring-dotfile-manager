@@ -13,14 +13,13 @@ import java.util.concurrent.TimeoutException;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import app.jhg.spring_dotfile_manager.model.SubprocessResult;
 import lombok.extern.slf4j.Slf4j;
 
 @Service
 @Slf4j
 public class SubprocessServiceImpl implements SubprocessService {
 
-    public record SubprocessResult(int exitCode, String output) {}
-    
     private final long subprocessTimeout;
 
     private final FileService fileService;

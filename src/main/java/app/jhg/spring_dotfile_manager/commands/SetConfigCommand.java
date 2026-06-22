@@ -8,6 +8,7 @@ import org.springframework.stereotype.Component;
 import app.jhg.spring_dotfile_manager.service.ConfigService;
 import lombok.extern.slf4j.Slf4j;
 import picocli.CommandLine.Command;
+import picocli.CommandLine.Option;
 import picocli.CommandLine.Parameters;
 
 @Component
@@ -26,6 +27,12 @@ public class SetConfigCommand implements Callable<Integer>{
     )
     private String dotfileRepoPath;
 
+    @Option(
+        names = "--allow-post-install-scripts",
+        description = "Whether to allow the execution of post-install scripts (true or false)"
+    )
+    private Boolean allowPostInstallScripts;
+
     private final ConfigService configService;
     private final BufferedReader stdinReader;
 
@@ -37,8 +44,9 @@ public class SetConfigCommand implements Callable<Integer>{
     @Override
     public Integer call() throws Exception {
         dotfileRepoPath = dotfileRepoPath.trim();
+
         if (dotfileRepoPath.isEmpty()) {
-            String currentConfig = configService.readConfig();
+            String currentConfig = configService.readDotfileRepoPath();
             log.info("No dotfile repository path provided.");
             log.info("Enter desired path, or <Enter> to keep current configuration ({})", currentConfig);
 
@@ -53,7 +61,13 @@ public class SetConfigCommand implements Callable<Integer>{
             }
         }
 
-        configService.updateConfig(dotfileRepoPath);
+        if (allowPostInstallScripts == null) {
+            boolean currentPostInstall = configService.readAllowPostInstallScripts();
+            log.debug("Using existing preference for post-install scripts: {}", currentPostInstall);
+            allowPostInstallScripts = currentPostInstall;
+        }
+
+        configService.updateConfig(dotfileRepoPath, allowPostInstallScripts);
         configService.printConfig();
         return 0;
     }

@@ -19,7 +19,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import app.jhg.spring_dotfile_manager.service.SubprocessServiceImpl.SubprocessResult;
+import app.jhg.spring_dotfile_manager.model.SubprocessResult;
 
 @ExtendWith(MockitoExtension.class)
 public class SubprocessServiceUnitTests {

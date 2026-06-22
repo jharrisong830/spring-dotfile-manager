@@ -10,10 +10,11 @@ public class SDFMConfigModelUnitTests {
     @Test
     public void testGetConfigFileContents() {
         String repoPath = "/home/user/dotfiles";
-        SDFMConfigModel configModel = new SDFMConfigModel(repoPath);
+        boolean allowPostInstall = false;
+        SDFMConfigModel configModel = new SDFMConfigModel(repoPath, allowPostInstall);
 
-        String expectedContents = "dotfile-repo-path: %s\n"
-            .formatted(repoPath);
+        String expectedContents = "dotfile-repo-path: %s\nallow-post-install-scripts: %b\n"
+            .formatted(repoPath, allowPostInstall);
 
         assertEquals(expectedContents, configModel.getConfigFileContents());
     }
@@ -21,18 +22,20 @@ public class SDFMConfigModelUnitTests {
     @Test
     public void testFromConfigFileContents() {
         String repoPath = "/home/user/dotfiles";
-        String configFileContents = "dotfile-repo-path: %s\n"
-            .formatted(repoPath);
+        boolean allowPostInstall = false;
+        String configFileContents = "dotfile-repo-path: %s\nallow-post-install-scripts: %b\n"
+            .formatted(repoPath, allowPostInstall);
 
         SDFMConfigModel configModel = SDFMConfigModel.fromConfigFileContents(configFileContents);
 
         assertEquals(repoPath, configModel.dotfileRepoPath);
+        assertEquals(allowPostInstall, configModel.allowPostInstallScripts);
         assertEquals(configFileContents, configModel.getConfigFileContents());
     }
 
     @Test
     public void testFromConfigFileContents_missingKey() {
-        String configFileContents = "invalid-key: /home/user/dotfiles";
+        String configFileContents = "dotfile-repo-path: /home/user/dotfiles"; // missing postinstall flag
         assertThrows(IllegalArgumentException.class, () -> SDFMConfigModel.fromConfigFileContents(configFileContents));
     }
 

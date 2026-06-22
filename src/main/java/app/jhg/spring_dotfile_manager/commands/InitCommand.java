@@ -6,6 +6,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import picocli.CommandLine.Command;
+import picocli.CommandLine.Option;
 import picocli.CommandLine.Parameters;
 
 import java.io.BufferedReader;
@@ -27,17 +28,26 @@ public class InitCommand implements Callable<Integer> {
     )
     private String dotfileRepoPath;
 
+    @Option(
+        names = "--allow-post-install-scripts",
+        description = "Whether to allow the execution of post-install scripts (true or false)"
+    )
+    private Boolean allowPostInstallScripts;
+
     private final String defaultDotfileRepoPath;
+    private final boolean defaultAllowPostInstall;
 
     private final ConfigService configService;
     private final BufferedReader stdinReader;
 
     public InitCommand(
         @Value("${spring-dotfile-manager.config.default-repo-path}") String defaultDotfileRepoPath,
+        @Value("${spring-dotfile-manager.config.default-allow-post-install}") boolean defaultAllowPostInstall,
         ConfigService configService,
         BufferedReader stdinReader
     ) {
         this.defaultDotfileRepoPath = defaultDotfileRepoPath;
+        this.defaultAllowPostInstall = defaultAllowPostInstall;
         this.configService = configService;
         this.stdinReader = stdinReader;
     }
@@ -45,6 +55,7 @@ public class InitCommand implements Callable<Integer> {
     @Override
     public Integer call() throws Exception {
         dotfileRepoPath = dotfileRepoPath.trim();
+
         if (dotfileRepoPath.isEmpty()) {
             log.info("No dotfile repository path provided.");
             log.info("Enter desired path, or <Enter> to accept default ({})", FormattingUtils.formatWithHomeDirectory(defaultDotfileRepoPath));
@@ -61,8 +72,13 @@ public class InitCommand implements Callable<Integer> {
             }
         }
 
+        if (allowPostInstallScripts == null) {
+            log.debug("Using DEFAULT allow post install");
+            allowPostInstallScripts = defaultAllowPostInstall;
+        }
+
         log.debug("Setting dotfile repository path to: {}", dotfileRepoPath);
-        configService.initializeConfig(dotfileRepoPath);
+        configService.initializeConfig(dotfileRepoPath, allowPostInstallScripts);
         configService.printConfig();
         return 0;
     }

@@ -9,9 +9,12 @@ import org.yaml.snakeyaml.Yaml;
 import org.yaml.snakeyaml.error.YAMLException;
 
 import app.jhg.spring_dotfile_manager.util.FormattingUtils;
+import lombok.ToString;
 
+@ToString
 public class DotfileMarkerModel {
 
+    @ToString
     public static class PlatformOverrideModel {
 
         public final boolean shouldLink;
@@ -20,11 +23,6 @@ public class DotfileMarkerModel {
         private PlatformOverrideModel(boolean shouldLink, Path location) {
             this.shouldLink = shouldLink;
             this.location = location;
-        }
-
-        @Override
-        public String toString() {
-            return "PlatformOverrideModel{shouldLink=" + shouldLink + ", location=" + location + "}";
         }
 
         public static PlatformOverrideModel parsePlatformRawSubdocument(String filename, Object rawSubdocument) {
@@ -80,18 +78,6 @@ public class DotfileMarkerModel {
         this.linuxOverride = linuxOverride;
         this.win32Override = win32Override;
         this.darwinOverride = darwinOverride;
-    }
-
-    @Override
-    public String toString() {
-        return "DotfileMarkerModel{"
-            + "name='" + name + "'"
-            + ", location=" + location
-            + ", sourceLocation=" + sourceLocation
-            + ", linuxOverride=" + linuxOverride
-            + ", win32Override=" + win32Override
-            + ", darwinOverride=" + darwinOverride
-            + "}";
     }
 
     public String prettyPrint(Path currentPlatformPath) {

@@ -46,7 +46,7 @@ public class DotfileServiceUnitTests {
             Path.of(RESOLVED_REPO_PATH, "bar/baz.dotfile")
         );
 
-        when(configService.readConfig()).thenReturn(RAW_REPO_PATH);
+        when(configService.readDotfileRepoPath()).thenReturn(RAW_REPO_PATH);
         when(fileService.glob(eq(Path.of(RESOLVED_REPO_PATH)), eq(GLOB_PATTERN))).thenReturn(expectedPaths);
 
         List<Path> result = dotfileService.getAllDotfileMarkerPaths();
@@ -55,9 +55,9 @@ public class DotfileServiceUnitTests {
     }
 
     @Test
-    public void testGetAllDotfileMarkerPaths_readConfigThrowsIOException() throws IOException {
+    public void testGetAllDotfileMarkerPaths_readDotfileRepoPathThrowsIOException() throws IOException {
         doThrow(new IOException("Config file not found"))
-            .when(configService).readConfig();
+            .when(configService).readDotfileRepoPath();
 
         assertThrows(IOException.class, () -> dotfileService.getAllDotfileMarkerPaths());
 
@@ -66,7 +66,7 @@ public class DotfileServiceUnitTests {
 
     @Test
     public void testGetAllDotfileMarkerPaths_globThrowsIOException() throws IOException {
-        when(configService.readConfig()).thenReturn(RAW_REPO_PATH);
+        when(configService.readDotfileRepoPath()).thenReturn(RAW_REPO_PATH);
         doThrow(new IOException("Repo directory does not exist"))
             .when(fileService).glob(any(Path.class), anyString());
 
@@ -133,7 +133,7 @@ public class DotfileServiceUnitTests {
 
     @Test
     public void testGetAllDotfileMarkerModels_emptyPathList() throws IOException {
-        when(configService.readConfig()).thenReturn(RAW_REPO_PATH);
+        when(configService.readDotfileRepoPath()).thenReturn(RAW_REPO_PATH);
         when(fileService.glob(eq(Path.of(RESOLVED_REPO_PATH)), eq(GLOB_PATTERN))).thenReturn(List.of());
 
         List<DotfileMarkerModel> result = dotfileService.getAllDotfileMarkerModels();
@@ -146,7 +146,7 @@ public class DotfileServiceUnitTests {
         Path markerPath = Path.of(RESOLVED_REPO_PATH, "zshrc.dotfile");
         String rawContent = "name: .zshrc\nlocation: ~/.zshrc\n";
 
-        when(configService.readConfig()).thenReturn(RAW_REPO_PATH);
+        when(configService.readDotfileRepoPath()).thenReturn(RAW_REPO_PATH);
         when(fileService.glob(eq(Path.of(RESOLVED_REPO_PATH)), eq(GLOB_PATTERN))).thenReturn(List.of(markerPath));
         when(fileService.readFile(markerPath)).thenReturn(rawContent);
 
@@ -163,7 +163,7 @@ public class DotfileServiceUnitTests {
         String rawA = "name: .zshrc\nlocation: ~/.zshrc\n---\nname: .bashrc\nlocation: ~/.bashrc\n";
         String rawB = "name: .vimrc\nlocation: ~/.vimrc\n";
 
-        when(configService.readConfig()).thenReturn(RAW_REPO_PATH);
+        when(configService.readDotfileRepoPath()).thenReturn(RAW_REPO_PATH);
         when(fileService.glob(eq(Path.of(RESOLVED_REPO_PATH)), eq(GLOB_PATTERN))).thenReturn(List.of(pathA, pathB));
         when(fileService.readFile(pathA)).thenReturn(rawA);
         when(fileService.readFile(pathB)).thenReturn(rawB);
@@ -181,7 +181,7 @@ public class DotfileServiceUnitTests {
         Path pathA = Path.of(RESOLVED_REPO_PATH, "zshrc.dotfile");
         Path pathB = Path.of(RESOLVED_REPO_PATH, "bad.dotfile");
 
-        when(configService.readConfig()).thenReturn(RAW_REPO_PATH);
+        when(configService.readDotfileRepoPath()).thenReturn(RAW_REPO_PATH);
         when(fileService.glob(eq(Path.of(RESOLVED_REPO_PATH)), eq(GLOB_PATTERN))).thenReturn(List.of(pathA, pathB));
         when(fileService.readFile(pathA)).thenReturn("name: .zshrc\nlocation: ~/.zshrc\n");
         when(fileService.readFile(pathB)).thenReturn("not valid marker content");
@@ -192,7 +192,7 @@ public class DotfileServiceUnitTests {
     @Test
     public void testGetAllDotfileMarkerModels_getAllDotfileMarkerPathsThrowsIOException() throws IOException {
         doThrow(new IOException("Config file not found"))
-            .when(configService).readConfig();
+            .when(configService).readDotfileRepoPath();
 
         assertThrows(IOException.class, () -> dotfileService.getAllDotfileMarkerModels());
     }
@@ -201,7 +201,7 @@ public class DotfileServiceUnitTests {
     public void testGetAllDotfileMarkerModels_getDotfileMarkerModelsByPathThrowsIOException() throws IOException {
         Path markerPath = Path.of(RESOLVED_REPO_PATH, "zshrc.dotfile");
 
-        when(configService.readConfig()).thenReturn(RAW_REPO_PATH);
+        when(configService.readDotfileRepoPath()).thenReturn(RAW_REPO_PATH);
         when(fileService.glob(eq(Path.of(RESOLVED_REPO_PATH)), eq(GLOB_PATTERN))).thenReturn(List.of(markerPath));
         doThrow(new IOException("File not found"))
             .when(fileService).readFile(markerPath);

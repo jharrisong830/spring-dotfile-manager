@@ -1,5 +1,6 @@
 package app.jhg.spring_dotfile_manager.commands;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.concurrent.Callable;
 
@@ -36,8 +37,8 @@ public class UnlinkCommand implements Callable<Integer> {
             for (DotfileMarkerModel marker : markers) {
                 try {
                     dotfileService.unlinkDotfile(marker);
-                } catch (Exception e) {
-                    log.error("Error occurred while unlinking dotfile: {}", marker.location);
+                } catch (IOException e) {
+                    log.error("Error occurred while unlinking dotfile: {} ({})", marker.location, e.getMessage());
                     exitCode = 1;
                 }
             }
