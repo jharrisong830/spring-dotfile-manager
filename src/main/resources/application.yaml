@@ -14,7 +14,7 @@ spring-dotfile-manager:
     default-repo-path: "{HOME}/dotfiles"
     default-allow-post-install: false
   dotfile-glob-pattern: "**/.dotfiles"
-  post-install-glob-pattern: "post-install/**/*.sh"
+  post-install-glob-pattern: "post-install/**.sh"
   version: @project.version@
   subprocess:
     timeout: 15000

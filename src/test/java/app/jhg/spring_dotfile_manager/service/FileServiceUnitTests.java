@@ -446,6 +446,35 @@ public class FileServiceUnitTests {
     }
 
     @Test
+    public void testGlob_doubleStarSlashPattern_doesNotMatchDirectChildOfLiteralPrefix() throws IOException {
+        Path postInstallDir = tempDir.resolve("post-install");
+        Path subDir = postInstallDir.resolve("sub");
+        Files.createDirectories(subDir);
+        Files.createFile(postInstallDir.resolve("top-level.sh"));
+        Files.createFile(subDir.resolve("nested.sh"));
+
+        List<Path> result = fileService.glob(tempDir, "post-install/**/*.sh");
+
+        assertEquals(1, result.size());
+        assertTrue(result.contains(subDir.resolve("nested.sh")));
+    }
+
+    @Test
+    public void testGlob_doubleStarPattern_matchesDirectAndNestedChildOfLiteralPrefix() throws IOException {
+        Path postInstallDir = tempDir.resolve("post-install");
+        Path subDir = postInstallDir.resolve("sub");
+        Files.createDirectories(subDir);
+        Files.createFile(postInstallDir.resolve("top-level.sh"));
+        Files.createFile(subDir.resolve("nested.sh"));
+
+        List<Path> result = fileService.glob(tempDir, "post-install/**.sh");
+
+        assertEquals(2, result.size());
+        assertTrue(result.contains(postInstallDir.resolve("top-level.sh")));
+        assertTrue(result.contains(subDir.resolve("nested.sh")));
+    }
+
+    @Test
     public void testGlob_baseDirectoryDoesNotExist() {
         Path nonExistent = tempDir.resolve("does-not-exist");
 
