@@ -2,6 +2,7 @@ package app.jhg.spring_dotfile_manager.commands;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 import java.io.BufferedReader;
@@ -24,9 +25,10 @@ public class InitCommandUnitTests {
     private ConfigService configService;
 
     private static final String DEFAULT_REPO_PATH = "~/dotfiles";
+    private static final boolean DEFUALT_ALLOW_POST_INSTALL = false;
 
     private InitCommand commandWithStdin(String stdinInput) {
-        return new InitCommand(DEFAULT_REPO_PATH, configService, new BufferedReader(new StringReader(stdinInput)));
+        return new InitCommand(DEFAULT_REPO_PATH, DEFUALT_ALLOW_POST_INSTALL, configService, new BufferedReader(new StringReader(stdinInput)));
     }
 
     // Parses picocli @Parameters fields without going through CommandLine.execute(),
@@ -43,7 +45,7 @@ public class InitCommandUnitTests {
         int result = cmd.call();
 
         assertEquals(0, result);
-        verify(configService).initializeConfig("~/my-dotfiles");
+        verify(configService).initializeConfig("~/my-dotfiles", false);
         verify(configService).printConfig();
     }
 
@@ -56,7 +58,7 @@ public class InitCommandUnitTests {
         int result = cmd.call();
 
         assertEquals(0, result);
-        verify(configService).initializeConfig(DEFAULT_REPO_PATH);
+        verify(configService).initializeConfig(DEFAULT_REPO_PATH, false);
         verify(configService).printConfig();
     }
 
@@ -68,7 +70,7 @@ public class InitCommandUnitTests {
         int result = cmd.call();
 
         assertEquals(0, result);
-        verify(configService).initializeConfig(DEFAULT_REPO_PATH);
+        verify(configService).initializeConfig(DEFAULT_REPO_PATH, false);
         verify(configService).printConfig();
     }
 
@@ -80,7 +82,7 @@ public class InitCommandUnitTests {
         int result = cmd.call();
 
         assertEquals(0, result);
-        verify(configService).initializeConfig(DEFAULT_REPO_PATH);
+        verify(configService).initializeConfig(DEFAULT_REPO_PATH, false);
         verify(configService).printConfig();
     }
 
@@ -92,7 +94,7 @@ public class InitCommandUnitTests {
         int result = cmd.call();
 
         assertEquals(0, result);
-        verify(configService).initializeConfig("~/custom-dotfiles");
+        verify(configService).initializeConfig("~/custom-dotfiles", false);
         verify(configService).printConfig();
     }
 
@@ -101,20 +103,48 @@ public class InitCommandUnitTests {
         // readLine() returns null at EOF — the null check in call() falls through to default
         BufferedReader nullReader = mock(BufferedReader.class);
         when(nullReader.readLine()).thenReturn(null);
-        InitCommand cmd = new InitCommand(DEFAULT_REPO_PATH, configService, nullReader);
+        InitCommand cmd = new InitCommand(DEFAULT_REPO_PATH, DEFUALT_ALLOW_POST_INSTALL, configService, nullReader);
         parseArgs(cmd);
 
         int result = cmd.call();
 
         assertEquals(0, result);
-        verify(configService).initializeConfig(DEFAULT_REPO_PATH);
+        verify(configService).initializeConfig(DEFAULT_REPO_PATH, false);
         verify(configService).printConfig();
+    }
+
+    @Test
+    public void testCall_allowPostInstallProvided_true_passesTrueToInitializeConfig() throws Exception {
+        InitCommand cmd = commandWithStdin("");
+        parseArgs(cmd, "~/my-dotfiles", "--allow-post-install-scripts=true");
+
+        int result = cmd.call();
+
+        assertEquals(0, result);
+        verify(configService).initializeConfig("~/my-dotfiles", true);
+        verify(configService).printConfig();
+    }
+
+    @Test
+    public void testCall_allowPostInstallInvalidValue_throws() throws Exception {
+        InitCommand cmd = commandWithStdin("");
+
+        assertThrows(CommandLine.ParameterException.class, () -> parseArgs(cmd, "~/my-dotfiles", "--allow-post-install-scripts=yes"));
+        verifyNoInteractions(configService);
+    }
+
+    @Test
+    public void testCall_allowPostInstallMissingValue_throws() throws Exception {
+        InitCommand cmd = commandWithStdin("");
+
+        assertThrows(CommandLine.ParameterException.class, () -> parseArgs(cmd, "~/my-dotfiles", "--allow-post-install-scripts"));
+        verifyNoInteractions(configService);
     }
 
     @Test
     public void testCall_initializeConfig_fileAlreadyExistsException_propagates() throws Exception {
         doThrow(new FileAlreadyExistsException("already exists"))
-            .when(configService).initializeConfig(any());
+            .when(configService).initializeConfig(any(), eq(false));
         InitCommand cmd = commandWithStdin("");
         parseArgs(cmd, "~/my-dotfiles");
 
@@ -125,7 +155,7 @@ public class InitCommandUnitTests {
     @Test
     public void testCall_initializeConfig_ioException_propagates() throws Exception {
         doThrow(new IOException("disk full"))
-            .when(configService).initializeConfig(any());
+            .when(configService).initializeConfig(any(), eq(false));
         InitCommand cmd = commandWithStdin("");
         parseArgs(cmd, "~/my-dotfiles");
 
@@ -141,6 +171,6 @@ public class InitCommandUnitTests {
         parseArgs(cmd, "~/my-dotfiles");
 
         assertThrows(IOException.class, cmd::call);
-        verify(configService).initializeConfig("~/my-dotfiles");
+        verify(configService).initializeConfig("~/my-dotfiles", false);
     }
 }

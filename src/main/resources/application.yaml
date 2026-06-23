@@ -12,8 +12,12 @@ spring-dotfile-manager:
       darwin: "{HOME}/.config/spring-dotfile-manager/config.yaml"
       win32: "{HOME}/AppData/Local/spring-dotfile-manager/config.yaml"
     default-repo-path: "{HOME}/dotfiles"
+    default-allow-post-install: false
   dotfile-glob-pattern: "**/.dotfiles"
+  post-install-glob-pattern: "post-install/**.sh"
   version: @project.version@
+  subprocess:
+    timeout: 15000
 
 logging:
   pattern:

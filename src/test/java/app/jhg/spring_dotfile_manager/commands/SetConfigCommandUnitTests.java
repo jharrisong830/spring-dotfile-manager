@@ -2,6 +2,7 @@ package app.jhg.spring_dotfile_manager.commands;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 import java.io.BufferedReader;
@@ -38,7 +39,7 @@ public class SetConfigCommandUnitTests {
         int result = cmd.call();
 
         assertEquals(0, result);
-        verify(configService).updateConfig("~/new-dotfiles");
+        verify(configService).updateConfig("~/new-dotfiles", false);
         verify(configService).printConfig();
     }
 
@@ -50,7 +51,7 @@ public class SetConfigCommandUnitTests {
         int result = cmd.call();
 
         assertEquals(0, result);
-        verify(configService).updateConfig("~/from-stdin");
+        verify(configService).updateConfig("~/from-stdin", false);
     }
 
     @Test
@@ -61,7 +62,60 @@ public class SetConfigCommandUnitTests {
         int result = cmd.call();
 
         assertEquals(0, result);
-        verify(configService).updateConfig("~/new-dotfiles");
+        verify(configService).updateConfig("~/new-dotfiles", false);
+    }
+
+    @Test
+    public void testCall_allowPostInstallProvided_true_passesTrueToUpdateConfig() throws Exception {
+        SetConfigCommand cmd = commandWithStdin("");
+        parseArgs(cmd, "~/new-dotfiles", "--allow-post-install-scripts=true");
+
+        int result = cmd.call();
+
+        assertEquals(0, result);
+        verify(configService).updateConfig("~/new-dotfiles", true);
+        verify(configService, never()).readAllowPostInstallScripts();
+    }
+
+    @Test
+    public void testCall_allowPostInstallOmitted_preservesExistingValue() throws Exception {
+        when(configService.readAllowPostInstallScripts()).thenReturn(true);
+        SetConfigCommand cmd = commandWithStdin("");
+        parseArgs(cmd, "~/new-dotfiles");
+
+        int result = cmd.call();
+
+        assertEquals(0, result);
+        verify(configService).updateConfig("~/new-dotfiles", true);
+    }
+
+    @Test
+    public void testCall_allowPostInstallInvalidValue_throws() throws Exception {
+        SetConfigCommand cmd = commandWithStdin("");
+
+        assertThrows(CommandLine.ParameterException.class, () -> parseArgs(cmd, "~/new-dotfiles", "--allow-post-install-scripts=yes"));
+        verifyNoInteractions(configService);
+    }
+
+    @Test
+    public void testCall_allowPostInstallMissingValue_throws() throws Exception {
+        SetConfigCommand cmd = commandWithStdin("");
+
+        assertThrows(CommandLine.ParameterException.class, () -> parseArgs(cmd, "~/new-dotfiles", "--allow-post-install-scripts"));
+        verifyNoInteractions(configService);
+    }
+
+    @Test
+    public void testCall_noPathProvided_stdinEmpty_allowPostInstallProvided_updatesWithCurrentPath() throws Exception {
+        when(configService.readDotfileRepoPath()).thenReturn("~/existing-dotfiles");
+        SetConfigCommand cmd = commandWithStdin("");
+        parseArgs(cmd, "--allow-post-install-scripts=true");
+
+        int result = cmd.call();
+
+        assertEquals(0, result);
+        verify(configService).updateConfig("~/existing-dotfiles", true);
+        verify(configService, never()).readAllowPostInstallScripts();
     }
 
     @Test
@@ -71,7 +125,7 @@ public class SetConfigCommandUnitTests {
 
         int result = cmd.call();
         assertEquals(0, result);
-        verify(configService, never()).updateConfig(any());
+        verify(configService, never()).updateConfig(any(), eq(false));
     }
 
     @Test
@@ -81,7 +135,7 @@ public class SetConfigCommandUnitTests {
 
         int result = cmd.call();
         assertEquals(0, result);
-        verify(configService, never()).updateConfig(any());
+        verify(configService, never()).updateConfig(any(), eq(false));
     }
 
     @Test
@@ -93,13 +147,13 @@ public class SetConfigCommandUnitTests {
 
         int result = cmd.call();
         assertEquals(0, result);
-        verify(configService, never()).updateConfig(any());
+        verify(configService, never()).updateConfig(any(), eq(false));
     }
 
     @Test
     public void testCall_updateConfig_ioException_propagates() throws Exception {
         doThrow(new IOException("disk full"))
-            .when(configService).updateConfig(any());
+            .when(configService).updateConfig(any(), eq(false));
         SetConfigCommand cmd = commandWithStdin("");
         parseArgs(cmd, "~/new-dotfiles");
 
@@ -109,7 +163,7 @@ public class SetConfigCommandUnitTests {
     @Test
     public void testCall_updateConfig_illegalArgumentException_propagates() throws Exception {
         doThrow(new IllegalArgumentException("invalid path"))
-            .when(configService).updateConfig(any());
+            .when(configService).updateConfig(any(), eq(false));
         SetConfigCommand cmd = commandWithStdin("");
         parseArgs(cmd, "~/new-dotfiles");
 
@@ -124,6 +178,6 @@ public class SetConfigCommandUnitTests {
         parseArgs(cmd, "~/new-dotfiles");
 
         assertThrows(IOException.class, cmd::call);
-        verify(configService).updateConfig("~/new-dotfiles");
+        verify(configService).updateConfig("~/new-dotfiles", false);
     }
 }

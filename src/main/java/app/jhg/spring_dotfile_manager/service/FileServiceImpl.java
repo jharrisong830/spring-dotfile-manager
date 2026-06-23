@@ -72,14 +72,19 @@ public class FileServiceImpl implements FileService {
     @Override
     public void forceDelete(Path path) throws IOException {
         log.debug("FORCE DELETE: {}", path);
-        
+
+        if (isSymbolicLink(path)) {
+            log.debug("Deleting symlink: {}", path);
+            deleteFile(path);
+            return;
+        }
+
         if (isDirectory(path)) {
             // delete directory contents along with the directory itself
             log.debug("Force deleting directory: {}", path);
             try (Stream<Path> stream = Files.walk(path)) {
                 List<Path> entries = stream.sorted(Comparator.reverseOrder()).toList();
                 for (Path p : entries) {
-                    log.debug("Deleting file/directory: {}", p);
                     deleteFile(p);
                 }
             }
@@ -96,13 +101,16 @@ public class FileServiceImpl implements FileService {
         if (!Files.exists(baseDirectory)) {
             throw new IOException("Base directory does not exist: " + baseDirectory);
         }
-        if (!Files.isDirectory(baseDirectory)) {
+        if (!isDirectory(baseDirectory)) {
             throw new IOException("Base directory is not a directory: " + baseDirectory);
         }
 
         PathMatcher matcher = FileSystems.getDefault().getPathMatcher("glob:" + globPattern);
 
         try (Stream<Path> stream = Files.find(baseDirectory, Integer.MAX_VALUE, (p, attrs) -> {
+            if (!attrs.isRegularFile()) {
+                return false;
+            }
             Path relative = baseDirectory.relativize(p);
             // also try with a synthetic parent so that patterns like **/*.yaml match root-level files,
             // consistent with the behaviour of PathMatchingResourcePatternResolver

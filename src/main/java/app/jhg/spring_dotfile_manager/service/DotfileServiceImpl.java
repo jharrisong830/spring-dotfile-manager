@@ -2,6 +2,7 @@ package app.jhg.spring_dotfile_manager.service;
 
 import java.io.IOException;
 import java.nio.file.FileAlreadyExistsException;
+import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
@@ -12,14 +13,15 @@ import org.springframework.stereotype.Service;
 import app.jhg.spring_dotfile_manager.model.DotfileMarkerModel;
 import app.jhg.spring_dotfile_manager.model.DotfileMarkerModel.PlatformOverrideModel;
 import app.jhg.spring_dotfile_manager.util.FormattingUtils;
+import app.jhg.spring_dotfile_manager.util.Os;
 import lombok.extern.slf4j.Slf4j;
 
 @Service
 @Slf4j
 public class DotfileServiceImpl implements DotfileService {
-    
+
     private final String dotfileGlobPattern;
-    private final String osName;
+    private final Os osName;
 
     private final ConfigService configService;
     private final FileService fileService;
@@ -39,8 +41,8 @@ public class DotfileServiceImpl implements DotfileService {
 
     @Override
     public List<Path> getAllDotfileMarkerPaths() throws IOException {
-        log.debug("Finding {} in {}", dotfileGlobPattern, configService.readConfig());
-        Path dotfileRepoPath = Path.of(FormattingUtils.formatWithHomeDirectory(configService.readConfig()));
+        log.debug("Finding {} in {}", dotfileGlobPattern, configService.readDotfileRepoPath());
+        Path dotfileRepoPath = Path.of(FormattingUtils.formatWithHomeDirectory(configService.readDotfileRepoPath()));
         return fileService.glob(dotfileRepoPath, dotfileGlobPattern);
     }
 
@@ -64,10 +66,8 @@ public class DotfileServiceImpl implements DotfileService {
 
     @Override
     public void relinkDotfile(DotfileMarkerModel marker) throws IOException {
-        Path locationForSystem = getTargetPathForCurrentSystem(marker);
+        Path locationForSystem = getTargetPathOrSkip(marker, "relink");
         if (locationForSystem == null) {
-            // if the marker shouldn't be linked on this platform, do nothing
-            log.debug("Dotfile {} is not applicable for this platform, skipping relink", marker.sourceLocation);
             return;
         }
 
@@ -93,13 +93,19 @@ public class DotfileServiceImpl implements DotfileService {
 
     @Override
     public void overwriteExistingDotfile(DotfileMarkerModel marker) throws IOException {
-        Path locationForSystem = getTargetPathForCurrentSystem(marker);
+        Path locationForSystem = getTargetPathOrSkip(marker, "relink");
         if (locationForSystem == null) {
-            // if the marker shouldn't be linked on this platform, do nothing
-            log.debug("Dotfile {} is not applicable for this platform, skipping relink", marker.sourceLocation);
             return;
         }
         
+        if (!fileService.exists(marker.sourceLocation)) {
+            throw new NoSuchFileException(
+                marker.sourceLocation.toString(),
+                null,
+                "Source does not exist; refusing to overwrite " + locationForSystem
+            );
+        }
+
         log.debug("Force deleting existing file at {} and relinking to {}", locationForSystem, marker.sourceLocation);
         fileService.forceDelete(locationForSystem);
         fileService.createSymlink(locationForSystem, marker.sourceLocation);
@@ -107,10 +113,8 @@ public class DotfileServiceImpl implements DotfileService {
 
     @Override
     public void unlinkDotfile(DotfileMarkerModel marker) throws IOException {
-        Path locationForSystem = getTargetPathForCurrentSystem(marker);
+        Path locationForSystem = getTargetPathOrSkip(marker, "unlink");
         if (locationForSystem == null) {
-            // if the marker shouldn't be linked on this platform, do nothing
-            log.debug("Dotfile {} is not applicable for this platform, skipping unlink", marker.sourceLocation);
             return;
         }
         
@@ -123,29 +127,39 @@ public class DotfileServiceImpl implements DotfileService {
         }
     }
 
+    private Path getTargetPathOrSkip(DotfileMarkerModel marker, String action) {
+        Path locationForSystem = getTargetPathForCurrentSystem(marker);
+        if (locationForSystem == null) {
+            // if the marker shouldn't be linked on this platform, do nothing
+            log.debug("Dotfile {} is not applicable for this platform, skipping {}", marker.sourceLocation, action);
+        }
+        return locationForSystem;
+    }
+
     @Override
     public Path getTargetPathForCurrentSystem(DotfileMarkerModel marker) {
-        PlatformOverrideModel overrideModel;
-
-        if (osName.equals("darwin")) {
-            log.debug("Using Darwin for {}", marker.sourceLocation);
-            overrideModel = marker.darwinOverride;
-        } else if (osName.equals("win32")) {
-            log.debug("Using Windows for {}", marker.sourceLocation);
-            overrideModel = marker.win32Override;
-        } else { // osName.equals("linux")
-            log.debug("Using Linux for {}", marker.sourceLocation);
-            overrideModel = marker.linuxOverride;
-        }
+        PlatformOverrideModel overrideModel = switch (osName) {
+            case DARWIN -> {
+                log.debug("Using Darwin for {}", marker.sourceLocation);
+                yield marker.darwinOverride;
+            }
+            case WIN32 -> {
+                log.debug("Using Windows for {}", marker.sourceLocation);
+                yield marker.win32Override;
+            }
+            case LINUX -> {
+                log.debug("Using Linux for {}", marker.sourceLocation);
+                yield marker.linuxOverride;
+            }
+        };
 
         if (overrideModel == null) {
             log.debug("No override provided for {}, using default location", marker.sourceLocation);
             return marker.location; // no override -> use default location
         } else if (overrideModel.shouldLink) {
-            // if there is an override and we should link on this platform,
-            // use the override location if it exists, otherwise, link with the default location
+            // if there is an override and we should link on this platform, use the override location 
             log.debug("Using override location for {}: {}", marker.sourceLocation, overrideModel.location);
-            return (overrideModel.location == null) ? marker.location : overrideModel.location;
+            return overrideModel.location;
         } else {
             // should not link -> null path
             log.debug("Not linking {} for this platform", marker.sourceLocation);

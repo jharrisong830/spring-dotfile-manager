@@ -1,5 +1,6 @@
 package app.jhg.spring_dotfile_manager.model;
 
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 import org.yaml.snakeyaml.Yaml;
@@ -8,14 +9,18 @@ import org.yaml.snakeyaml.error.YAMLException;
 public class SDFMConfigModel {
     
     public final String dotfileRepoPath;
+    public final boolean allowPostInstallScripts;
 
-    public SDFMConfigModel(String dotfileRepoPath) {
+    public SDFMConfigModel(String dotfileRepoPath, boolean allowPostInstallScripts) {
         this.dotfileRepoPath = dotfileRepoPath;
+        this.allowPostInstallScripts = allowPostInstallScripts;
     }
 
     public String getConfigFileContents() {
         Yaml yaml = new Yaml();
-        Map<String, String> configFileMap = Map.of("dotfile-repo-path", dotfileRepoPath);
+        Map<String, Object> configFileMap = new LinkedHashMap<>();
+        configFileMap.put("dotfile-repo-path", dotfileRepoPath);
+        configFileMap.put("allow-post-install-scripts", allowPostInstallScripts);
         return yaml.dumpAsMap(configFileMap);
     }
 
@@ -29,17 +34,26 @@ public class SDFMConfigModel {
             throw new IllegalArgumentException("Invalid configuration file contents: expected a YAML mapping", e);
         }
 
-        if (configFileMap == null || !configFileMap.containsKey("dotfile-repo-path")) {
-            throw new IllegalArgumentException("Invalid configuration file contents: missing 'dotfile-repo-path' key");
+        if (configFileMap == null) {
+            throw new IllegalArgumentException("Invalid configuration file contents: could not parse config file");
         }
 
-        Object rawValue = configFileMap.get("dotfile-repo-path");
-        if (rawValue == null) {
+        Object dotfileRepoPathRawValue = configFileMap.get("dotfile-repo-path");
+        if (dotfileRepoPathRawValue == null) {
             throw new IllegalArgumentException("Invalid configuration file contents: 'dotfile-repo-path' value is missing");
         }
-        if (!(rawValue instanceof String dotfileRepoPath) || dotfileRepoPath.isBlank()) {
+        if (!(dotfileRepoPathRawValue instanceof String dotfileRepoPath) || dotfileRepoPath.isBlank()) {
             throw new IllegalArgumentException("Invalid configuration file contents: 'dotfile-repo-path' must be a non-blank string");
         }
-        return new SDFMConfigModel(dotfileRepoPath);
+
+        Object allowPostInstallScriptsRawValue = configFileMap.get("allow-post-install-scripts");
+        if (allowPostInstallScriptsRawValue == null) {
+            throw new IllegalArgumentException("Invalid configuration file contents: 'allow-post-install-scripts' value is missing");
+        }
+        if (!(allowPostInstallScriptsRawValue instanceof Boolean allowPostInstallScripts)) {
+            throw new IllegalArgumentException("Invalid configuration file contents: 'allow-post-install-scripts' must be a boolean");
+        }
+
+        return new SDFMConfigModel(dotfileRepoPath, allowPostInstallScripts);
     }
 }

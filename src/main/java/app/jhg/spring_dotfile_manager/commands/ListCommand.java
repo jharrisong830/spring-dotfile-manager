@@ -58,7 +58,7 @@ public class ListCommand implements Callable<Integer> {
                     log.info("- {}", marker);
                 } else {
                     Path currentPlatformPath = dotfileService.getTargetPathForCurrentSystem(marker);
-                    log.info(marker.prettyPrint(currentPlatformPath));
+                    log.info("{}", marker.prettyPrint(currentPlatformPath));
                 }
             }
         }

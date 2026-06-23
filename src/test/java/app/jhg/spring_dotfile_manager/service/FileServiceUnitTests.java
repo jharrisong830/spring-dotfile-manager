@@ -318,6 +318,22 @@ public class FileServiceUnitTests {
     }
 
     @Test
+    public void testForceDelete_symbolicLinkToDirectory() throws IOException {
+        Path targetDir = tempDir.resolve("targetDir");
+        Files.createDirectory(targetDir);
+        Path childFile = targetDir.resolve("child.txt");
+        Files.createFile(childFile);
+        Path link = tempDir.resolve("linkToDir");
+        Files.createSymbolicLink(link, targetDir);
+
+        fileService.forceDelete(link);
+
+        assertFalse(Files.exists(link));
+        assertTrue(Files.exists(targetDir));
+        assertTrue(Files.exists(childFile));
+    }
+
+    @Test
     public void testForceDelete_emptyDirectory() throws IOException {
         Path dirPath = tempDir.resolve("emptyDir");
         Files.createDirectory(dirPath);
@@ -416,6 +432,46 @@ public class FileServiceUnitTests {
         List<Path> result = fileService.glob(tempDir, "**/*.yaml");
 
         assertTrue(result.isEmpty());
+    }
+
+    @Test
+    public void testGlob_excludesDirectoriesMatchingPattern() throws IOException {
+        Files.createDirectory(tempDir.resolve("dir.yaml"));
+        Files.createFile(tempDir.resolve("file.yaml"));
+
+        List<Path> result = fileService.glob(tempDir, "*.yaml");
+
+        assertEquals(1, result.size());
+        assertTrue(result.contains(tempDir.resolve("file.yaml")));
+    }
+
+    @Test
+    public void testGlob_doubleStarSlashPattern_doesNotMatchDirectChildOfLiteralPrefix() throws IOException {
+        Path postInstallDir = tempDir.resolve("post-install");
+        Path subDir = postInstallDir.resolve("sub");
+        Files.createDirectories(subDir);
+        Files.createFile(postInstallDir.resolve("top-level.sh"));
+        Files.createFile(subDir.resolve("nested.sh"));
+
+        List<Path> result = fileService.glob(tempDir, "post-install/**/*.sh");
+
+        assertEquals(1, result.size());
+        assertTrue(result.contains(subDir.resolve("nested.sh")));
+    }
+
+    @Test
+    public void testGlob_doubleStarPattern_matchesDirectAndNestedChildOfLiteralPrefix() throws IOException {
+        Path postInstallDir = tempDir.resolve("post-install");
+        Path subDir = postInstallDir.resolve("sub");
+        Files.createDirectories(subDir);
+        Files.createFile(postInstallDir.resolve("top-level.sh"));
+        Files.createFile(subDir.resolve("nested.sh"));
+
+        List<Path> result = fileService.glob(tempDir, "post-install/**.sh");
+
+        assertEquals(2, result.size());
+        assertTrue(result.contains(postInstallDir.resolve("top-level.sh")));
+        assertTrue(result.contains(subDir.resolve("nested.sh")));
     }
 
     @Test

@@ -33,13 +33,14 @@ sdfm init
 
 Running the above command will generate an application config file at `~/.config/spring-dotfile-manager/config.yaml` on Unix-like systems, and `~/AppData/Local/spring-dotfile-manager/config.yaml` on Windows.
 
-This config file will just be a single-line YAML document, which tells the application where your dotfile repository is located. You can edit this file directly, or call `sdfm set-config <new_path_here>` to specify where your dotfile repository is located.
+This config file will just be a two-line YAML document, which tells the application where your dotfile repository is located and whether post-install scripts should run. You can edit this file directly, or call `sdfm set-config <new_path_here>` to specify where your dotfile repository is located. Pass `--allow-post-install-scripts=true` (or `=false`) when initializing or updating your config to control whether post-install scripts run; an explicit `true`/`false` value is required.
 
 A typical config file will look as follows. You can use `{HOME}` within this path, and `sdfm` will fill in your home directory at runtime.
 
 ```yaml
 # {HOME} -> /home/user
 dotfile-repo-path: "{HOME}/dotfiles"
+allow-post-install-scripts: false
 ```
 
 If this config file doesn't exist, you can specify the dotfile repository location as a CLI option. This will take precedence over the location specified in the config file, if it exists.
@@ -209,4 +210,21 @@ win32:
     location: "{HOME}/gitbash.bashrc"
 darwin:
     shouldLink: false
+```
+
+### Post-Install Scripts
+
+You can run a set of scripts after re-linking dotfiles to your system. By default, post-install scripts will not run. You can enable them by setting `allow-post-install-scripts` to `true` in your config file.
+
+After dotfiles are re-linked, your dotfiles repository will be scanned for Bash scripts inside of the `post-install` directory at the root of your repository. Only files that end with the `.sh` and are contained within the `post-install` directory will be run. You can have multiple subdirectories inside of the `post-install` directory. For example, in the below directory structure, only files marked with `*` will be executed:
+
+```
+.
+├── ...
+├── post-install
+│   ├── script-01.sh *
+│   ├── subdir
+│   │   └── script-02.sh *
+│   └── some-program.exe
+└── ...
 ```

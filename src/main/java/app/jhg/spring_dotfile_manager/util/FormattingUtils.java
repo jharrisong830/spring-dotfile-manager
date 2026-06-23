@@ -19,13 +19,14 @@ public final class FormattingUtils {
 
 
     /**
-     * Replaces occurrences of "{HOME}" and "~" at the beginning of the string with the user's home directory.
+     * Replaces occurrences of "{HOME}" and "~" with the user's home directory.
+     * "~" is only replaced at the beginning of the string; "{HOME}" is replaced everywhere it appears.
      * @param original the original string containing "{HOME}" and/or "~" placeholders
      * @return the formatted string with "{HOME}" and "~" placeholders replaced by the user's home directory
      */
     public static String formatWithHomeDirectory(String original) {
-        original = TILDE_REGEX.matcher(original).replaceFirst(Matcher.quoteReplacement(HOME));
-        return HOME_DIR_REGEX.matcher(original).replaceAll(Matcher.quoteReplacement(HOME));
+        String result = TILDE_REGEX.matcher(original).replaceFirst(Matcher.quoteReplacement(HOME));
+        return HOME_DIR_REGEX.matcher(result).replaceAll(Matcher.quoteReplacement(HOME));
     }
 
     /**
@@ -39,17 +40,17 @@ public final class FormattingUtils {
     }
 
     /**
-     * Determines the OS name in a standardized format for dotfile linking purposes.
+     * Determines the OS in a standardized format for dotfile linking purposes.
      * @param osName the original OS name
-     * @return the resolved OS name in a standardized format
+     * @return the resolved OS
      */
-    public static String getResolvedOsName(String osName) {
+    public static Os getResolvedOsName(String osName) {
         if (osName.contains("Linux")) {
-            return "linux";
+            return Os.LINUX;
         } else if (osName.contains("Mac")) {
-            return "darwin";
+            return Os.DARWIN;
         } else if (osName.contains("Win")) {
-            return "win32";
+            return Os.WIN32;
         } else {
             throw new UnsupportedOperationException("Unsupported OS for dotfile linking: " + osName);
         }
