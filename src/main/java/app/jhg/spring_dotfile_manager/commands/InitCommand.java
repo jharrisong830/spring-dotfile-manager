@@ -30,6 +30,7 @@ public class InitCommand implements Callable<Integer> {
 
     @Option(
         names = "--allow-post-install-scripts",
+        arity = "1",
         description = "Whether to allow the execution of post-install scripts (true or false)"
     )
     private Boolean allowPostInstallScripts;

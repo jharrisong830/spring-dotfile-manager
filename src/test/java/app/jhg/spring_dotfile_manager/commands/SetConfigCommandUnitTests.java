@@ -98,6 +98,27 @@ public class SetConfigCommandUnitTests {
     }
 
     @Test
+    public void testCall_allowPostInstallMissingValue_throws() throws Exception {
+        SetConfigCommand cmd = commandWithStdin("");
+
+        assertThrows(CommandLine.ParameterException.class, () -> parseArgs(cmd, "~/new-dotfiles", "--allow-post-install-scripts"));
+        verifyNoInteractions(configService);
+    }
+
+    @Test
+    public void testCall_noPathProvided_stdinEmpty_allowPostInstallProvided_updatesWithCurrentPath() throws Exception {
+        when(configService.readDotfileRepoPath()).thenReturn("~/existing-dotfiles");
+        SetConfigCommand cmd = commandWithStdin("");
+        parseArgs(cmd, "--allow-post-install-scripts=true");
+
+        int result = cmd.call();
+
+        assertEquals(0, result);
+        verify(configService).updateConfig("~/existing-dotfiles", true);
+        verify(configService, never()).readAllowPostInstallScripts();
+    }
+
+    @Test
     public void testCall_noPathProvided_stdinEmpty_doesNothing() throws Exception {
         SetConfigCommand cmd = commandWithStdin("");
         parseArgs(cmd);

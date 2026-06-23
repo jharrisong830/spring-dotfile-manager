@@ -134,6 +134,14 @@ public class InitCommandUnitTests {
     }
 
     @Test
+    public void testCall_allowPostInstallMissingValue_throws() throws Exception {
+        InitCommand cmd = commandWithStdin("");
+
+        assertThrows(CommandLine.ParameterException.class, () -> parseArgs(cmd, "~/my-dotfiles", "--allow-post-install-scripts"));
+        verifyNoInteractions(configService);
+    }
+
+    @Test
     public void testCall_initializeConfig_fileAlreadyExistsException_propagates() throws Exception {
         doThrow(new FileAlreadyExistsException("already exists"))
             .when(configService).initializeConfig(any(), eq(false));

@@ -33,7 +33,7 @@ sdfm init
 
 Running the above command will generate an application config file at `~/.config/spring-dotfile-manager/config.yaml` on Unix-like systems, and `~/AppData/Local/spring-dotfile-manager/config.yaml` on Windows.
 
-This config file will just be a two-line YAML document, which tells the application where your dotfile repository is located and whether post-install scripts should run. You can edit this file directly, or call `sdfm set-config <new_path_here>` to specify where your dotfile repository is located. Providing the flag `--allow-post-install-scripts` when initializing or updating your config will enable post-install scripts.
+This config file will just be a two-line YAML document, which tells the application where your dotfile repository is located and whether post-install scripts should run. You can edit this file directly, or call `sdfm set-config <new_path_here>` to specify where your dotfile repository is located. Pass `--allow-post-install-scripts=true` (or `=false`) when initializing or updating your config to control whether post-install scripts run; an explicit `true`/`false` value is required.
 
 A typical config file will look as follows. You can use `{HOME}` within this path, and `sdfm` will fill in your home directory at runtime.
 

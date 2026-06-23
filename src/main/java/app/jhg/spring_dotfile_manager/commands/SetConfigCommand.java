@@ -29,6 +29,7 @@ public class SetConfigCommand implements Callable<Integer>{
 
     @Option(
         names = "--allow-post-install-scripts",
+        arity = "1",
         description = "Whether to allow the execution of post-install scripts (true or false)"
     )
     private Boolean allowPostInstallScripts;
@@ -44,8 +45,10 @@ public class SetConfigCommand implements Callable<Integer>{
     @Override
     public Integer call() throws Exception {
         dotfileRepoPath = dotfileRepoPath.trim();
+        boolean pathProvided = !dotfileRepoPath.isEmpty();
+        boolean allowPostInstallProvided = allowPostInstallScripts != null;
 
-        if (dotfileRepoPath.isEmpty()) {
+        if (!pathProvided) {
             String currentConfig = configService.readDotfileRepoPath();
             log.info("No dotfile repository path provided.");
             log.info("Enter desired path, or <Enter> to keep current configuration ({})", currentConfig);
@@ -55,19 +58,21 @@ public class SetConfigCommand implements Callable<Integer>{
 
             if (!customPath.isEmpty()) {
                 dotfileRepoPath = customPath;
+                pathProvided = true;
             } else {
                 log.info("Keeping current configuration: {}", currentConfig);
-                return 0;
+                dotfileRepoPath = currentConfig;
             }
         }
 
-        if (allowPostInstallScripts == null) {
-            boolean currentPostInstall = configService.readAllowPostInstallScripts();
-            log.debug("Using existing preference for post-install scripts: {}", currentPostInstall);
-            allowPostInstallScripts = currentPostInstall;
+        if (!allowPostInstallProvided) {
+            allowPostInstallScripts = configService.readAllowPostInstallScripts();
+            log.debug("Using existing preference for post-install scripts: {}", allowPostInstallScripts);
         }
 
-        configService.updateConfig(dotfileRepoPath, allowPostInstallScripts);
+        if (pathProvided || allowPostInstallProvided) {
+            configService.updateConfig(dotfileRepoPath, allowPostInstallScripts);
+        }
         configService.printConfig();
         return 0;
     }
