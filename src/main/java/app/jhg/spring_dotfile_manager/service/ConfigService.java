@@ -5,7 +5,7 @@ import java.nio.file.Path;
 
 public interface ConfigService {
 
-    public Path getConfigFilePath();
+    Path getConfigFilePath();
 
     /**
      * Initializes the configuration file with the provided dotfile repository path and postinstall preference. If the configuration file already exists, a FileAlreadyExistsException is thrown. If an I/O error occurs during file operations, an IOException is thrown.
@@ -13,21 +13,21 @@ public interface ConfigService {
      * @param allowPostInstallScripts whether to allow postinstall scripts to run 
      * @throws IOException if an I/O error occurs during file operations.
      */
-    public void initializeConfig(String dotfileRepoPath, boolean allowPostInstallScripts) throws IOException;
+    void initializeConfig(String dotfileRepoPath, boolean allowPostInstallScripts) throws IOException;
     
     /**
      * Reads the configuration file and returns the path to the user's dotfile repository. If an I/O error occurs during file operations, an IOException is thrown.
      * @return The path to the user's dotfile repository as specified in the configuration file.
      * @throws IOException if an I/O error occurs during file operations.
      */
-    public String readDotfileRepoPath() throws IOException;
+    String readDotfileRepoPath() throws IOException;
 
     /**
      * Reads the configuration file and returns the post install script preference. If an I/O error occurs during file operations, an IOException is thrown.
      * @return The user's preference for running post-install scripts
      * @throws IOException if an I/O error occurs during file operations.
      */
-    public boolean readAllowPostInstallScripts() throws IOException;
+    boolean readAllowPostInstallScripts() throws IOException;
 
     /**
      * Updates the configuration file with a new dotfile repository path and postinstall preference. If an I/O error occurs during file operations, an IOException is thrown. If the configuration file does not exist, a FileNotFoundException is thrown.
@@ -35,11 +35,11 @@ public interface ConfigService {
      * @param newAllowPostInstallScripts new preference for whether to allow postinstall scripts to run
      * @throws IOException if an I/O error occurs during file operations.
      */
-    public void updateConfig(String newDotfileRepoPath, boolean newAllowPostInstallScripts) throws IOException;
+    void updateConfig(String newDotfileRepoPath, boolean newAllowPostInstallScripts) throws IOException;
 
     /**
      * Prints the current configuration, including the path to the configuration file and the dotfile repository path and postinstall preference specified in the configuration. If an I/O error occurs during file operations, an IOException is thrown.
      * @throws IOException if an I/O error occurs during file operations.
      */
-    public void printConfig() throws IOException;
+    void printConfig() throws IOException;
 }
