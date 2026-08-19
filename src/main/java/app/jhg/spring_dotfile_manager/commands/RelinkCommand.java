@@ -9,12 +9,14 @@ import java.util.concurrent.Callable;
 
 import org.springframework.stereotype.Component;
 
+import app.jhg.spring_dotfile_manager.config.KeyMixin;
 import app.jhg.spring_dotfile_manager.model.DotfileMarkerModel;
 import app.jhg.spring_dotfile_manager.model.PostInstallScriptResult;
 import app.jhg.spring_dotfile_manager.service.DotfileService;
 import app.jhg.spring_dotfile_manager.service.PostInstallService;
 import lombok.extern.slf4j.Slf4j;
 import picocli.CommandLine.Command;
+import picocli.CommandLine.Mixin;
 
 @Component
 @Command(
@@ -24,10 +26,13 @@ import picocli.CommandLine.Command;
 )
 @Slf4j
 public class RelinkCommand implements Callable<Integer> {
-    
+
     private final DotfileService dotfileService;
     private final PostInstallService postInstallService;
     private final BufferedReader stdinReader;
+
+    @Mixin
+    private KeyMixin keyMixin;
 
     public RelinkCommand(DotfileService dotfileService, PostInstallService postInstallService, BufferedReader stdinReader) {
         this.dotfileService = dotfileService;

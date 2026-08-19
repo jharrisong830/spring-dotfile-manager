@@ -6,10 +6,12 @@ import java.util.concurrent.Callable;
 
 import org.springframework.stereotype.Component;
 
+import app.jhg.spring_dotfile_manager.config.KeyMixin;
 import app.jhg.spring_dotfile_manager.model.DotfileMarkerModel;
 import app.jhg.spring_dotfile_manager.service.DotfileService;
 import lombok.extern.slf4j.Slf4j;
 import picocli.CommandLine.Command;
+import picocli.CommandLine.Mixin;
 
 @Component
 @Command(
@@ -19,8 +21,11 @@ import picocli.CommandLine.Command;
 )
 @Slf4j
 public class UnlinkCommand implements Callable<Integer> {
-    
+
     private final DotfileService dotfileService;
+
+    @Mixin
+    private KeyMixin keyMixin;
 
     public UnlinkCommand(DotfileService dotfileService) {
         this.dotfileService = dotfileService;
