@@ -56,4 +56,12 @@ public interface DotfileService {
      * @return the target path for the given dotfile marker based on the current operating system and any platform-specific overrides specified in the marker, or null if the marker should not be linked on the current platform
      */
     Path getTargetPathForCurrentSystem(DotfileMarkerModel marker);
+
+    /**
+     * gets the dotfile markers matching the given key that are applicable to the current platform.
+     * @param key the key to search for
+     * @return the list of markers with a matching key that would actually be linked on this platform (0 = no match, 1 = unambiguous, 2+ = ambiguous)
+     * @throws IOException if there is an error reading the dotfile marker files
+     */
+    List<DotfileMarkerModel> getMarkersByKeyForCurrentSystem(String key) throws IOException;
 }

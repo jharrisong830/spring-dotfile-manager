@@ -33,7 +33,26 @@ public class UnlinkCommand implements Callable<Integer> {
 
     @Override 
     public Integer call() throws Exception {
-        List<DotfileMarkerModel> markers = dotfileService.getAllDotfileMarkerModels();
+        String key = keyMixin.getKey();
+        List<DotfileMarkerModel> markers;
+        
+        if (key != null) {
+            markers = dotfileService.getMarkersByKeyForCurrentSystem(key);
+            if (markers.isEmpty()) {
+                log.error("No dotfile found with key '{}' for the current platform.", key);
+                return 1;
+            }
+            if (markers.size() > 1) {
+                log.error("Multiple dotfiles found with key '{}': {}. Refusing to unlink an ambiguous key.", 
+                    key,
+                    markers.stream().map(m -> m.sourceLocation).toList()
+                );
+                return 1;
+            }
+        } else {
+            markers = dotfileService.getAllDotfileMarkerModels();
+        }
+        
         int exitCode = 0;
 
         if (markers.isEmpty()) {

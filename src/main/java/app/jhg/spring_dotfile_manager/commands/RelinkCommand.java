@@ -42,9 +42,27 @@ public class RelinkCommand implements Callable<Integer> {
 
     @Override
     public Integer call() throws Exception {
-        List<DotfileMarkerModel> markers = dotfileService.getAllDotfileMarkerModels();
-        int exitCode = 0;
+        String key = keyMixin.getKey();
+        List<DotfileMarkerModel> markers;
         
+        if (key != null) {
+            markers = dotfileService.getMarkersByKeyForCurrentSystem(key);
+            if (markers.isEmpty()) {
+                log.error("No dotfile found with key '{}' for the current platform.", key);
+                return 1;
+            } 
+            if (markers.size() > 1) {
+                log.error("Multiple dotfiles found with key '{}': {}. Refusing to relink an ambiguous key.",
+                    key,
+                    markers.stream().map(m -> m.sourceLocation).toList()
+                );
+                return 1;
+            }
+        } else {
+            markers = dotfileService.getAllDotfileMarkerModels();
+        }
+
+        int exitCode = 0;
         if (markers.isEmpty()) {
             log.info("No dotfiles found to relink in the configured repository.");
         } else {
@@ -77,41 +95,45 @@ public class RelinkCommand implements Callable<Integer> {
             }
         }
 
-        try {
-            log.debug("Finding post-install scripts...");
-            List<Path> postInstallScripts = postInstallService.findPostInstallScripts();
+        if (key == null) {
+            // scoped relinks target a single dotfile; running repo-wide post-install scripts
+            // afterward would be surprising, so only offer to run them for a full relink
+            try {
+                log.debug("Finding post-install scripts...");
+                List<Path> postInstallScripts = postInstallService.findPostInstallScripts();
 
-            if (postInstallScripts.isEmpty()) {
-                log.debug("No post-install scripts found, or post-install scripts disabled.");
-            } else {
-                log.info("Found {} post-install script(s) to run:", postInstallScripts.size());
-                for (Path script : postInstallScripts) {
-                    log.info("  {}", script);
-                }
-                log.info("Do you want to run these post-install scripts? (only 'yes' will be accepted)");
-
-                String line = stdinReader.readLine();
-                String response = line != null ? line.trim() : "";
-
-                if (response.equalsIgnoreCase("yes")) {
-                    List<PostInstallScriptResult> postInstallScriptResults = postInstallService.runPostInstallScripts();
-
-                    for (PostInstallScriptResult result : postInstallScriptResults) {
-                        if (result.success()) {
-                            log.info("Ran post-install script {}", result.script());
-                            log.debug(result.message());
-                        } else {
-                            log.error("Post-install script {} failed: {}", result.script(), result.message());
-                            exitCode = 1;
-                        }
-                    }
+                if (postInstallScripts.isEmpty()) {
+                    log.debug("No post-install scripts found, or post-install scripts disabled.");
                 } else {
-                    log.info("Skipped running post-install scripts.");
+                    log.info("Found {} post-install script(s) to run:", postInstallScripts.size());
+                    for (Path script : postInstallScripts) {
+                        log.info("  {}", script);
+                    }
+                    log.info("Do you want to run these post-install scripts? (only 'yes' will be accepted)");
+
+                    String line = stdinReader.readLine();
+                    String response = line != null ? line.trim() : "";
+
+                    if (response.equalsIgnoreCase("yes")) {
+                        List<PostInstallScriptResult> postInstallScriptResults = postInstallService.runPostInstallScripts();
+
+                        for (PostInstallScriptResult result : postInstallScriptResults) {
+                            if (result.success()) {
+                                log.info("Ran post-install script {}", result.script());
+                                log.debug(result.message());
+                            } else {
+                                log.error("Post-install script {} failed: {}", result.script(), result.message());
+                                exitCode = 1;
+                            }
+                        }
+                    } else {
+                        log.info("Skipped running post-install scripts.");
+                    }
                 }
+            } catch (IOException e) {
+                log.error("File I/O error while executing post-install scripts: {}", e.getMessage());
+                exitCode = 1;
             }
-        } catch (IOException e) {
-            log.error("File I/O error while executing post-install scripts: {}", e.getMessage());
-            exitCode = 1;
         }
 
         return exitCode;

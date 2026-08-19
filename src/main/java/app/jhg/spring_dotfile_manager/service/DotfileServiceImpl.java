@@ -166,4 +166,12 @@ public class DotfileServiceImpl implements DotfileService {
             return null;
         }
     }
+
+    @Override
+    public List<DotfileMarkerModel> getMarkersByKeyForCurrentSystem(String key) throws IOException {
+        return getAllDotfileMarkerModels().stream()
+            .filter(m -> key.equals(m.key))
+            .filter(m -> getTargetPathForCurrentSystem(m) != null)
+            .toList();
+    }
 }
