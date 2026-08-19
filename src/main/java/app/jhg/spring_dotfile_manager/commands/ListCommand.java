@@ -1,8 +1,11 @@
 package app.jhg.spring_dotfile_manager.commands;
 
 import java.nio.file.Path;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.Callable;
+import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Component;
 
@@ -42,6 +45,10 @@ public class ListCommand implements Callable<Integer> {
             markers = markers.stream()
                     .filter(m -> dotfileService.getTargetPathForCurrentSystem(m) != null)
                     .toList();
+
+            findDuplicateKeys(markers).forEach((key, sourceLocations) ->
+                log.warn("Multiple dotfiles share the key '{}': {}. A scoped relink/unlink with --key '{}' would refuse to run until this is resolved.",
+                    key, sourceLocations, key));
         }
 
         if (markers.isEmpty()) {
@@ -64,5 +71,22 @@ public class ListCommand implements Callable<Integer> {
         }
 
         return 0;
+    }
+
+    /**
+     * groups the given markers by key, keeping only keys shared by more than one marker.
+     * @param markers the markers to check, expected to already be filtered to those applicable to the current platform
+     * @return a map of key to the source locations of the markers sharing that key, for keys with more than one match
+     */
+    private Map<String, List<Path>> findDuplicateKeys(List<DotfileMarkerModel> markers) {
+        return markers.stream()
+                .collect(Collectors.groupingBy(
+                    m -> m.key,
+                    LinkedHashMap::new,
+                    Collectors.mapping(m -> m.sourceLocation, Collectors.toList())
+                ))
+                .entrySet().stream()
+                .filter(entry -> entry.getValue().size() > 1)
+                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (a, b) -> a, LinkedHashMap::new));
     }
 }
