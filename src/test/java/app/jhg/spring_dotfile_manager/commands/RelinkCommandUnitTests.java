@@ -20,6 +20,7 @@ import app.jhg.spring_dotfile_manager.model.DotfileMarkerModel;
 import app.jhg.spring_dotfile_manager.model.PostInstallScriptResult;
 import app.jhg.spring_dotfile_manager.service.DotfileService;
 import app.jhg.spring_dotfile_manager.service.PostInstallService;
+import picocli.CommandLine;
 
 @ExtendWith(MockitoExtension.class)
 public class RelinkCommandUnitTests {
@@ -274,5 +275,12 @@ public class RelinkCommandUnitTests {
 
         assertEquals(1, result);
         verify(postInstallService, never()).runPostInstallScripts();
+    }
+
+    @Test
+    public void testParseArgs_keyOptionAccepted() {
+        // proves the KeyMixin is wired into RelinkCommand; the mixin's own parsing
+        // behavior is covered by KeyMixinUnitTests
+        assertDoesNotThrow(() -> new CommandLine(command).parseArgs("--key", "bin"));
     }
 }

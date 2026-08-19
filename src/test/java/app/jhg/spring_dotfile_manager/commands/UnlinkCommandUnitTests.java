@@ -17,6 +17,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import app.jhg.spring_dotfile_manager.model.DotfileMarkerModel;
 import app.jhg.spring_dotfile_manager.service.DotfileService;
+import picocli.CommandLine;
 
 @ExtendWith(MockitoExtension.class)
 public class UnlinkCommandUnitTests {
@@ -109,5 +110,12 @@ public class UnlinkCommandUnitTests {
         assertEquals(1, result); // does not propogate, but returns non-zero exit code
         verify(dotfileService).unlinkDotfile(markers.get(0));
         verify(dotfileService).unlinkDotfile(markers.get(1));
+    }
+
+    @Test
+    public void testParseArgs_keyOptionAccepted() {
+        // proves the KeyMixin is wired into UnlinkCommand; the mixin's own parsing
+        // behavior is covered by KeyMixinUnitTests
+        assertDoesNotThrow(() -> new CommandLine(command).parseArgs("--key", "bin"));
     }
 }
