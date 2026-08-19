@@ -30,6 +30,8 @@ public class UnlinkCommandUnitTests {
     @BeforeEach
     void setUp() {
         command = new UnlinkCommand(dotfileService);
+        // populate the @Mixin field with defaults, as picocli would when parsing zero args
+        new CommandLine(command).parseArgs();
     }
 
     @Test
@@ -117,5 +119,62 @@ public class UnlinkCommandUnitTests {
         // proves the KeyMixin is wired into UnlinkCommand; the mixin's own parsing
         // behavior is covered by KeyMixinUnitTests
         assertDoesNotThrow(() -> new CommandLine(command).parseArgs("--key", "bin"));
+    }
+
+    private void withKey(String key) {
+        new CommandLine(command).parseArgs("--key", key);
+    }
+
+    @Test
+    public void testCall_keyOption_noMatch_returnsOneWithoutUnlinking() throws Exception {
+        withKey("bin");
+        when(dotfileService.getMarkersByKeyForCurrentSystem("bin")).thenReturn(List.of());
+
+        int result = command.call();
+
+        assertEquals(1, result);
+        verify(dotfileService, never()).unlinkDotfile(any());
+        verify(dotfileService, never()).getAllDotfileMarkerModels();
+    }
+
+    @Test
+    public void testCall_keyOption_ambiguousMatch_returnsOneWithoutUnlinking() throws Exception {
+        List<DotfileMarkerModel> markers = DotfileMarkerModel.fromMarkerFileContents(
+            Path.of("/repo/shell.dotfile"),
+            "name: bin\nlocation: /home/user/bin\nkey: bin\n---\nname: bin\nlocation: /home/user/other-bin\nkey: bin\n"
+        );
+        withKey("bin");
+        when(dotfileService.getMarkersByKeyForCurrentSystem("bin")).thenReturn(markers);
+
+        int result = command.call();
+
+        assertEquals(1, result);
+        verify(dotfileService, never()).unlinkDotfile(any());
+    }
+
+    @Test
+    public void testCall_keyOption_singleMatch_unlinksOnlyThatMarker() throws Exception {
+        List<DotfileMarkerModel> markers = DotfileMarkerModel.fromMarkerFileContents(
+            Path.of("/repo/zshrc.dotfile"),
+            "name: .zshrc\nlocation: /home/user/.zshrc\nkey: shell-config\n"
+        );
+        withKey("shell-config");
+        when(dotfileService.getMarkersByKeyForCurrentSystem("shell-config")).thenReturn(markers);
+
+        int result = command.call();
+
+        assertEquals(0, result);
+        verify(dotfileService).unlinkDotfile(markers.get(0));
+        verify(dotfileService, never()).getAllDotfileMarkerModels();
+    }
+
+    @Test
+    public void testCall_keyOption_getMarkersByKeyForCurrentSystemThrowsIOException_propagates() throws Exception {
+        withKey("bin");
+        doThrow(new IOException("repo not found"))
+            .when(dotfileService).getMarkersByKeyForCurrentSystem("bin");
+
+        assertThrows(IOException.class, command::call);
+        verify(dotfileService, never()).unlinkDotfile(any());
     }
 }

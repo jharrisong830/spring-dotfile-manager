@@ -39,6 +39,8 @@ public class RelinkCommandUnitTests {
     @BeforeEach
     void setUp() {
         command = new RelinkCommand(dotfileService, postInstallService, stdinReader);
+        // populate the @Mixin field with defaults, as picocli would when parsing zero args
+        new CommandLine(command).parseArgs();
     }
 
     @Test
@@ -282,5 +284,67 @@ public class RelinkCommandUnitTests {
         // proves the KeyMixin is wired into RelinkCommand; the mixin's own parsing
         // behavior is covered by KeyMixinUnitTests
         assertDoesNotThrow(() -> new CommandLine(command).parseArgs("--key", "bin"));
+    }
+
+    private void withKey(String key) {
+        new CommandLine(command).parseArgs("--key", key);
+    }
+
+    @Test
+    public void testCall_keyOption_noMatch_returnsOneWithoutRelinking() throws Exception {
+        withKey("bin");
+        when(dotfileService.getMarkersByKeyForCurrentSystem("bin")).thenReturn(List.of());
+
+        int result = command.call();
+
+        assertEquals(1, result);
+        verify(dotfileService, never()).relinkDotfile(any());
+        verify(dotfileService, never()).getAllDotfileMarkerModels();
+        verify(postInstallService, never()).findPostInstallScripts();
+    }
+
+    @Test
+    public void testCall_keyOption_ambiguousMatch_returnsOneWithoutRelinking() throws Exception {
+        List<DotfileMarkerModel> markers = DotfileMarkerModel.fromMarkerFileContents(
+            Path.of("/repo/shell.dotfile"),
+            "name: bin\nlocation: /home/user/bin\nkey: bin\n---\nname: bin\nlocation: /home/user/other-bin\nkey: bin\n"
+        );
+        withKey("bin");
+        when(dotfileService.getMarkersByKeyForCurrentSystem("bin")).thenReturn(markers);
+
+        int result = command.call();
+
+        assertEquals(1, result);
+        verify(dotfileService, never()).relinkDotfile(any());
+        verify(postInstallService, never()).findPostInstallScripts();
+    }
+
+    @Test
+    public void testCall_keyOption_singleMatch_relinksOnlyThatMarkerAndSkipsPostInstall() throws Exception {
+        List<DotfileMarkerModel> markers = DotfileMarkerModel.fromMarkerFileContents(
+            Path.of("/repo/zshrc.dotfile"),
+            "name: .zshrc\nlocation: /home/user/.zshrc\nkey: shell-config\n"
+        );
+        withKey("shell-config");
+        when(dotfileService.getMarkersByKeyForCurrentSystem("shell-config")).thenReturn(markers);
+
+        int result = command.call();
+
+        assertEquals(0, result);
+        verify(dotfileService).relinkDotfile(markers.get(0));
+        verify(dotfileService, never()).getAllDotfileMarkerModels();
+        // scoped relinks should not offer to run repo-wide post-install scripts
+        verify(postInstallService, never()).findPostInstallScripts();
+        verify(postInstallService, never()).runPostInstallScripts();
+    }
+
+    @Test
+    public void testCall_keyOption_getMarkersByKeyForCurrentSystemThrowsIOException_propagates() throws Exception {
+        withKey("bin");
+        doThrow(new IOException("repo not found"))
+            .when(dotfileService).getMarkersByKeyForCurrentSystem("bin");
+
+        assertThrows(IOException.class, command::call);
+        verify(dotfileService, never()).relinkDotfile(any());
     }
 }
