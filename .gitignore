@@ -33,5 +33,5 @@ build/
 .vscode/
 
 ### Claude ###
-.claude/
-CLAUDE*.md
+.claude/*.local.*
+CLAUDE.local.md
