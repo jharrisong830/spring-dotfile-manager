@@ -1,6 +1,8 @@
 package app.jhg.spring_dotfile_manager.commands;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.concurrent.Callable;
 
@@ -33,21 +35,25 @@ public class UnlinkCommand implements Callable<Integer> {
 
     @Override 
     public Integer call() throws Exception {
-        String key = keyMixin.getKey();
+        List<String> keys = keyMixin.getKeys();
         List<DotfileMarkerModel> markers;
-        
-        if (key != null) {
-            markers = dotfileService.getMarkersByKeyForCurrentSystem(key);
-            if (markers.isEmpty()) {
-                log.error("No dotfile found with key '{}' for the current platform.", key);
-                return 1;
-            }
-            if (markers.size() > 1) {
-                log.error("Multiple dotfiles found with key '{}': {}. Refusing to unlink an ambiguous key.", 
-                    key,
-                    markers.stream().map(m -> m.sourceLocation).toList()
-                );
-                return 1;
+
+        if (!keys.isEmpty()) {
+            markers = new ArrayList<>();
+            for (String key : new LinkedHashSet<>(keys)) {
+                List<DotfileMarkerModel> keyMarkers = dotfileService.getMarkersByKeyForCurrentSystem(key);
+                if (keyMarkers.isEmpty()) {
+                    log.error("No dotfile found with key '{}' for the current platform.", key);
+                    return 1;
+                }
+                if (keyMarkers.size() > 1) {
+                    log.error("Multiple dotfiles found with key '{}': {}. Refusing to unlink an ambiguous key.",
+                        key,
+                        keyMarkers.stream().map(m -> m.sourceLocation).toList()
+                    );
+                    return 1;
+                }
+                markers.addAll(keyMarkers);
             }
         } else {
             markers = dotfileService.getAllDotfileMarkerModels();

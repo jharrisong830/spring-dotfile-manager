@@ -4,6 +4,8 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.concurrent.Callable;
 
@@ -42,21 +44,25 @@ public class RelinkCommand implements Callable<Integer> {
 
     @Override
     public Integer call() throws Exception {
-        String key = keyMixin.getKey();
+        List<String> keys = keyMixin.getKeys();
         List<DotfileMarkerModel> markers;
-        
-        if (key != null) {
-            markers = dotfileService.getMarkersByKeyForCurrentSystem(key);
-            if (markers.isEmpty()) {
-                log.error("No dotfile found with key '{}' for the current platform.", key);
-                return 1;
-            } 
-            if (markers.size() > 1) {
-                log.error("Multiple dotfiles found with key '{}': {}. Refusing to relink an ambiguous key.",
-                    key,
-                    markers.stream().map(m -> m.sourceLocation).toList()
-                );
-                return 1;
+
+        if (!keys.isEmpty()) {
+            markers = new ArrayList<>();
+            for (String key : new LinkedHashSet<>(keys)) {
+                List<DotfileMarkerModel> keyMarkers = dotfileService.getMarkersByKeyForCurrentSystem(key);
+                if (keyMarkers.isEmpty()) {
+                    log.error("No dotfile found with key '{}' for the current platform.", key);
+                    return 1;
+                }
+                if (keyMarkers.size() > 1) {
+                    log.error("Multiple dotfiles found with key '{}': {}. Refusing to relink an ambiguous key.",
+                        key,
+                        keyMarkers.stream().map(m -> m.sourceLocation).toList()
+                    );
+                    return 1;
+                }
+                markers.addAll(keyMarkers);
             }
         } else {
             markers = dotfileService.getAllDotfileMarkerModels();
@@ -95,8 +101,8 @@ public class RelinkCommand implements Callable<Integer> {
             }
         }
 
-        if (key == null) {
-            // scoped relinks target a single dotfile; running repo-wide post-install scripts
+        if (keys.isEmpty()) {
+            // scoped relinks target specific dotfiles; running repo-wide post-install scripts
             // afterward would be surprising, so only offer to run them for a full relink
             try {
                 log.debug("Finding post-install scripts...");

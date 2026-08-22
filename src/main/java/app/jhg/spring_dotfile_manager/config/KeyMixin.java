@@ -1,5 +1,8 @@
 package app.jhg.spring_dotfile_manager.config;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.springframework.stereotype.Component;
 
 import lombok.Getter;
@@ -11,7 +14,7 @@ public class KeyMixin {
     @Getter
     @Option(
         names = "--key",
-        description = "Restrict the operation to the dotfile with the given key, instead of all dotfiles in the repository."
+        description = "Restrict the operation to the dotfile(s) with the given key, instead of all dotfiles in the repository. May be specified multiple times"
     )
-    public String key;
+    public List<String> keys = new ArrayList<>();
 }

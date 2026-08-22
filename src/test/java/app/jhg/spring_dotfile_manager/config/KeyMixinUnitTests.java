@@ -2,6 +2,8 @@ package app.jhg.spring_dotfile_manager.config;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import java.util.List;
+
 import org.junit.jupiter.api.Test;
 
 import picocli.CommandLine;
@@ -9,34 +11,42 @@ import picocli.CommandLine;
 public class KeyMixinUnitTests {
 
     @Test
-    public void testGetKey_returnsSetValue() {
+    public void testGetKeys_returnsSetValue() {
         KeyMixin mixin = new KeyMixin();
-        mixin.key = "bin";
+        mixin.keys = List.of("bin");
 
-        assertEquals("bin", mixin.getKey());
+        assertEquals(List.of("bin"), mixin.getKeys());
     }
 
     @Test
-    public void testGetKey_whenNull_returnsNull() {
+    public void testGetKeys_whenNotSet_returnsEmptyList() {
         KeyMixin mixin = new KeyMixin();
 
-        assertNull(mixin.getKey());
+        assertTrue(mixin.getKeys().isEmpty());
     }
 
     @Test
-    public void testParseArgs_keyOptionProvided_setsKey() {
+    public void testParseArgs_keyOptionProvided_setsKeys() {
         KeyMixin mixin = new KeyMixin();
         new CommandLine(mixin).parseArgs("--key", "bin");
 
-        assertEquals("bin", mixin.getKey());
+        assertEquals(List.of("bin"), mixin.getKeys());
     }
 
     @Test
-    public void testParseArgs_keyOptionNotProvided_leavesKeyNull() {
+    public void testParseArgs_keyOptionProvidedMultipleTimes_setsAllKeys() {
+        KeyMixin mixin = new KeyMixin();
+        new CommandLine(mixin).parseArgs("--key", "bin", "--key", "vim");
+
+        assertEquals(List.of("bin", "vim"), mixin.getKeys());
+    }
+
+    @Test
+    public void testParseArgs_keyOptionNotProvided_leavesKeysEmpty() {
         KeyMixin mixin = new KeyMixin();
         new CommandLine(mixin).parseArgs();
 
-        assertNull(mixin.getKey());
+        assertTrue(mixin.getKeys().isEmpty());
     }
 
     @Test
@@ -51,6 +61,6 @@ public class KeyMixinUnitTests {
         KeyMixin mixin = new KeyMixin();
         new CommandLine(mixin).parseArgs("--key", "   ");
 
-        assertEquals("   ", mixin.getKey());
+        assertEquals(List.of("   "), mixin.getKeys());
     }
 }
