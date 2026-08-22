@@ -17,7 +17,7 @@ public interface PostInstallService {
 
     /**
      * locates all bash scripts using the pattern `post-install/\*\*\/\*\.sh`, without running them, sorted for deterministic execution order
-     * @return list of discovered post-install script paths, or an empty list if post-install scripts are disabled
+     * @return list of discovered post-install script paths, or an empty list if post-install scripts are disabled or the current platform is Windows (not yet supported, since scripts require bash)
      * @throws IOException if there are issues reading from the user's config file or scanning the dotfile repository
      */
     List<Path> findPostInstallScripts() throws IOException;

@@ -14,6 +14,7 @@ import org.springframework.stereotype.Service;
 import app.jhg.spring_dotfile_manager.model.PostInstallScriptResult;
 import app.jhg.spring_dotfile_manager.model.SubprocessResult;
 import app.jhg.spring_dotfile_manager.util.FormattingUtils;
+import app.jhg.spring_dotfile_manager.util.Os;
 import lombok.extern.slf4j.Slf4j;
 
 @Service
@@ -21,6 +22,7 @@ import lombok.extern.slf4j.Slf4j;
 public class PostInstallServiceImpl implements PostInstallService {
 
     private final String postInstallGlobPattern;
+    private final Os osName;
 
     private final ConfigService configService;
     private final FileService fileService;
@@ -28,11 +30,13 @@ public class PostInstallServiceImpl implements PostInstallService {
 
     public PostInstallServiceImpl(
         @Value("${spring-dotfile-manager.post-install-glob-pattern}") String postInstallGlobPattern,
+        @Value("${os.name}") String osName,
         ConfigService configService,
         FileService fileService,
         SubprocessService subprocessService
     ) {
         this.postInstallGlobPattern = postInstallGlobPattern;
+        this.osName = FormattingUtils.getResolvedOsName(osName);
         this.configService = configService;
         this.fileService = fileService;
         this.subprocessService = subprocessService;
@@ -43,6 +47,13 @@ public class PostInstallServiceImpl implements PostInstallService {
         if (!configService.readAllowPostInstallScripts()) {
             // return an empty list immediately if post-install scripts are not allowed
             log.debug("Post-install scripts disabled");
+            return List.of();
+        }
+
+        if (osName == Os.WIN32) {
+            // post-install scripts run via `bash <script>`, which isn't available on Windows out of the box;
+            // not supported there yet, so skip rather than fail every script with the same underlying cause
+            log.warn("Post-install scripts are not supported on Windows yet (requires bash); skipping.");
             return List.of();
         }
 
