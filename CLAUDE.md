@@ -13,6 +13,8 @@ java -jar target/spring-dotfile-manager-<version>.jar ...
 ./mvnw spring-boot:run -Dspring-boot.run.arguments='...'
 ```
 
+Run all `java`/`./mvnw` commands (including `./mvnw test`) outside the sandbox (`dangerouslyDisableSandbox: true`) — the sandboxed environment can't locate a Java runtime.
+
 Current version is tracked in `pom.xml` (`<version>`), currently `1.2.3`. Requires OpenJDK 26 (`java.version` in `pom.xml`).
 
 `bin/build.sh` and `bin/install.sh` wrap the Maven build and install the built jar + the `bin/sdfm` wrapper script into `~/.local/bin`, so the `sdfm` command can be run directly once installed.
