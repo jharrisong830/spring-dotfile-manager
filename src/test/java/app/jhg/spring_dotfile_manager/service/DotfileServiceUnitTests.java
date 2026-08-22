@@ -258,6 +258,7 @@ public class DotfileServiceUnitTests {
 
         when(fileService.isSymbolicLink(location)).thenReturn(false);
         when(fileService.exists(location)).thenReturn(false);
+        when(fileService.exists(source)).thenReturn(true);
 
         dotfileService.relinkDotfile(marker);
 
@@ -275,6 +276,7 @@ public class DotfileServiceUnitTests {
         Path source = Path.of(RESOLVED_REPO_PATH, ".zshrc");
 
         when(fileService.isSymbolicLink(location)).thenReturn(true);
+        when(fileService.exists(source)).thenReturn(true);
 
         dotfileService.relinkDotfile(marker);
 
@@ -293,6 +295,7 @@ public class DotfileServiceUnitTests {
 
         when(fileService.isSymbolicLink(location)).thenReturn(false);
         when(fileService.exists(location)).thenReturn(false);
+        when(fileService.exists(source)).thenReturn(true);
 
         dotfileService.relinkDotfile(marker);
 
@@ -314,6 +317,43 @@ public class DotfileServiceUnitTests {
         assertThrows(IOException.class, () -> dotfileService.relinkDotfile(marker));
 
         verify(fileService, never()).deleteFile(any());
+        verify(fileService, never()).createSymlink(any(), any());
+    }
+
+    @Test
+    public void testRelinkDotfile_locationIsSymlink_sourceDoesNotExist_throwsNoSuchFileException() throws IOException {
+        DotfileMarkerModel marker = DotfileMarkerModel.fromMarkerFileContents(
+            Path.of(RESOLVED_REPO_PATH, "zshrc.dotfile"),
+            "name: .zshrc\nlocation: ~/.zshrc\n"
+        ).get(0);
+        Path location = Path.of(System.getProperty("user.home"), ".zshrc");
+        Path source = Path.of(RESOLVED_REPO_PATH, ".zshrc");
+
+        when(fileService.isSymbolicLink(location)).thenReturn(true);
+        when(fileService.exists(source)).thenReturn(false);
+
+        assertThrows(NoSuchFileException.class, () -> dotfileService.relinkDotfile(marker));
+
+        verify(fileService, never()).deleteFile(any());
+        verify(fileService, never()).createSymlink(any(), any());
+    }
+
+    @Test
+    public void testRelinkDotfile_locationDoesNotExist_sourceDoesNotExist_throwsNoSuchFileException() throws IOException {
+        DotfileMarkerModel marker = DotfileMarkerModel.fromMarkerFileContents(
+            Path.of(RESOLVED_REPO_PATH, "zshrc.dotfile"),
+            "name: .zshrc\nlocation: ~/.zshrc\n"
+        ).get(0);
+        Path location = Path.of(System.getProperty("user.home"), ".zshrc");
+        Path source = Path.of(RESOLVED_REPO_PATH, ".zshrc");
+
+        when(fileService.isSymbolicLink(location)).thenReturn(false);
+        when(fileService.exists(location)).thenReturn(false);
+        when(fileService.exists(source)).thenReturn(false);
+
+        assertThrows(NoSuchFileException.class, () -> dotfileService.relinkDotfile(marker));
+
+        verify(fileService, never()).createDirectories(any());
         verify(fileService, never()).createSymlink(any(), any());
     }
 
@@ -457,6 +497,7 @@ public class DotfileServiceUnitTests {
         Path source = Path.of(RESOLVED_REPO_PATH, ".zshrc");
 
         when(fileService.isSymbolicLink(overrideLocation)).thenReturn(true);
+        when(fileService.exists(source)).thenReturn(true);
 
         dotfileService.relinkDotfile(marker);
 
@@ -475,6 +516,7 @@ public class DotfileServiceUnitTests {
 
         when(fileService.isSymbolicLink(overrideLocation)).thenReturn(false);
         when(fileService.exists(overrideLocation)).thenReturn(false);
+        when(fileService.exists(source)).thenReturn(true);
 
         dotfileService.relinkDotfile(marker);
 
