@@ -29,14 +29,20 @@ public class PostInstallServiceImpl implements PostInstallService {
     private final SubprocessService subprocessService;
 
     public PostInstallServiceImpl(
-        @Value("${spring-dotfile-manager.post-install-glob-pattern}") String postInstallGlobPattern,
+        @Value("${spring-dotfile-manager.post-install-glob-pattern.linux}") String linuxGlobPattern,
+        @Value("${spring-dotfile-manager.post-install-glob-pattern.darwin}") String darwinGlobPattern,
+        @Value("${spring-dotfile-manager.post-install-glob-pattern.win32}") String win32GlobPattern,
         @Value("${os.name}") String osName,
         ConfigService configService,
         FileService fileService,
         SubprocessService subprocessService
     ) {
-        this.postInstallGlobPattern = postInstallGlobPattern;
         this.osName = FormattingUtils.getResolvedOsName(osName);
+        this.postInstallGlobPattern = switch (this.osName) {
+            case LINUX  -> linuxGlobPattern;
+            case DARWIN -> darwinGlobPattern;
+            case WIN32  -> win32GlobPattern;
+        };
         this.configService = configService;
         this.fileService = fileService;
         this.subprocessService = subprocessService;
@@ -47,13 +53,6 @@ public class PostInstallServiceImpl implements PostInstallService {
         if (!configService.readAllowPostInstallScripts()) {
             // return an empty list immediately if post-install scripts are not allowed
             log.debug("Post-install scripts disabled");
-            return List.of();
-        }
-
-        if (osName == Os.WIN32) {
-            // post-install scripts run via `bash <script>`, which isn't available on Windows out of the box;
-            // not supported there yet, so skip rather than fail every script with the same underlying cause
-            log.warn("Post-install scripts are not supported on Windows yet (requires bash); skipping.");
             return List.of();
         }
 
@@ -71,7 +70,10 @@ public class PostInstallServiceImpl implements PostInstallService {
         List<PostInstallScriptResult> results = new ArrayList<>();
         for (Path scriptPath : allPostInstallScripts) {
             log.debug("Starting execution for {}", scriptPath);
-            List<String> cmd = List.of("bash", scriptPath.toString());
+            List<String> cmd = switch (osName) {
+                case LINUX, DARWIN -> List.of("bash", scriptPath.toString());
+                case WIN32 -> List.of("pwsh", "-NoProfile", "-NonInteractive", "-ExecutionPolicy", "Bypass", "-File", scriptPath.toString());
+            };
             try {
                 SubprocessResult res = subprocessService.executeCommand(scriptPath.getParent(), cmd);
                 results.add(new PostInstallScriptResult(res.exitCode() == 0, res.output(), scriptPath));

@@ -6,15 +6,22 @@ cd "$REPO_ROOT" || exit 1
 
 ./bin/build.sh || exit 1
 
-POM_VERSION=$(./mvnw help:evaluate -Dexpression=project.version -q -DforceStdout)
+POM_VERSION=$(./mvnw help:evaluate "-Dexpression=project.version" -q -DforceStdout)
 echo "INSTALL spring-dotfile-manager v$POM_VERSION"
 
 echo "Installing spring-dotfile-manager to $HOME/.local/bin/sdfm"
 echo "Add $HOME/.local/bin to your PATH if it's not already there!"
 
+SOURCE_JAR="$REPO_ROOT/target/spring-dotfile-manager-$POM_VERSION.jar"
+if [ ! -f "$SOURCE_JAR" ]; then
+    echo "Built jar not found at $SOURCE_JAR (resolved version: '$POM_VERSION') - aborting install." >&2
+    cd "$CWD" || exit 1
+    exit 1
+fi
+
 mkdir -p "$HOME/.local/bin"
 mkdir -p "$HOME/.local/bin/jar"
-cp "$REPO_ROOT/target/spring-dotfile-manager-$POM_VERSION.jar" "$HOME/.local/bin/jar/sdfm.jar"
+cp "$SOURCE_JAR" "$HOME/.local/bin/jar/sdfm.jar"
 cp "$REPO_ROOT/bin/sdfm" "$HOME/.local/bin/sdfm"
 chmod +x "$HOME/.local/bin/sdfm"
 

@@ -24,6 +24,20 @@ java -jar ./target/spring-dotfile-manager-0.0.1-SNAPSHOT.jar ...
 ./mvnw spring-boot:run -Dspring-boot.run.arguments='...'
 ```
 
+On Windows (PowerShell):
+
+```powershell
+# builds an executable JAR and sdfm.cmd wrapper in %LOCALAPPDATA%\spring-dotfile-manager\bin
+.\bin\install.ps1
+
+# builds an executable JAR in `target/`
+.\mvnw.cmd clean package
+java -jar .\target\spring-dotfile-manager-0.0.1-SNAPSHOT.jar ...
+
+# use the Maven Spring Boot plugin
+.\mvnw.cmd spring-boot:run -Dspring-boot.run.arguments='...'
+```
+
 ## Usage
 
 ### Initialize a Config File
@@ -250,17 +264,16 @@ darwin:
 
 You can run a set of scripts after re-linking dotfiles to your system. By default, post-install scripts will not run. You can enable them by setting `allow-post-install-scripts` to `true` in your config file.
 
-**Not supported on Windows.** Post-install scripts run via `bash <script>`, which Windows does not provide out of the box. `relink` will skip them entirely on Windows (logging a warning if `allow-post-install-scripts` is `true`), regardless of your config.
-
-After dotfiles are re-linked, your dotfiles repository will be scanned for Bash scripts inside of the `post-install` directory at the root of your repository. Only files that end with the `.sh` and are contained within the `post-install` directory will be run. You can have multiple subdirectories inside of the `post-install` directory. For example, in the below directory structure, only files marked with `*` will be executed:
+After dotfiles are re-linked, your dotfiles repository will be scanned for scripts inside of the `post-install` directory at the root of your repository. On Linux/macOS, post-install scripts are run via `bash <script>`, and only files ending in `.sh` are picked up. On Windows, they're run via `pwsh -File <script>`, and only files ending in `.ps1` are picked up — **PowerShell 7+ (`pwsh`) must be installed and on your `PATH`**; the older, preinstalled Windows PowerShell (`powershell`) is not used. You can have multiple subdirectories inside of the `post-install` directory. For example, in the below directory structure, only files marked with `*` will be executed:
 
 ```
 .
 ├── ...
 ├── post-install
-│   ├── script-01.sh *
-│   ├── subdir
-│   │   └── script-02.sh *
-│   └── some-program.exe
+│   ├── script-01.sh *      (Linux/macOS)
+│   ├── script-01.ps1 *     (Windows)
+│   ├── subdir
+│   │   └── script-02.sh *  (Linux/macOS)
+│   └── some-program.exe
 └── ...
 ```

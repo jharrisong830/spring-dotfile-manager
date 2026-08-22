@@ -2,46 +2,56 @@
   {
     "name": "spring-dotfile-manager.config.path.linux",
     "type": "java.lang.String",
-    "description": "A description for 'spring-dotfile-manager.config.path.linux'"
+    "description": "Path to the application's own config file when running on Linux, supporting {HOME}/{NAME} format specifiers."
   },
   {
     "name": "spring-dotfile-manager.config.path.darwin",
     "type": "java.lang.String",
-    "description": "A description for 'spring-dotfile-manager.config.path.darwin'"
+    "description": "Path to the application's own config file when running on macOS, supporting {HOME}/{NAME} format specifiers."
   },
   {
     "name": "spring-dotfile-manager.config.path.win32",
     "type": "java.lang.String",
-    "description": "A description for 'spring-dotfile-manager.config.path.win32'"
+    "description": "Path to the application's own config file when running on Windows, supporting {HOME}/{NAME} format specifiers."
   },
   {
     "name": "spring-dotfile-manager.config.default-repo-path",
     "type": "java.lang.String",
-    "description": "A description for 'spring-dotfile-manager.config.default-repo-path'"
+    "description": "Default dotfile repository path offered by `init` when the user doesn't supply one or accepts the suggested default."
   },
   {
     "name": "spring-dotfile-manager.config.default-allow-post-install",
     "type": "java.lang.Boolean",
-    "description": "A description for 'spring-dotfile-manager.config.default-allow-post-install'"
+    "description": "Default value for the allow-post-install-scripts config flag written by `init` when `--allow-post-install-scripts` isn't given."
   },
   {
     "name": "spring-dotfile-manager.dotfile-glob-pattern",
     "type": "java.lang.String",
-    "description": "A description for 'spring-dotfile-manager.dotfile-glob-pattern'"
+    "description": "Glob pattern used to locate `.dotfiles` marker files within the dotfile repository."
   },
   {
     "name": "spring-dotfile-manager.version",
     "type": "java.lang.String",
-    "description": "A description for 'spring-dotfile-manager.version'"
+    "description": "Application version string reported by the CLI's `--version` option."
   },
   {
     "name": "spring-dotfile-manager.subprocess.timeout",
     "type": "java.lang.Long",
-    "description": "A description for 'spring-dotfile-manager.subprocess.timeout'"
+    "description": "Maximum time, in milliseconds, to wait for a subprocess to finish before it is forcibly killed."
   },
   {
-    "name": "spring-dotfile-manager.post-install-glob-pattern",
+    "name": "spring-dotfile-manager.post-install-glob-pattern.linux",
     "type": "java.lang.String",
-    "description": "A description for 'spring-dotfile-manager.post-install-glob-pattern'"
+    "description": "Glob pattern used to locate post-install scripts within the dotfile repository when running on Linux."
+  },
+  {
+    "name": "spring-dotfile-manager.post-install-glob-pattern.darwin",
+    "type": "java.lang.String",
+    "description": "Glob pattern used to locate post-install scripts within the dotfile repository when running on macOS."
+  },
+  {
+    "name": "spring-dotfile-manager.post-install-glob-pattern.win32",
+    "type": "java.lang.String",
+    "description": "Glob pattern used to locate post-install scripts within the dotfile repository when running on Windows."
   }
 ]}

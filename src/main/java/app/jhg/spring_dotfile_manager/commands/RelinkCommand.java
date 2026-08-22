@@ -126,7 +126,9 @@ public class RelinkCommand implements Callable<Integer> {
                         for (PostInstallScriptResult result : postInstallScriptResults) {
                             if (result.success()) {
                                 log.info("Ran post-install script {}", result.script());
-                                log.debug(result.message());
+                                if (!result.message().isBlank()) {
+                                    log.info(result.message());
+                                }
                             } else {
                                 log.error("Post-install script {} failed: {}", result.script(), result.message());
                                 exitCode = 1;
