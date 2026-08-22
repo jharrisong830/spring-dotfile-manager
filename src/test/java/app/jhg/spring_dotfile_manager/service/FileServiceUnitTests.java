@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import java.io.IOException;
 import java.nio.file.FileAlreadyExistsException;
+import java.nio.file.FileSystemException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
@@ -241,6 +242,34 @@ public class FileServiceUnitTests {
         Path link = tempDir.resolve("nonExistentDir/link.txt");
 
         assertThrows(IOException.class, () -> fileService.createSymlink(link, target));
+    }
+
+    @Test
+    public void testIsMissingSymlinkPrivilege_matchesPrivilegeReason() {
+        FileSystemException e = new FileSystemException("link.txt", null, "A required privilege is not held by the client.");
+
+        assertTrue(fileService.isMissingSymlinkPrivilege(e));
+    }
+
+    @Test
+    public void testIsMissingSymlinkPrivilege_isCaseInsensitive() {
+        FileSystemException e = new FileSystemException("link.txt", null, "A required Privilege is not held by the client.");
+
+        assertTrue(fileService.isMissingSymlinkPrivilege(e));
+    }
+
+    @Test
+    public void testIsMissingSymlinkPrivilege_doesNotMatchUnrelatedReason() {
+        FileSystemException e = new FileSystemException("link.txt", null, "Permission denied");
+
+        assertFalse(fileService.isMissingSymlinkPrivilege(e));
+    }
+
+    @Test
+    public void testIsMissingSymlinkPrivilege_noReason() {
+        FileSystemException e = new FileSystemException("link.txt");
+
+        assertFalse(fileService.isMissingSymlinkPrivilege(e));
     }
 
 

@@ -1,6 +1,7 @@
 package app.jhg.spring_dotfile_manager.service;
 
 import java.io.IOException;
+import java.nio.file.FileSystemException;
 import java.nio.file.Path;
 import java.util.List;
 
@@ -38,7 +39,9 @@ public interface FileService {
      * creates a symlink to the specified source at the given link path
      * @param linkPath path at which the link should be created
      * @param source where the symlink should point to
-     * @throws IOException if an I/O error occurs creating the symlink
+     * @throws IOException if an I/O error occurs creating the symlink. On Windows, if the caller lacks
+     *   permission to create symbolic links (Developer Mode disabled and not running elevated), the message
+     *   is rewritten with guidance on resolving it.
      */
     void createSymlink(Path linkPath, Path source) throws IOException;
 
@@ -88,4 +91,14 @@ public interface FileService {
      * @throws IOException if an I/O error occurs during the glob operation
      */
     List<Path> glob(Path baseDirectory, String globPattern) throws IOException;
+
+    /**
+     * checks whether the given exception is Windows' "A required privilege is not held by the client" error,
+     * thrown by Files.createSymbolicLink when the caller lacks SeCreateSymbolicLinkPrivilege (i.e. Developer Mode
+     * is disabled and the process isn't elevated). The reason string comes from the OS and is locale-dependent,
+     * so this match is best-effort and only reliable on English-language Windows installs.
+     * @param e the exception to check
+     * @return true if the exception looks like a missing symlink privilege, false otherwise
+     */
+    boolean isMissingSymlinkPrivilege(FileSystemException e);
 }
