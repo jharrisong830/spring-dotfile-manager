@@ -10,7 +10,7 @@
 	</parent>
 	<groupId>app.jhg</groupId>
 	<artifactId>spring-dotfile-manager</artifactId>
-	<version>3.1.1</version>
+	<version>3.1.1-jdk21</version>
 	<name>spring-dotfile-manager</name>
 	<description>Dotfile management CLI</description>
 	<url/>
@@ -27,7 +27,7 @@
 		<url/>
 	</scm>
 	<properties>
-		<java.version>26</java.version>
+		<java.version>21</java.version>
 		<mockito.version>5.22.0</mockito.version>
 		<picocli.version>4.7.7</picocli.version>
 	</properties>
