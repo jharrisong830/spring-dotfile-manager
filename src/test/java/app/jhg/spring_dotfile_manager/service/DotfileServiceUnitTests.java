@@ -74,6 +74,42 @@ public class DotfileServiceUnitTests {
         assertThrows(IOException.class, () -> dotfileService.getAllDotfileMarkerPaths());
     }
 
+    @Test
+    public void testGetAllDotfileMarkerPaths_relativeRepoPathIsResolvedToAbsolute() throws IOException {
+        String relativeRepoPath = "dotfiles";
+        Path expectedAbsolutePath = Path.of(relativeRepoPath).toAbsolutePath().normalize();
+
+        when(configService.readDotfileRepoPath()).thenReturn(relativeRepoPath);
+        when(fileService.glob(eq(expectedAbsolutePath), eq(GLOB_PATTERN))).thenReturn(List.of());
+
+        dotfileService.getAllDotfileMarkerPaths();
+
+        verify(fileService).glob(eq(expectedAbsolutePath), eq(GLOB_PATTERN));
+    }
+
+    @Test
+    public void testGetAllDotfileMarkerPaths_relativeRepoPathWithDotSegmentsIsNormalized() throws IOException {
+        String relativeRepoPath = "./dotfiles/../dotfiles";
+        Path expectedAbsolutePath = Path.of(relativeRepoPath).toAbsolutePath().normalize();
+
+        when(configService.readDotfileRepoPath()).thenReturn(relativeRepoPath);
+        when(fileService.glob(eq(expectedAbsolutePath), eq(GLOB_PATTERN))).thenReturn(List.of());
+
+        dotfileService.getAllDotfileMarkerPaths();
+
+        verify(fileService).glob(eq(expectedAbsolutePath), eq(GLOB_PATTERN));
+    }
+
+    @Test
+    public void testGetAllDotfileMarkerPaths_alreadyAbsoluteRepoPathIsUnchanged() throws IOException {
+        when(configService.readDotfileRepoPath()).thenReturn(RAW_REPO_PATH);
+        when(fileService.glob(eq(Path.of(RESOLVED_REPO_PATH)), eq(GLOB_PATTERN))).thenReturn(List.of());
+
+        dotfileService.getAllDotfileMarkerPaths();
+
+        verify(fileService).glob(eq(Path.of(RESOLVED_REPO_PATH)), eq(GLOB_PATTERN));
+    }
+
 
     @Test
     public void testGetDotfileMarkerModelsByPath_singleMarker() throws IOException {

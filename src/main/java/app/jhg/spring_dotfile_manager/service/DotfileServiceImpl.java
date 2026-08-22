@@ -42,7 +42,12 @@ public class DotfileServiceImpl implements DotfileService {
     @Override
     public List<Path> getAllDotfileMarkerPaths() throws IOException {
         log.debug("Finding {} in {}", dotfileGlobPattern, configService.readDotfileRepoPath());
-        Path dotfileRepoPath = Path.of(FormattingUtils.formatWithHomeDirectory(configService.readDotfileRepoPath()));
+        // resolve to an absolute path: marker.sourceLocation is derived directly from these paths (see
+        // DotfileMarkerModel), and a relative sourceLocation becomes the literal symlink target - which resolves
+        // relative to the *link's* directory, not the process's cwd, producing a broken link
+        Path dotfileRepoPath = Path.of(FormattingUtils.formatWithHomeDirectory(configService.readDotfileRepoPath()))
+            .toAbsolutePath()
+            .normalize();
         return fileService.glob(dotfileRepoPath, dotfileGlobPattern);
     }
 
