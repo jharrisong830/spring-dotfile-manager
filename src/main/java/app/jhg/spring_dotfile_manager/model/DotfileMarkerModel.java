@@ -57,6 +57,7 @@ public class DotfileMarkerModel {
     }
     
     public final String name;
+    public final String key;
     public final Path location;
     public final Path sourceLocation;
 
@@ -66,6 +67,7 @@ public class DotfileMarkerModel {
 
     private DotfileMarkerModel(
         String name,
+        String key,
         Path location,
         Path markerFilePath,
         PlatformOverrideModel linuxOverride,
@@ -73,6 +75,7 @@ public class DotfileMarkerModel {
         PlatformOverrideModel darwinOverride
     ) {
         this.name = name;
+        this.key = key;
         this.location = location;
         this.sourceLocation = getSourceLocationFromMarkerPath(markerFilePath, name);
         this.linuxOverride = linuxOverride;
@@ -83,7 +86,7 @@ public class DotfileMarkerModel {
     public String prettyPrint(Path currentPlatformPath) {
         StringBuilder sb = new StringBuilder();
 
-        sb.append(name).append(" ( @ ").append(sourceLocation).append(" )\n");
+        sb.append(name).append(" [").append(key).append("] ( @ ").append(sourceLocation).append(" )\n");
         sb.append(" --> ").append(currentPlatformPath).append("\n");
 
         return sb.toString();
@@ -131,6 +134,16 @@ public class DotfileMarkerModel {
         location = FormattingUtils.formatWithName(location, name); // resolve {NAME}
         location = FormattingUtils.formatWithHomeDirectory(location);
 
+        String key = name; // defaults to name if not explicitly provided
+        if (rawDocumentMap.containsKey("key")) {
+            Object rawKey = rawDocumentMap.get("key");
+            if (!(rawKey instanceof String keyParsed) || keyParsed.isBlank()) {
+                throw new IllegalArgumentException("Invalid marker file contents: 'key' value must be a non-blank string");
+            }
+
+            key = keyParsed;
+        }
+
         PlatformOverrideModel linuxOverride = null;
         PlatformOverrideModel win32Override = null;
         PlatformOverrideModel darwinOverride = null;
@@ -147,7 +160,7 @@ public class DotfileMarkerModel {
             darwinOverride = PlatformOverrideModel.parsePlatformRawSubdocument(name, rawDocumentMap.get("darwin"));
         }
 
-        return new DotfileMarkerModel(name, Path.of(location), markerFilePath, linuxOverride, win32Override, darwinOverride);
+        return new DotfileMarkerModel(name, key, Path.of(location), markerFilePath, linuxOverride, win32Override, darwinOverride);
     }
 
     private static Path getSourceLocationFromMarkerPath(Path markerFilePath, String name) {

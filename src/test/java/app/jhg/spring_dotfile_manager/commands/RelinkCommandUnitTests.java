@@ -20,6 +20,7 @@ import app.jhg.spring_dotfile_manager.model.DotfileMarkerModel;
 import app.jhg.spring_dotfile_manager.model.PostInstallScriptResult;
 import app.jhg.spring_dotfile_manager.service.DotfileService;
 import app.jhg.spring_dotfile_manager.service.PostInstallService;
+import picocli.CommandLine;
 
 @ExtendWith(MockitoExtension.class)
 public class RelinkCommandUnitTests {
@@ -38,6 +39,8 @@ public class RelinkCommandUnitTests {
     @BeforeEach
     void setUp() {
         command = new RelinkCommand(dotfileService, postInstallService, stdinReader);
+        // populate the @Mixin field with defaults, as picocli would when parsing zero args
+        new CommandLine(command).parseArgs();
     }
 
     @Test
@@ -274,5 +277,154 @@ public class RelinkCommandUnitTests {
 
         assertEquals(1, result);
         verify(postInstallService, never()).runPostInstallScripts();
+    }
+
+    @Test
+    public void testParseArgs_keyOptionAccepted() {
+        // proves the KeyMixin is wired into RelinkCommand; the mixin's own parsing
+        // behavior is covered by KeyMixinUnitTests
+        assertDoesNotThrow(() -> new CommandLine(command).parseArgs("--key", "bin"));
+    }
+
+    private void withKeys(String... keys) {
+        List<String> args = new java.util.ArrayList<>();
+        for (String key : keys) {
+            args.add("--key");
+            args.add(key);
+        }
+        new CommandLine(command).parseArgs(args.toArray(new String[0]));
+    }
+
+    @Test
+    public void testCall_keyOption_noMatch_returnsOneWithoutRelinking() throws Exception {
+        withKeys("bin");
+        when(dotfileService.getMarkersByKeyForCurrentSystem("bin")).thenReturn(List.of());
+
+        int result = command.call();
+
+        assertEquals(1, result);
+        verify(dotfileService, never()).relinkDotfile(any());
+        verify(dotfileService, never()).getAllDotfileMarkerModels();
+        verify(postInstallService, never()).findPostInstallScripts();
+    }
+
+    @Test
+    public void testCall_keyOption_ambiguousMatch_returnsOneWithoutRelinking() throws Exception {
+        List<DotfileMarkerModel> markers = DotfileMarkerModel.fromMarkerFileContents(
+            Path.of("/repo/shell.dotfile"),
+            "name: bin\nlocation: /home/user/bin\nkey: bin\n---\nname: bin\nlocation: /home/user/other-bin\nkey: bin\n"
+        );
+        withKeys("bin");
+        when(dotfileService.getMarkersByKeyForCurrentSystem("bin")).thenReturn(markers);
+
+        int result = command.call();
+
+        assertEquals(1, result);
+        verify(dotfileService, never()).relinkDotfile(any());
+        verify(postInstallService, never()).findPostInstallScripts();
+    }
+
+    @Test
+    public void testCall_keyOption_singleMatch_relinksOnlyThatMarkerAndSkipsPostInstall() throws Exception {
+        List<DotfileMarkerModel> markers = DotfileMarkerModel.fromMarkerFileContents(
+            Path.of("/repo/zshrc.dotfile"),
+            "name: .zshrc\nlocation: /home/user/.zshrc\nkey: shell-config\n"
+        );
+        withKeys("shell-config");
+        when(dotfileService.getMarkersByKeyForCurrentSystem("shell-config")).thenReturn(markers);
+
+        int result = command.call();
+
+        assertEquals(0, result);
+        verify(dotfileService).relinkDotfile(markers.get(0));
+        verify(dotfileService, never()).getAllDotfileMarkerModels();
+        // scoped relinks should not offer to run repo-wide post-install scripts
+        verify(postInstallService, never()).findPostInstallScripts();
+        verify(postInstallService, never()).runPostInstallScripts();
+    }
+
+    @Test
+    public void testCall_keyOption_getMarkersByKeyForCurrentSystemThrowsIOException_propagates() throws Exception {
+        withKeys("bin");
+        doThrow(new IOException("repo not found"))
+            .when(dotfileService).getMarkersByKeyForCurrentSystem("bin");
+
+        assertThrows(IOException.class, command::call);
+        verify(dotfileService, never()).relinkDotfile(any());
+    }
+
+    @Test
+    public void testCall_multipleKeyOptions_eachUnambiguous_relinksAllAndSkipsPostInstall() throws Exception {
+        List<DotfileMarkerModel> zshrcMarkers = DotfileMarkerModel.fromMarkerFileContents(
+            Path.of("/repo/zshrc.dotfile"),
+            "name: .zshrc\nlocation: /home/user/.zshrc\nkey: zsh\n"
+        );
+        List<DotfileMarkerModel> vimrcMarkers = DotfileMarkerModel.fromMarkerFileContents(
+            Path.of("/repo/vimrc.dotfile"),
+            "name: .vimrc\nlocation: /home/user/.vimrc\nkey: vim\n"
+        );
+        withKeys("zsh", "vim");
+        when(dotfileService.getMarkersByKeyForCurrentSystem("zsh")).thenReturn(zshrcMarkers);
+        when(dotfileService.getMarkersByKeyForCurrentSystem("vim")).thenReturn(vimrcMarkers);
+
+        int result = command.call();
+
+        assertEquals(0, result);
+        verify(dotfileService).relinkDotfile(zshrcMarkers.get(0));
+        verify(dotfileService).relinkDotfile(vimrcMarkers.get(0));
+        verify(dotfileService, never()).getAllDotfileMarkerModels();
+        verify(postInstallService, never()).findPostInstallScripts();
+    }
+
+    @Test
+    public void testCall_multipleKeyOptions_oneAmbiguous_returnsOneWithoutRelinkingAny() throws Exception {
+        List<DotfileMarkerModel> zshrcMarkers = DotfileMarkerModel.fromMarkerFileContents(
+            Path.of("/repo/zshrc.dotfile"),
+            "name: .zshrc\nlocation: /home/user/.zshrc\nkey: zsh\n"
+        );
+        List<DotfileMarkerModel> binMarkers = DotfileMarkerModel.fromMarkerFileContents(
+            Path.of("/repo/bin.dotfile"),
+            "name: bin\nlocation: /home/user/bin\nkey: bin\n---\nname: bin\nlocation: /home/user/other-bin\nkey: bin\n"
+        );
+        withKeys("zsh", "bin");
+        when(dotfileService.getMarkersByKeyForCurrentSystem("zsh")).thenReturn(zshrcMarkers);
+        when(dotfileService.getMarkersByKeyForCurrentSystem("bin")).thenReturn(binMarkers);
+
+        int result = command.call();
+
+        assertEquals(1, result);
+        verify(dotfileService, never()).relinkDotfile(any());
+    }
+
+    @Test
+    public void testCall_multipleKeyOptions_oneNoMatch_returnsOneWithoutRelinkingAny() throws Exception {
+        List<DotfileMarkerModel> zshrcMarkers = DotfileMarkerModel.fromMarkerFileContents(
+            Path.of("/repo/zshrc.dotfile"),
+            "name: .zshrc\nlocation: /home/user/.zshrc\nkey: zsh\n"
+        );
+        withKeys("zsh", "missing");
+        when(dotfileService.getMarkersByKeyForCurrentSystem("zsh")).thenReturn(zshrcMarkers);
+        when(dotfileService.getMarkersByKeyForCurrentSystem("missing")).thenReturn(List.of());
+
+        int result = command.call();
+
+        assertEquals(1, result);
+        verify(dotfileService, never()).relinkDotfile(any());
+    }
+
+    @Test
+    public void testCall_sameKeyOptionRepeated_relinksOnlyOnce() throws Exception {
+        List<DotfileMarkerModel> zshrcMarkers = DotfileMarkerModel.fromMarkerFileContents(
+            Path.of("/repo/zshrc.dotfile"),
+            "name: .zshrc\nlocation: /home/user/.zshrc\nkey: zsh\n"
+        );
+        withKeys("zsh", "zsh");
+        when(dotfileService.getMarkersByKeyForCurrentSystem("zsh")).thenReturn(zshrcMarkers);
+
+        int result = command.call();
+
+        assertEquals(0, result);
+        verify(dotfileService, times(1)).relinkDotfile(zshrcMarkers.get(0));
+        verify(dotfileService, times(1)).getMarkersByKeyForCurrentSystem("zsh");
     }
 }

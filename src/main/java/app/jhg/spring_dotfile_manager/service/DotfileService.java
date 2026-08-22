@@ -12,14 +12,14 @@ public interface DotfileService {
      * gets a list of all paths to dotfile marker files in the configured dotfile repository
      * @return a list of paths to dotfile marker files
      */
-    public List<Path> getAllDotfileMarkerPaths() throws IOException;
+    List<Path> getAllDotfileMarkerPaths() throws IOException;
 
     /**
      * gets a list of all dotfile markers in the configured dotfile repository
      * @return a list of dotfile marker models
      * @throws IOException if there is an error reading the dotfile marker files
      */
-    public List<DotfileMarkerModel> getAllDotfileMarkerModels() throws IOException;
+    List<DotfileMarkerModel> getAllDotfileMarkerModels() throws IOException;
 
     /**
      * gets the dotfile markers objects specified by the marker file at the given path
@@ -27,33 +27,41 @@ public interface DotfileService {
      * @return the dotfile marker models
      * @throws IOException if there is an error reading the dotfile marker file
      */
-    public List<DotfileMarkerModel> getDotfileMarkerModelsByPath(Path path) throws IOException;
+    List<DotfileMarkerModel> getDotfileMarkerModelsByPath(Path path) throws IOException;
 
     /**
      * relinks an individual marker file
      * @param marker the dotfile marker representing the dotfile to be linked
      * @throws IOException if there is a regular file or directory where a link is supposed to be made, or if there is any I/O error
      */
-    public void relinkDotfile(DotfileMarkerModel marker) throws IOException;
+    void relinkDotfile(DotfileMarkerModel marker) throws IOException;
 
     /**
      * overwrites an existing regular file or directory at the marker's location with a symlink to the marker's source location. This is only called after the user has confirmed they want to overwrite the existing file/directory.
      * @param marker the dotfile marker representing the dotfile to be linked
      * @throws IOException if there is any I/O error during the overwrite process
      */
-    public void overwriteExistingDotfile(DotfileMarkerModel marker) throws IOException;
+    void overwriteExistingDotfile(DotfileMarkerModel marker) throws IOException;
 
     /**
      * unlinks an individual dotfile based on the given marker
      * @param marker the dotfile marker representing the dotfile to be unlinked
      * @throws IOException if there is an I/O error during the unlinking process
      */
-    public void unlinkDotfile(DotfileMarkerModel marker) throws IOException;
+    void unlinkDotfile(DotfileMarkerModel marker) throws IOException;
 
     /**
      * determines the target path for a given dotfile marker based on the current operating system and any platform-specific overrides specified in the marker. If the marker should not be linked on the current platform, this method returns null.
      * @param marker the dotfile marker for which to determine the target path
      * @return the target path for the given dotfile marker based on the current operating system and any platform-specific overrides specified in the marker, or null if the marker should not be linked on the current platform
      */
-    public Path getTargetPathForCurrentSystem(DotfileMarkerModel marker);
+    Path getTargetPathForCurrentSystem(DotfileMarkerModel marker);
+
+    /**
+     * gets the dotfile markers matching the given key that are applicable to the current platform.
+     * @param key the key to search for
+     * @return the list of markers with a matching key that would actually be linked on this platform (0 = no match, 1 = unambiguous, 2+ = ambiguous)
+     * @throws IOException if there is an error reading the dotfile marker files
+     */
+    List<DotfileMarkerModel> getMarkersByKeyForCurrentSystem(String key) throws IOException;
 }

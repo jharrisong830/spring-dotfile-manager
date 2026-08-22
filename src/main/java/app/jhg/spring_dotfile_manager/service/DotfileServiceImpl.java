@@ -42,7 +42,12 @@ public class DotfileServiceImpl implements DotfileService {
     @Override
     public List<Path> getAllDotfileMarkerPaths() throws IOException {
         log.debug("Finding {} in {}", dotfileGlobPattern, configService.readDotfileRepoPath());
-        Path dotfileRepoPath = Path.of(FormattingUtils.formatWithHomeDirectory(configService.readDotfileRepoPath()));
+        // resolve to an absolute path: marker.sourceLocation is derived directly from these paths (see
+        // DotfileMarkerModel), and a relative sourceLocation becomes the literal symlink target - which resolves
+        // relative to the *link's* directory, not the process's cwd, producing a broken link
+        Path dotfileRepoPath = Path.of(FormattingUtils.formatWithHomeDirectory(configService.readDotfileRepoPath()))
+            .toAbsolutePath()
+            .normalize();
         return fileService.glob(dotfileRepoPath, dotfileGlobPattern);
     }
 
@@ -73,11 +78,13 @@ public class DotfileServiceImpl implements DotfileService {
 
         if (fileService.isSymbolicLink(locationForSystem)) {
             // happy path: unlink and re-create the link
+            ensureSourceExists(marker, locationForSystem);
             log.debug("Deleting existing symlink at {} and creating new one for {}", locationForSystem, marker.sourceLocation);
             fileService.deleteFile(locationForSystem);
             fileService.createSymlink(locationForSystem, marker.sourceLocation);
         } else if (!fileService.exists(locationForSystem)) {
             // happy path 2: create the link if nothing exists
+            ensureSourceExists(marker, locationForSystem);
             log.debug("No file at {}, creating symlink for {}", locationForSystem, marker.sourceLocation);
             Path parentDir = locationForSystem.getParent();
             if (parentDir != null) {
@@ -97,18 +104,31 @@ public class DotfileServiceImpl implements DotfileService {
         if (locationForSystem == null) {
             return;
         }
-        
-        if (!fileService.exists(marker.sourceLocation)) {
-            throw new NoSuchFileException(
-                marker.sourceLocation.toString(),
-                null,
-                "Source does not exist; refusing to overwrite " + locationForSystem
-            );
-        }
+
+        ensureSourceExists(marker, locationForSystem);
 
         log.debug("Force deleting existing file at {} and relinking to {}", locationForSystem, marker.sourceLocation);
         fileService.forceDelete(locationForSystem);
         fileService.createSymlink(locationForSystem, marker.sourceLocation);
+    }
+
+    /**
+     * refuses to proceed if the marker's source doesn't exist. A missing source becomes a dangling symlink on
+     * POSIX systems, but on Windows the symlink type (file vs. directory) is inferred from whether the target
+     * exists at creation time - a missing source is always linked as a file-type symlink, which permanently
+     * cannot resolve into a directory even after the source is created. Checking up front avoids both.
+     * @param marker the marker whose source should be checked
+     * @param locationForSystem the link location, used only for the exception message
+     * @throws NoSuchFileException if marker.sourceLocation does not exist
+     */
+    private void ensureSourceExists(DotfileMarkerModel marker, Path locationForSystem) throws NoSuchFileException {
+        if (!fileService.exists(marker.sourceLocation)) {
+            throw new NoSuchFileException(
+                marker.sourceLocation.toString(),
+                null,
+                "Source does not exist; refusing to link " + locationForSystem
+            );
+        }
     }
 
     @Override
@@ -165,5 +185,13 @@ public class DotfileServiceImpl implements DotfileService {
             log.debug("Not linking {} for this platform", marker.sourceLocation);
             return null;
         }
+    }
+
+    @Override
+    public List<DotfileMarkerModel> getMarkersByKeyForCurrentSystem(String key) throws IOException {
+        return getAllDotfileMarkerModels().stream()
+            .filter(m -> key.equals(m.key))
+            .filter(m -> getTargetPathForCurrentSystem(m) != null)
+            .toList();
     }
 }

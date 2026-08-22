@@ -3,6 +3,7 @@ package app.jhg.spring_dotfile_manager.config;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
+import java.io.BufferedReader;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.file.FileAlreadyExistsException;
@@ -16,7 +17,11 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.beans.factory.NoSuchBeanDefinitionException;
 import org.springframework.context.ApplicationContext;
 
+import app.jhg.spring_dotfile_manager.commands.RelinkCommand;
 import app.jhg.spring_dotfile_manager.commands.RootCommand;
+import app.jhg.spring_dotfile_manager.commands.UnlinkCommand;
+import app.jhg.spring_dotfile_manager.service.DotfileService;
+import app.jhg.spring_dotfile_manager.service.PostInstallService;
 import picocli.CommandLine;
 import picocli.CommandLine.IExecutionExceptionHandler;
 
@@ -74,6 +79,14 @@ public class SDFMConfigurationUnitTests {
         when(ctx.getBean(DebugMixin.class)).thenReturn(expectedBean);
         when(ctx.getBean(DotfileRepoPathMixin.class)).thenReturn(expectedRepoPathMixin);
         when(ctx.getBean(VersionProviderConfiguration.class)).thenReturn(expectedVersion);
+        // RelinkCommand/UnlinkCommand carry a @Mixin field, which picocli resolves eagerly
+        // when building the CommandLine tree -- stub their (and KeyMixin's) bean lookups too,
+        // even though this test doesn't exercise their behavior.
+        when(ctx.getBean(KeyMixin.class)).thenReturn(new KeyMixin());
+        when(ctx.getBean(RelinkCommand.class)).thenReturn(
+            new RelinkCommand(mock(DotfileService.class), mock(PostInstallService.class), mock(BufferedReader.class))
+        );
+        when(ctx.getBean(UnlinkCommand.class)).thenReturn(new UnlinkCommand(mock(DotfileService.class)));
 
         CommandLine commandLine = new SDFMConfiguration().commandLine(rootCommand, ctx, handler);
         CommandLine.IFactory factory = commandLine.getFactory();
@@ -88,6 +101,11 @@ public class SDFMConfigurationUnitTests {
         when(ctx.getBean(DebugMixin.class)).thenThrow(new NoSuchBeanDefinitionException(DebugMixin.class));
         when(ctx.getBean(DotfileRepoPathMixin.class)).thenReturn(expectedRepoPathMixin);
         when(ctx.getBean(VersionProviderConfiguration.class)).thenReturn(expectedVersion);
+        when(ctx.getBean(KeyMixin.class)).thenReturn(new KeyMixin());
+        when(ctx.getBean(RelinkCommand.class)).thenReturn(
+            new RelinkCommand(mock(DotfileService.class), mock(PostInstallService.class), mock(BufferedReader.class))
+        );
+        when(ctx.getBean(UnlinkCommand.class)).thenReturn(new UnlinkCommand(mock(DotfileService.class)));
 
         CommandLine commandLine = new SDFMConfiguration().commandLine(rootCommand, ctx, handler);
         CommandLine.IFactory factory = commandLine.getFactory();

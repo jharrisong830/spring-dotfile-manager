@@ -20,10 +20,12 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import app.jhg.spring_dotfile_manager.model.SubprocessResult;
+import app.jhg.spring_dotfile_manager.util.FormattingUtils;
+import app.jhg.spring_dotfile_manager.util.Os;
 
 @ExtendWith(MockitoExtension.class)
 public class SubprocessServiceUnitTests {
-    
+
     @Mock
     private FileService fileService;
 
@@ -32,6 +34,12 @@ public class SubprocessServiceUnitTests {
     private static final long TIMEOUT = 1000;
     private static final Path CWD = Path.of(".");
 
+    // executeCommand runs the given args as a standalone process, with no shell wrapping - "echo"/"false"/"sleep"
+    // aren't standalone executables on Windows (echo/exit are cmd.exe builtins, there's no sleep.exe), so these
+    // tests route through cmd.exe/ping there instead
+    private static final boolean IS_WINDOWS =
+        FormattingUtils.getResolvedOsName(System.getProperty("os.name")) == Os.WIN32;
+
     @BeforeEach
     void setUp() {
         subprocessService = new SubprocessServiceImpl(TIMEOUT, fileService);
@@ -39,8 +47,8 @@ public class SubprocessServiceUnitTests {
 
     @Test
     public void testExecuteCommand_success() throws Exception {
-        SubprocessResult expectedResult = new SubprocessResult(0, "hi\n");
-        List<String> args = List.of("echo", "hi");
+        List<String> args = IS_WINDOWS ? List.of("cmd", "/c", "echo", "hi") : List.of("echo", "hi");
+        SubprocessResult expectedResult = new SubprocessResult(0, IS_WINDOWS ? "hi\r\n" : "hi\n");
 
         when(fileService.isDirectory(CWD)).thenReturn(true);
 
@@ -50,8 +58,8 @@ public class SubprocessServiceUnitTests {
 
     @Test
     public void testExecuteCommand_nonZeroExitCode() throws Exception {
+        List<String> args = IS_WINDOWS ? List.of("cmd", "/c", "exit", "1") : List.of("false");
         SubprocessResult expectedResult = new SubprocessResult(1, "");
-        List<String> args = List.of("false");
 
         when(fileService.isDirectory(CWD)).thenReturn(true);
 
@@ -78,7 +86,9 @@ public class SubprocessServiceUnitTests {
 
     @Test
     public void testExecuteCommand_timeoutThrows() throws Exception {
-        List<String> args = List.of("sleep", "2"); // sleeps past the 1 second timeout
+        // sleeps past the 1 second timeout; there's no standalone sleep.exe on Windows, so ping against
+        // localhost is used as a delay instead (~1s per echo request)
+        List<String> args = IS_WINDOWS ? List.of("ping", "-n", "3", "127.0.0.1") : List.of("sleep", "2");
 
         when(fileService.isDirectory(CWD)).thenReturn(true);
 
@@ -87,7 +97,7 @@ public class SubprocessServiceUnitTests {
 
     @Test
     public void testExecuteCommand_interruptedThrows() throws Exception {
-        List<String> args = List.of("sleep", "10");
+        List<String> args = IS_WINDOWS ? List.of("ping", "-n", "11", "127.0.0.1") : List.of("sleep", "10");
         when(fileService.isDirectory(CWD)).thenReturn(true);
         subprocessService = new SubprocessServiceImpl(10000, fileService); // longer timeout
 

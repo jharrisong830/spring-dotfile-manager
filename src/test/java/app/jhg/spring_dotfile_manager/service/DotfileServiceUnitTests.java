@@ -74,6 +74,42 @@ public class DotfileServiceUnitTests {
         assertThrows(IOException.class, () -> dotfileService.getAllDotfileMarkerPaths());
     }
 
+    @Test
+    public void testGetAllDotfileMarkerPaths_relativeRepoPathIsResolvedToAbsolute() throws IOException {
+        String relativeRepoPath = "dotfiles";
+        Path expectedAbsolutePath = Path.of(relativeRepoPath).toAbsolutePath().normalize();
+
+        when(configService.readDotfileRepoPath()).thenReturn(relativeRepoPath);
+        when(fileService.glob(eq(expectedAbsolutePath), eq(GLOB_PATTERN))).thenReturn(List.of());
+
+        dotfileService.getAllDotfileMarkerPaths();
+
+        verify(fileService).glob(eq(expectedAbsolutePath), eq(GLOB_PATTERN));
+    }
+
+    @Test
+    public void testGetAllDotfileMarkerPaths_relativeRepoPathWithDotSegmentsIsNormalized() throws IOException {
+        String relativeRepoPath = "./dotfiles/../dotfiles";
+        Path expectedAbsolutePath = Path.of(relativeRepoPath).toAbsolutePath().normalize();
+
+        when(configService.readDotfileRepoPath()).thenReturn(relativeRepoPath);
+        when(fileService.glob(eq(expectedAbsolutePath), eq(GLOB_PATTERN))).thenReturn(List.of());
+
+        dotfileService.getAllDotfileMarkerPaths();
+
+        verify(fileService).glob(eq(expectedAbsolutePath), eq(GLOB_PATTERN));
+    }
+
+    @Test
+    public void testGetAllDotfileMarkerPaths_alreadyAbsoluteRepoPathIsUnchanged() throws IOException {
+        when(configService.readDotfileRepoPath()).thenReturn(RAW_REPO_PATH);
+        when(fileService.glob(eq(Path.of(RESOLVED_REPO_PATH)), eq(GLOB_PATTERN))).thenReturn(List.of());
+
+        dotfileService.getAllDotfileMarkerPaths();
+
+        verify(fileService).glob(eq(Path.of(RESOLVED_REPO_PATH)), eq(GLOB_PATTERN));
+    }
+
 
     @Test
     public void testGetDotfileMarkerModelsByPath_singleMarker() throws IOException {
@@ -222,6 +258,7 @@ public class DotfileServiceUnitTests {
 
         when(fileService.isSymbolicLink(location)).thenReturn(false);
         when(fileService.exists(location)).thenReturn(false);
+        when(fileService.exists(source)).thenReturn(true);
 
         dotfileService.relinkDotfile(marker);
 
@@ -239,6 +276,7 @@ public class DotfileServiceUnitTests {
         Path source = Path.of(RESOLVED_REPO_PATH, ".zshrc");
 
         when(fileService.isSymbolicLink(location)).thenReturn(true);
+        when(fileService.exists(source)).thenReturn(true);
 
         dotfileService.relinkDotfile(marker);
 
@@ -257,6 +295,7 @@ public class DotfileServiceUnitTests {
 
         when(fileService.isSymbolicLink(location)).thenReturn(false);
         when(fileService.exists(location)).thenReturn(false);
+        when(fileService.exists(source)).thenReturn(true);
 
         dotfileService.relinkDotfile(marker);
 
@@ -278,6 +317,43 @@ public class DotfileServiceUnitTests {
         assertThrows(IOException.class, () -> dotfileService.relinkDotfile(marker));
 
         verify(fileService, never()).deleteFile(any());
+        verify(fileService, never()).createSymlink(any(), any());
+    }
+
+    @Test
+    public void testRelinkDotfile_locationIsSymlink_sourceDoesNotExist_throwsNoSuchFileException() throws IOException {
+        DotfileMarkerModel marker = DotfileMarkerModel.fromMarkerFileContents(
+            Path.of(RESOLVED_REPO_PATH, "zshrc.dotfile"),
+            "name: .zshrc\nlocation: ~/.zshrc\n"
+        ).get(0);
+        Path location = Path.of(System.getProperty("user.home"), ".zshrc");
+        Path source = Path.of(RESOLVED_REPO_PATH, ".zshrc");
+
+        when(fileService.isSymbolicLink(location)).thenReturn(true);
+        when(fileService.exists(source)).thenReturn(false);
+
+        assertThrows(NoSuchFileException.class, () -> dotfileService.relinkDotfile(marker));
+
+        verify(fileService, never()).deleteFile(any());
+        verify(fileService, never()).createSymlink(any(), any());
+    }
+
+    @Test
+    public void testRelinkDotfile_locationDoesNotExist_sourceDoesNotExist_throwsNoSuchFileException() throws IOException {
+        DotfileMarkerModel marker = DotfileMarkerModel.fromMarkerFileContents(
+            Path.of(RESOLVED_REPO_PATH, "zshrc.dotfile"),
+            "name: .zshrc\nlocation: ~/.zshrc\n"
+        ).get(0);
+        Path location = Path.of(System.getProperty("user.home"), ".zshrc");
+        Path source = Path.of(RESOLVED_REPO_PATH, ".zshrc");
+
+        when(fileService.isSymbolicLink(location)).thenReturn(false);
+        when(fileService.exists(location)).thenReturn(false);
+        when(fileService.exists(source)).thenReturn(false);
+
+        assertThrows(NoSuchFileException.class, () -> dotfileService.relinkDotfile(marker));
+
+        verify(fileService, never()).createDirectories(any());
         verify(fileService, never()).createSymlink(any(), any());
     }
 
@@ -421,6 +497,7 @@ public class DotfileServiceUnitTests {
         Path source = Path.of(RESOLVED_REPO_PATH, ".zshrc");
 
         when(fileService.isSymbolicLink(overrideLocation)).thenReturn(true);
+        when(fileService.exists(source)).thenReturn(true);
 
         dotfileService.relinkDotfile(marker);
 
@@ -439,6 +516,7 @@ public class DotfileServiceUnitTests {
 
         when(fileService.isSymbolicLink(overrideLocation)).thenReturn(false);
         when(fileService.exists(overrideLocation)).thenReturn(false);
+        when(fileService.exists(source)).thenReturn(true);
 
         dotfileService.relinkDotfile(marker);
 
@@ -629,5 +707,100 @@ public class DotfileServiceUnitTests {
         assertThrows(UnsupportedOperationException.class, () ->
             new DotfileServiceImpl(GLOB_PATTERN, "Amiga OS 3.1", configService, fileService)
         );
+    }
+
+
+    @Test
+    public void testGetMarkersByKeyForCurrentSystem_noMatch_returnsEmptyList() throws IOException {
+        Path markerPath = Path.of(RESOLVED_REPO_PATH, "zshrc.dotfile");
+
+        when(configService.readDotfileRepoPath()).thenReturn(RAW_REPO_PATH);
+        when(fileService.glob(eq(Path.of(RESOLVED_REPO_PATH)), eq(GLOB_PATTERN))).thenReturn(List.of(markerPath));
+        when(fileService.readFile(markerPath)).thenReturn("name: .zshrc\nlocation: ~/.zshrc\n");
+
+        List<DotfileMarkerModel> result = dotfileService.getMarkersByKeyForCurrentSystem("nonexistent-key");
+
+        assertTrue(result.isEmpty());
+    }
+
+    @Test
+    public void testGetMarkersByKeyForCurrentSystem_defaultKeyMatchesName() throws IOException {
+        Path markerPath = Path.of(RESOLVED_REPO_PATH, "zshrc.dotfile");
+
+        when(configService.readDotfileRepoPath()).thenReturn(RAW_REPO_PATH);
+        when(fileService.glob(eq(Path.of(RESOLVED_REPO_PATH)), eq(GLOB_PATTERN))).thenReturn(List.of(markerPath));
+        when(fileService.readFile(markerPath)).thenReturn("name: .zshrc\nlocation: ~/.zshrc\n");
+
+        List<DotfileMarkerModel> result = dotfileService.getMarkersByKeyForCurrentSystem(".zshrc");
+
+        assertEquals(1, result.size());
+        assertEquals(".zshrc", result.get(0).name);
+    }
+
+    @Test
+    public void testGetMarkersByKeyForCurrentSystem_explicitKeyMatches() throws IOException {
+        Path markerPath = Path.of(RESOLVED_REPO_PATH, "zshrc.dotfile");
+
+        when(configService.readDotfileRepoPath()).thenReturn(RAW_REPO_PATH);
+        when(fileService.glob(eq(Path.of(RESOLVED_REPO_PATH)), eq(GLOB_PATTERN))).thenReturn(List.of(markerPath));
+        when(fileService.readFile(markerPath)).thenReturn("name: .zshrc\nlocation: ~/.zshrc\nkey: shell-config\n");
+
+        List<DotfileMarkerModel> result = dotfileService.getMarkersByKeyForCurrentSystem("shell-config");
+
+        assertEquals(1, result.size());
+        assertEquals(".zshrc", result.get(0).name);
+    }
+
+    @Test
+    public void testGetMarkersByKeyForCurrentSystem_matchNotApplicableToCurrentPlatform_excluded() throws IOException {
+        Path markerPath = Path.of(RESOLVED_REPO_PATH, "zshrc.dotfile");
+
+        when(configService.readDotfileRepoPath()).thenReturn(RAW_REPO_PATH);
+        when(fileService.glob(eq(Path.of(RESOLVED_REPO_PATH)), eq(GLOB_PATTERN))).thenReturn(List.of(markerPath));
+        when(fileService.readFile(markerPath)).thenReturn("name: .zshrc\nlocation: ~/.zshrc\nlinux:\n  shouldLink: false\n");
+
+        List<DotfileMarkerModel> result = dotfileService.getMarkersByKeyForCurrentSystem(".zshrc");
+
+        assertTrue(result.isEmpty());
+    }
+
+    @Test
+    public void testGetMarkersByKeyForCurrentSystem_duplicateKeyBothApplicable_returnsBoth() throws IOException {
+        Path pathA = Path.of(RESOLVED_REPO_PATH, "common/bin.dotfile");
+        Path pathB = Path.of(RESOLVED_REPO_PATH, "extra/bin.dotfile");
+
+        when(configService.readDotfileRepoPath()).thenReturn(RAW_REPO_PATH);
+        when(fileService.glob(eq(Path.of(RESOLVED_REPO_PATH)), eq(GLOB_PATTERN))).thenReturn(List.of(pathA, pathB));
+        when(fileService.readFile(pathA)).thenReturn("name: bin\nlocation: ~/bin\nkey: bin\n");
+        when(fileService.readFile(pathB)).thenReturn("name: bin\nlocation: ~/other-bin\nkey: bin\n");
+
+        List<DotfileMarkerModel> result = dotfileService.getMarkersByKeyForCurrentSystem("bin");
+
+        assertEquals(2, result.size());
+    }
+
+    @Test
+    public void testGetMarkersByKeyForCurrentSystem_duplicateKeyOnlyOneApplicable_returnsOnlyApplicable() throws IOException {
+        Path pathA = Path.of(RESOLVED_REPO_PATH, "common/bin.dotfile");
+        Path pathB = Path.of(RESOLVED_REPO_PATH, "windows/bin.dotfile");
+
+        when(configService.readDotfileRepoPath()).thenReturn(RAW_REPO_PATH);
+        when(fileService.glob(eq(Path.of(RESOLVED_REPO_PATH)), eq(GLOB_PATTERN))).thenReturn(List.of(pathA, pathB));
+        when(fileService.readFile(pathA)).thenReturn("name: bin\nlocation: ~/bin\nkey: bin\n");
+        // only applicable on win32, so it should not collide with pathA when resolving on Linux
+        when(fileService.readFile(pathB)).thenReturn("name: bin\nlocation: ~/win-bin\nkey: bin\nlinux:\n  shouldLink: false\n");
+
+        List<DotfileMarkerModel> result = dotfileService.getMarkersByKeyForCurrentSystem("bin");
+
+        assertEquals(1, result.size());
+        assertEquals(Path.of(RESOLVED_REPO_PATH, "common", "bin"), result.get(0).sourceLocation);
+    }
+
+    @Test
+    public void testGetMarkersByKeyForCurrentSystem_getAllDotfileMarkerModelsThrowsIOException_propagates() throws IOException {
+        doThrow(new IOException("Config file not found"))
+            .when(configService).readDotfileRepoPath();
+
+        assertThrows(IOException.class, () -> dotfileService.getMarkersByKeyForCurrentSystem("bin"));
     }
 }

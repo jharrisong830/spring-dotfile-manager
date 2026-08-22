@@ -1,6 +1,7 @@
 package app.jhg.spring_dotfile_manager.service;
 
 import java.io.IOException;
+import java.nio.file.FileSystemException;
 import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -8,6 +9,7 @@ import java.nio.file.PathMatcher;
 import java.nio.file.StandardOpenOption;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Locale;
 import java.util.stream.Stream;
 
 import org.springframework.stereotype.Service;
@@ -42,7 +44,26 @@ public class FileServiceImpl implements FileService {
     @Override
     public void createSymlink(Path linkPath, Path source) throws IOException {
         log.debug("Creating symlink: {} -> {}", source, linkPath);
-        Files.createSymbolicLink(linkPath, source);
+        try {
+            Files.createSymbolicLink(linkPath, source);
+        } catch (FileSystemException e) {
+            if (isMissingSymlinkPrivilege(e)) {
+                throw new IOException(
+                    "Could not create symlink at " + linkPath + ": missing permission to create symbolic links. "
+                        + "On Windows, this requires Developer Mode to be enabled "
+                        + "(Settings > Privacy & security > For developers) or running sdfm from an elevated "
+                        + "(Administrator) terminal.",
+                    e
+                );
+            }
+            throw e;
+        }
+    }
+
+    @Override
+    public boolean isMissingSymlinkPrivilege(FileSystemException e) {
+        String reason = e.getReason();
+        return reason != null && reason.toLowerCase(Locale.ROOT).contains("privilege");
     }
 
     @Override

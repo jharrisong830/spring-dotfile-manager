@@ -4,6 +4,7 @@ A utility to manage mapping dotfiles from your repository to your system.
 
 ## Prerequisites:
 - OpenJDK 26
+- On Windows: Developer Mode enabled (**Settings > Privacy & security > For developers**), or an elevated (Administrator) terminal. Symlink creation requires `SeCreateSymbolicLinkPrivilege`, which Windows does not grant by default — see the note under [Creating Symlinks for Dotfiles](#creating-symlinks-for-dotfiles).
 
 ## Installing & Running
 
@@ -142,6 +143,12 @@ Once all of the dotfile marker files are created, we can start linking them from
 sdfm relink
 ```
 
+**Windows note:** creating symlinks requires the `SeCreateSymbolicLinkPrivilege` privilege, which Windows does not grant by default. Before running `sdfm relink` (or `unlink`) on Windows, either:
+- enable Developer Mode (**Settings > Privacy & security > For developers**), or
+- run `sdfm` from an elevated (Administrator) terminal.
+
+Without one of the above, `relink`/`unlink` will fail with an error about a missing permission to create symbolic links.
+
 ### Unlinking Dotfiles
 
 By default, any existing symlinks will be removed prior to creating a new symlink. Regular files and directories will **NOT** be removed and will generate an error (to be handled later). To remove all specified dotfiles without creating new links, run the following:
@@ -149,6 +156,33 @@ By default, any existing symlinks will be removed prior to creating a new symlin
 ```sh
 sdfm unlink
 ```
+
+### Scoped Relink/Unlink with `--key`
+
+By default, `relink` and `unlink` operate on every dotfile in your repository. To restrict either command to specific dotfiles, pass `--key`:
+
+```sh
+sdfm relink --key .zshrc
+sdfm unlink --key .zshrc
+```
+
+Every dotfile has a `key`, which defaults to its `name` unless you set one explicitly in the marker file:
+
+```yaml
+name: ".zshrc"
+location: "/home/user/.zshrc"
+key: "shell-config"
+```
+
+`--key` can be passed multiple times to scope the command to several dotfiles at once:
+
+```sh
+sdfm relink --key shell-config --key nvim
+```
+
+If a given key doesn't match any dotfile applicable to your current platform, or matches more than one (ambiguous keys), `sdfm` will refuse to relink/unlink **any** of the requested keys and exit with an error — resolve the ambiguity (e.g. by giving one of the dotfiles a distinct `key`) before retrying. Run `sdfm list` to see a warning if any dotfiles share a key.
+
+A scoped `relink` (i.e. one using `--key`) will not prompt to run post-install scripts, since those are meant to run after a full relink of your repository.
 
 ### Format Specifiers
 
@@ -215,6 +249,8 @@ darwin:
 ### Post-Install Scripts
 
 You can run a set of scripts after re-linking dotfiles to your system. By default, post-install scripts will not run. You can enable them by setting `allow-post-install-scripts` to `true` in your config file.
+
+**Not supported on Windows.** Post-install scripts run via `bash <script>`, which Windows does not provide out of the box. `relink` will skip them entirely on Windows (logging a warning if `allow-post-install-scripts` is `true`), regardless of your config.
 
 After dotfiles are re-linked, your dotfiles repository will be scanned for Bash scripts inside of the `post-install` directory at the root of your repository. Only files that end with the `.sh` and are contained within the `post-install` directory will be run. You can have multiple subdirectories inside of the `post-install` directory. For example, in the below directory structure, only files marked with `*` will be executed:
 

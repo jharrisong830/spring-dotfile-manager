@@ -42,7 +42,7 @@ public class PostInstallServiceUnitTests {
 
     @BeforeEach
     void setUp() {
-        postInstallService = new PostInstallServiceImpl(GLOB_PATTERN, configService, fileService, subprocessService);
+        postInstallService = new PostInstallServiceImpl(GLOB_PATTERN, "Linux", configService, fileService, subprocessService);
     }
 
     @Test
@@ -224,5 +224,43 @@ public class PostInstallServiceUnitTests {
 
         assertEquals(List.of(new PostInstallScriptResult(true, "", scriptPath)), results);
         verify(fileService).glob(eq(Path.of(REPO_PATH)), eq(GLOB_PATTERN));
+    }
+
+    @Test
+    public void testFindPostInstallScripts_windows_returnsEmptyListWithoutGlobbing() throws Exception {
+        postInstallService = new PostInstallServiceImpl(GLOB_PATTERN, "Windows 11", configService, fileService, subprocessService);
+        when(configService.readAllowPostInstallScripts()).thenReturn(true);
+
+        List<Path> results = postInstallService.findPostInstallScripts();
+
+        assertEquals(List.of(), results);
+        verify(configService, times(0)).readDotfileRepoPath();
+        verifyNoInteractions(fileService);
+        verifyNoInteractions(subprocessService);
+    }
+
+    @Test
+    public void testRunPostInstallScripts_windows_returnsEmptyListWithoutRunning() throws Exception {
+        postInstallService = new PostInstallServiceImpl(GLOB_PATTERN, "Windows 11", configService, fileService, subprocessService);
+        when(configService.readAllowPostInstallScripts()).thenReturn(true);
+
+        List<PostInstallScriptResult> results = postInstallService.runPostInstallScripts();
+
+        assertEquals(List.of(), results);
+        verify(configService, times(0)).readDotfileRepoPath();
+        verifyNoInteractions(fileService);
+        verifyNoInteractions(subprocessService);
+    }
+
+    @Test
+    public void testFindPostInstallScripts_windows_postInstallDisabled_returnsEmptyList() throws Exception {
+        postInstallService = new PostInstallServiceImpl(GLOB_PATTERN, "Windows 11", configService, fileService, subprocessService);
+        when(configService.readAllowPostInstallScripts()).thenReturn(false);
+
+        List<Path> results = postInstallService.findPostInstallScripts();
+
+        assertEquals(List.of(), results);
+        verifyNoInteractions(fileService);
+        verifyNoInteractions(subprocessService);
     }
 }

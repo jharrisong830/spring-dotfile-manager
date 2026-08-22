@@ -419,4 +419,109 @@ location: /home/testuser/.gitconfig
         assertNull(gitconfigMarker.win32Override);
         assertNull(gitconfigMarker.darwinOverride);
     }
+
+    @Test
+    public void testFromMarkerFileContents_key_defaultsToName() {
+        String markerFileContents =
+"""
+name: .zshrc
+location: /home/testuser/.zshrc
+""";
+
+        List<DotfileMarkerModel> markerModels = DotfileMarkerModel.fromMarkerFileContents(Path.of(TEST_MARKER_FILENAME), markerFileContents);
+        assertEquals(1, markerModels.size());
+        assertEquals(".zshrc", markerModels.get(0).key);
+    }
+
+    @Test
+    public void testFromMarkerFileContents_key_explicitValueOverridesDefault() {
+        String markerFileContents =
+"""
+name: .zshrc
+location: /home/testuser/.zshrc
+key: shell-config
+""";
+
+        List<DotfileMarkerModel> markerModels = DotfileMarkerModel.fromMarkerFileContents(Path.of(TEST_MARKER_FILENAME), markerFileContents);
+        assertEquals(1, markerModels.size());
+
+        DotfileMarkerModel marker = markerModels.get(0);
+        assertEquals(".zshrc", marker.name);
+        assertEquals("shell-config", marker.key);
+    }
+
+    @Test
+    public void testFromMarkerFileContents_key_blank() {
+        String markerFileContents =
+"""
+name: .zshrc
+location: /home/testuser/.zshrc
+key: ""
+""";
+
+        assertThrows(IllegalArgumentException.class, () -> DotfileMarkerModel.fromMarkerFileContents(Path.of(TEST_MARKER_FILENAME), markerFileContents));
+    }
+
+    @Test
+    public void testFromMarkerFileContents_key_whitespaceOnly() {
+        String markerFileContents =
+"""
+name: .zshrc
+location: /home/testuser/.zshrc
+key: "   "
+""";
+
+        assertThrows(IllegalArgumentException.class, () -> DotfileMarkerModel.fromMarkerFileContents(Path.of(TEST_MARKER_FILENAME), markerFileContents));
+    }
+
+    @Test
+    public void testFromMarkerFileContents_key_invalidType() {
+        String markerFileContents =
+"""
+name: .zshrc
+location: /home/testuser/.zshrc
+key: 123
+""";
+
+        assertThrows(IllegalArgumentException.class, () -> DotfileMarkerModel.fromMarkerFileContents(Path.of(TEST_MARKER_FILENAME), markerFileContents));
+    }
+
+    @Test
+    public void testFromMarkerFileContents_key_multipleMarkersEachDefaultToOwnName() {
+        String markerFileContents =
+"""
+---
+name: .zshrc
+location: /home/testuser/.zshrc
+---
+name: .vimrc
+location: /home/testuser/.vimrc
+key: editor-config
+""";
+
+        List<DotfileMarkerModel> markerModels = DotfileMarkerModel.fromMarkerFileContents(Path.of(TEST_MARKER_FILENAME), markerFileContents);
+        assertEquals(2, markerModels.size());
+
+        assertEquals(".zshrc", markerModels.get(0).key);
+        assertEquals("editor-config", markerModels.get(1).key);
+    }
+
+    @Test
+    public void testFromMarkerFileContents_key_doesNotAffectSourceLocationOrLocation() {
+        String markerFileContents =
+"""
+name: .zshrc
+location: /home/testuser/{NAME}
+key: shell-config
+""";
+
+        List<DotfileMarkerModel> markerModels = DotfileMarkerModel.fromMarkerFileContents(Path.of(TEST_MARKER_FILENAME), markerFileContents);
+        assertEquals(1, markerModels.size());
+
+        DotfileMarkerModel marker = markerModels.get(0);
+        assertEquals("shell-config", marker.key);
+        assertEquals(".zshrc", marker.name);
+        assertEquals(Path.of("/home/testuser/.zshrc"), marker.location);
+        assertEquals(Path.of(TEST_MARKER_FILENAME).getParent().resolve(".zshrc"), marker.sourceLocation);
+    }
 }

@@ -17,5 +17,5 @@ public interface SubprocessService {
      * @return the result of the subprocess execution, including exit code and captured output
      * @throws IllegalArgumentException if args is empty
      */
-    public SubprocessResult executeCommand(Path cwd, List<String> args) throws IOException, InterruptedException, ExecutionException, TimeoutException;
+    SubprocessResult executeCommand(Path cwd, List<String> args) throws IOException, InterruptedException, ExecutionException, TimeoutException;
 }
