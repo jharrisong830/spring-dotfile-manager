@@ -37,8 +37,8 @@ public class PostInstallServiceUnitTests {
 
     private PostInstallService postInstallService;
 
-    private static final String GLOB_PATTERN = "post-install/**/*.sh";
-    private static final String WIN32_GLOB_PATTERN = "post-install/**/*.ps1";
+    private static final String GLOB_PATTERN = "post-install/**.sh";
+    private static final String WIN32_GLOB_PATTERN = "post-install/**.ps1";
     private static final String REPO_PATH = System.getProperty("user.home") + "/dotfiles";
 
     @BeforeEach
