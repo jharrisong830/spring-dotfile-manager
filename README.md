@@ -3,7 +3,7 @@
 A utility to manage mapping dotfiles from your repository to your system.
 
 ## Prerequisites:
-- OpenJDK 26
+- OpenJDK 25
 - On Windows: Developer Mode enabled (**Settings > Privacy & security > For developers**), or an elevated (Administrator) terminal. Symlink creation requires `SeCreateSymbolicLinkPrivilege`, which Windows does not grant by default — see the note under [Creating Symlinks for Dotfiles](#creating-symlinks-for-dotfiles).
 
 ## Installing & Running
