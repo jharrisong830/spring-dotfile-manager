@@ -23,6 +23,8 @@ Current version is tracked in `pom.xml` (`<version>`), currently `1.2.3`. Requir
 ./mvnw test
 ```
 
+On Windows, `./mvnw test` must be run with Developer Mode enabled or from an elevated (Administrator) terminal — several `FileServiceUnitTests` cases create real symlinks via `Files.createSymbolicLink`, which requires `SeCreateSymbolicLinkPrivilege`. This is treated as a baseline requirement for developing/testing on Windows, not something the test suite works around, since the application itself requires the same privilege at runtime (see the Windows note in `README.md`).
+
 JUnit 5 + Mockito (`MockitoExtension`). Test classes mirror the main package structure 1:1 under `src/test/java/...`, named `<ClassName>UnitTests.java` (e.g. `DotfileServiceImpl` -> `DotfileServiceUnitTests`). Tests favor constructor injection with mocked collaborators set up in `@BeforeEach`, and method names follow `test<Method>_<scenario>` (e.g. `testGetAllDotfileMarkerPaths_readConfigThrowsIOException`).
 
 ## Project Structure
@@ -42,9 +44,10 @@ Base package: `app.jhg.spring_dotfile_manager`.
 `relink` runs post-install scripts after symlinking all dotfiles, via `PostInstallService.runPostInstallScripts()`:
 
 - Gated entirely by the `allow-post-install-scripts` config flag (`ConfigService.readAllowPostInstallScripts()`). If disabled, `runPostInstallScripts()` returns an empty list immediately without touching the filesystem or running anything — this is a trust-boundary check, not just a "don't execute" check.
+- **Not supported on Windows.** Checked immediately after the `allow-post-install-scripts` gate: if the current platform (`PostInstallServiceImpl`'s constructor-injected `os.name`, resolved via `FormattingUtils.getResolvedOsName`) is `WIN32`, `findPostInstallScripts()`/`runPostInstallScripts()` log a warning and return an empty list without touching the filesystem — same short-circuit shape as the disabled-flag case, checked second. This exists because scripts are run via `bash`, which isn't available on Windows by default; there's currently no PATH-detection fallback (e.g. for git-bash) — it's a hard platform gate.
 - Scripts are discovered recursively under `post-install/` at the root of the dotfile repo, matching `*.sh` (glob pattern is `spring-dotfile-manager.post-install-glob-pattern` in `application.yaml`, default `post-install/**/*.sh`).
 - Discovered paths are sorted (`Comparator.naturalOrder()` on `Path`, applied to a mutable copy since `FileService.glob()` returns an immutable list) so execution order is deterministic — e.g. `01-foo.sh` runs before `02-bar.sh`.
-- Each script is run as `bash <script>` (relies on `bash` being resolved via `PATH` — git-bash on Windows if installed with PATH integration) with `cwd` set to the script's own parent directory.
+- Each script is run as `bash <script>` with `cwd` set to the script's own parent directory.
 - Per-script failures (non-zero exit code, or any of `IOException`/`InterruptedException`/`ExecutionException`/`TimeoutException` from `SubprocessService.executeCommand`) are captured as a failed `PostInstallScriptResult` and do **not** stop the remaining scripts from running. `InterruptedException` specifically restores the thread's interrupt flag (`Thread.currentThread().interrupt()`) before continuing, so a later blocking call on the same thread will still observe the interruption.
 - Failures from `configService.readDotfileRepoPath()`/`fileService.glob()` (i.e. before any script runs) propagate as `IOException` out of `runPostInstallScripts()`, unlike per-script failures.
 - `RelinkCommand` logs each result and sets its own exit code to `1` if any script failed (or if `runPostInstallScripts()` throws `IOException`), without aborting the command.
