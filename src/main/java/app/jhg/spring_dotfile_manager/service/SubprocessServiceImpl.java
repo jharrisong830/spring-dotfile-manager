@@ -68,7 +68,8 @@ public class SubprocessServiceImpl implements SubprocessService {
         Process p = pb.start();
         log.debug("Process started: {}", p.pid());
 
-        try (ExecutorService executor = Executors.newSingleThreadExecutor()) {
+        ExecutorService executor = Executors.newSingleThreadExecutor();
+        try {
             // use a future to read output in the background, and wait for the process to complete in the main thread
             Future<String> outputFuture = executor.submit(() -> new String(p.getInputStream().readAllBytes()));
 
@@ -95,6 +96,8 @@ public class SubprocessServiceImpl implements SubprocessService {
             String output = outputFuture.get();
             log.debug("({}, '{}')", exitCode, output);
             return new SubprocessResult(exitCode, output);
+        } finally {
+            executor.shutdownNow();
         }
     }
 }
