@@ -38,11 +38,12 @@ public class PostInstallServiceUnitTests {
     private PostInstallService postInstallService;
 
     private static final String GLOB_PATTERN = "post-install/**/*.sh";
+    private static final String WIN32_GLOB_PATTERN = "post-install/**/*.ps1";
     private static final String REPO_PATH = System.getProperty("user.home") + "/dotfiles";
 
     @BeforeEach
     void setUp() {
-        postInstallService = new PostInstallServiceImpl(GLOB_PATTERN, "Linux", configService, fileService, subprocessService);
+        postInstallService = new PostInstallServiceImpl(GLOB_PATTERN, GLOB_PATTERN, WIN32_GLOB_PATTERN, "Linux", configService, fileService, subprocessService);
     }
 
     @Test
@@ -227,34 +228,39 @@ public class PostInstallServiceUnitTests {
     }
 
     @Test
-    public void testFindPostInstallScripts_windows_returnsEmptyListWithoutGlobbing() throws Exception {
-        postInstallService = new PostInstallServiceImpl(GLOB_PATTERN, "Windows 11", configService, fileService, subprocessService);
+    public void testFindPostInstallScripts_windows_usesWin32GlobPattern() throws Exception {
+        postInstallService = new PostInstallServiceImpl(GLOB_PATTERN, GLOB_PATTERN, WIN32_GLOB_PATTERN, "Windows 11", configService, fileService, subprocessService);
+        Path scriptPath = Path.of(REPO_PATH, "post-install/01.ps1");
         when(configService.readAllowPostInstallScripts()).thenReturn(true);
+        when(configService.readDotfileRepoPath()).thenReturn(REPO_PATH);
+        when(fileService.glob(eq(Path.of(REPO_PATH)), eq(WIN32_GLOB_PATTERN))).thenReturn(List.of(scriptPath));
 
         List<Path> results = postInstallService.findPostInstallScripts();
 
-        assertEquals(List.of(), results);
-        verify(configService, times(0)).readDotfileRepoPath();
-        verifyNoInteractions(fileService);
-        verifyNoInteractions(subprocessService);
+        assertEquals(List.of(scriptPath), results);
     }
 
     @Test
-    public void testRunPostInstallScripts_windows_returnsEmptyListWithoutRunning() throws Exception {
-        postInstallService = new PostInstallServiceImpl(GLOB_PATTERN, "Windows 11", configService, fileService, subprocessService);
+    public void testRunPostInstallScripts_windows_runsScriptsWithPwsh() throws Exception {
+        postInstallService = new PostInstallServiceImpl(GLOB_PATTERN, GLOB_PATTERN, WIN32_GLOB_PATTERN, "Windows 11", configService, fileService, subprocessService);
+        Path scriptPath = Path.of(REPO_PATH, "post-install/01.ps1");
         when(configService.readAllowPostInstallScripts()).thenReturn(true);
+        when(configService.readDotfileRepoPath()).thenReturn(REPO_PATH);
+        when(fileService.glob(eq(Path.of(REPO_PATH)), eq(WIN32_GLOB_PATTERN))).thenReturn(List.of(scriptPath));
+        when(subprocessService.executeCommand(any(), any())).thenReturn(new SubprocessResult(0, ""));
 
         List<PostInstallScriptResult> results = postInstallService.runPostInstallScripts();
 
-        assertEquals(List.of(), results);
-        verify(configService, times(0)).readDotfileRepoPath();
-        verifyNoInteractions(fileService);
-        verifyNoInteractions(subprocessService);
+        assertEquals(List.of(new PostInstallScriptResult(true, "", scriptPath)), results);
+        verify(subprocessService).executeCommand(
+            eq(scriptPath.getParent()),
+            eq(List.of("pwsh", "-NoProfile", "-NonInteractive", "-ExecutionPolicy", "Bypass", "-File", scriptPath.toString()))
+        );
     }
 
     @Test
     public void testFindPostInstallScripts_windows_postInstallDisabled_returnsEmptyList() throws Exception {
-        postInstallService = new PostInstallServiceImpl(GLOB_PATTERN, "Windows 11", configService, fileService, subprocessService);
+        postInstallService = new PostInstallServiceImpl(GLOB_PATTERN, GLOB_PATTERN, WIN32_GLOB_PATTERN, "Windows 11", configService, fileService, subprocessService);
         when(configService.readAllowPostInstallScripts()).thenReturn(false);
 
         List<Path> results = postInstallService.findPostInstallScripts();
