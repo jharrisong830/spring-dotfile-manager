@@ -150,6 +150,33 @@ By default, any existing symlinks will be removed prior to creating a new symlin
 sdfm unlink
 ```
 
+### Scoped Relink/Unlink with `--key`
+
+By default, `relink` and `unlink` operate on every dotfile in your repository. To restrict either command to specific dotfiles, pass `--key`:
+
+```sh
+sdfm relink --key .zshrc
+sdfm unlink --key .zshrc
+```
+
+Every dotfile has a `key`, which defaults to its `name` unless you set one explicitly in the marker file:
+
+```yaml
+name: ".zshrc"
+location: "/home/user/.zshrc"
+key: "shell-config"
+```
+
+`--key` can be passed multiple times to scope the command to several dotfiles at once:
+
+```sh
+sdfm relink --key shell-config --key nvim
+```
+
+If a given key doesn't match any dotfile applicable to your current platform, or matches more than one (ambiguous keys), `sdfm` will refuse to relink/unlink **any** of the requested keys and exit with an error — resolve the ambiguity (e.g. by giving one of the dotfiles a distinct `key`) before retrying. Run `sdfm list` to see a warning if any dotfiles share a key.
+
+A scoped `relink` (i.e. one using `--key`) will not prompt to run post-install scripts, since those are meant to run after a full relink of your repository.
+
 ### Format Specifiers
 
 To make writing these files simpler, we can use a couple of **format specifiers**. You can use `{HOME}` to inject your home folder on your current system. That way, you can use these marker files across multiple systems! This is useful when switching between Windows and other systems, or if you're on a computer where you have a different username. For example:

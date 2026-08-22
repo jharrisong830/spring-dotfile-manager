@@ -30,7 +30,7 @@ JUnit 5 + Mockito (`MockitoExtension`). Test classes mirror the main package str
 Base package: `app.jhg.spring_dotfile_manager`.
 
 - **`commands/`**: Picocli command classes (`InitCommand`, `RelinkCommand`, `UnlinkCommand`, `ListCommand`, `GetConfigCommand`, `SetConfigCommand`, `RootCommand`, `PicocliRunner`). One class per subcommand; `RootCommand` is the top-level entry, `PicocliRunner` wires Picocli into Spring Boot's `CommandLineRunner`.
-- **`config/`**: Spring `@Configuration` and Picocli mixins — `SDFMConfiguration` (app config bean wiring), `VersionProviderConfiguration` (CLI version string), `DebugMixin`/`DotfileRepoPathMixin` (shared Picocli options injected into multiple commands).
+- **`config/`**: Spring `@Configuration` and Picocli mixins — `SDFMConfiguration` (app config bean wiring), `VersionProviderConfiguration` (CLI version string), `DebugMixin`/`DotfileRepoPathMixin`/`KeyMixin` (shared Picocli options injected into multiple commands). `KeyMixin` backs the repeatable `--key` option on `RelinkCommand`/`UnlinkCommand` (`List<String> keys`, may be passed multiple times) — see "Key-scoped relink/unlink" below.
 - **`service/`**: Business logic behind an interface + `Impl` pair per concern — `ConfigService`/`ConfigServiceImpl` (reads/writes the app's own YAML config, e.g. `dotfile-repo-path`, `allow-post-install-scripts`), `DotfileService`/`DotfileServiceImpl` (scans for `.dotfiles` markers, resolves symlink targets), `FileService`/`FileServiceImpl` (low-level filesystem/symlink operations, globbing), `SubprocessService`/`SubprocessServiceImpl` (runs external commands via `ProcessBuilder` with a timeout, returning a `SubprocessResult`), `PostInstallService`/`PostInstallServiceImpl` (discovers and runs post-install scripts under `post-install/` in the dotfile repo; see below).
 - **`model/`**: `DotfileMarkerModel` (one entry from a `.dotfiles` YAML document, including platform overrides), `SDFMConfigModel` (the app's own config file shape), `SubprocessResult` (exit code + captured output from `SubprocessService`), and `PostInstallScriptResult` (`success`, `message`, and the `script` path — one per post-install script run).
 - **`util/`**: `FormattingUtils` — shared string formatting (e.g. `{HOME}`/`{NAME}` specifier resolution).
@@ -48,6 +48,17 @@ Base package: `app.jhg.spring_dotfile_manager`.
 - Per-script failures (non-zero exit code, or any of `IOException`/`InterruptedException`/`ExecutionException`/`TimeoutException` from `SubprocessService.executeCommand`) are captured as a failed `PostInstallScriptResult` and do **not** stop the remaining scripts from running. `InterruptedException` specifically restores the thread's interrupt flag (`Thread.currentThread().interrupt()`) before continuing, so a later blocking call on the same thread will still observe the interruption.
 - Failures from `configService.readDotfileRepoPath()`/`fileService.glob()` (i.e. before any script runs) propagate as `IOException` out of `runPostInstallScripts()`, unlike per-script failures.
 - `RelinkCommand` logs each result and sets its own exit code to `1` if any script failed (or if `runPostInstallScripts()` throws `IOException`), without aborting the command.
+
+## Key-scoped relink/unlink
+
+`relink` and `unlink` both accept a repeatable `--key` option (`KeyMixin`) to restrict the operation to specific dotfiles instead of every dotfile in the repository:
+
+- Each `DotfileMarkerModel` has a `key`, which defaults to its `name` unless a `key` field is explicitly set in the marker YAML.
+- For each `--key` value given, the command looks up matching markers via `DotfileService.getMarkersByKeyForCurrentSystem(key)` (matches on `key`, filtered to markers applicable to the current platform). If a key matches zero markers, or more than one (ambiguous), the command logs an error and exits `1` **without performing any relink/unlink** — this check runs for every requested key before any linking happens, so one bad key aborts the whole scoped operation.
+- Repeated `--key` values are deduplicated (order-preserving) before lookup, so passing the same key twice does not relink/unlink it twice.
+- With no `--key` given, both commands fall back to operating on `DotfileService.getAllDotfileMarkerModels()` (all dotfiles), as before.
+- `RelinkCommand` only offers to run post-install scripts when `--key` was not given at all — a scoped relink is assumed to be narrower than "just finished setting up," so it skips the repo-wide post-install prompt.
+- `ListCommand` warns (via `findDuplicateKeys`) when multiple platform-applicable dotfiles share a key, since a scoped relink/unlink with that key would refuse to run until resolved.
 
 ## Conventions
 
